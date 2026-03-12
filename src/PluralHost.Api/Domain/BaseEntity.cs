@@ -7,8 +7,6 @@ public abstract class BaseEntity : ISoftDeletable
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? DeletedAt { get; set; }
 
-    public bool IsDeleted => DeletedAt.HasValue;
-
-    public void SoftDelete() => DeletedAt = DateTime.UtcNow;
-    public void Restore() => DeletedAt = null;
+    public void SoftDelete() { DeletedAt = DateTime.UtcNow; UpdatedAt = DateTime.UtcNow; }
+    public void Restore()    { DeletedAt = null;             UpdatedAt = DateTime.UtcNow; }
 }
