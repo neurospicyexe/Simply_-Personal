@@ -10,6 +10,7 @@ builder.Services.AddDbContext<PluralHostContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddScoped<IGhostModeService, GhostModeService>();
 builder.Services.AddScoped<IGatekeeperService, GatekeeperService>();
+builder.Services.AddScoped<IShareTokenService, ShareTokenService>();
 
 var app = builder.Build();
 
