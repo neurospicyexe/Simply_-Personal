@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PluralHost.Api.Data;
+using PluralHost.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,7 @@ builder.Services.AddDbContext<PluralHostContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IGhostModeService, GhostModeService>();
 
 var app = builder.Build();
 
