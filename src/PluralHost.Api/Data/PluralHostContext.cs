@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using PluralHost.Api.Domain;
 
 namespace PluralHost.Api.Data;
@@ -24,13 +25,19 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
         modelBuilder.Entity<AccessToken>()
             .HasKey(t => t.TokenValue);
 
-        // ── Member: JSON column for ParentIds list ───────────────────────
+        // ── Member: CSV column for ParentIds list + value comparer ─────────
+        var guidListComparer = new ValueComparer<List<Guid>>(
+            (a, b) => a != null && b != null && a.SequenceEqual(b),
+            v => v.Aggregate(0, (h, g) => HashCode.Combine(h, g.GetHashCode())),
+            v => v.ToList());
+
         modelBuilder.Entity<Member>()
             .Property(m => m.ParentIds)
             .HasConversion(
                 v => string.Join(',', v),
                 v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                       .Select(Guid.Parse).ToList());
+                       .Select(Guid.Parse).ToList())
+            .Metadata.SetValueComparer(guidListComparer);
 
         // ── GLOBAL FILTER 1: Soft-Delete ─────────────────────────────────
         // Applied to all entities that inherit BaseEntity.
