@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PluralHost.Api.BackgroundServices;
 using PluralHost.Api.Data;
 using PluralHost.Api.Services;
 
@@ -11,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IGhostModeService, GhostModeService>();
 builder.Services.AddScoped<IGatekeeperService, GatekeeperService>();
 builder.Services.AddScoped<IShareTokenService, ShareTokenService>();
+builder.Services.AddHostedService<AutoUnfreezeService>();
 
 var app = builder.Build();
 
