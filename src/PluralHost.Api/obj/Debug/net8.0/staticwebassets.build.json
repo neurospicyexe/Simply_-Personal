@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "TWRqoHFnyxphAY10O2ivENeZLEY3A7yvoIQ+V4es3iE=",
+  "Source": "PluralHost.Api",
+  "BasePath": "_content/PluralHost.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

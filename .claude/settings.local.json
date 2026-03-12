@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(git init:*)",
+      "Bash(git checkout:*)",
+      "Bash(dotnet new:*)",
+      "Bash(command -v dotnet 2>&1 || type dotnet 2>&1 || echo \"dotnet not found\")",
+      "Bash(dotnet --version 2>&1 || echo \"dotnet CLI not available\")",
+      "Bash(dotnet --version 2>&1)",
+      "Bash(docker --version 2>&1 && node --version 2>&1)",
+      "Bash(dotnet --version)",
+      "Bash(cd /c/dev/simply-personal/src/PluralHost.Api && dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 8.*)",
+      "Bash(cd /c/dev/simply-personal/src/PluralHost.Api && dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.*)",
+      "Bash(cd /c/dev/simply-personal/src/PluralHost.Api && dotnet add package BCrypt.Net-Next --version 4.*)",
+      "Bash(cd /c/dev/simply-personal/tests/PluralHost.Tests && dotnet add reference ../../src/PluralHost.Api/PluralHost.Api.csproj)",
+      "Bash(cd /c/dev/simply-personal/tests/PluralHost.Tests && dotnet add package Microsoft.EntityFrameworkCore.InMemory --version 8.*)",
+      "Bash(cd /c/dev/simply-personal/tests/PluralHost.Tests && dotnet add package Moq --version 4.*)",
+      "Bash(dotnet build:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
