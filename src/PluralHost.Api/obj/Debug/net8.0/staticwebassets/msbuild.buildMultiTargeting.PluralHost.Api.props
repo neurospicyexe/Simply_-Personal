@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\PluralHost.Api.props" />
-</Project>
