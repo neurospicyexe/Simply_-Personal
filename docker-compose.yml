@@ -1,0 +1,16 @@
+services:
+  pluralhost:
+    build:
+      context: .
+      dockerfile: src/PluralHost.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      # SQLite database persisted to host
+      - ./data:/app/data
+      # Secure uploads (avatars, logs) — never served directly
+      - ./secure_uploads:/app/secure_uploads
+    environment:
+      - ConnectionStrings__Default=Data Source=/app/data/pluralhost.db
+      - ASPNETCORE_URLS=http://+:8080
+    restart: unless-stopped
