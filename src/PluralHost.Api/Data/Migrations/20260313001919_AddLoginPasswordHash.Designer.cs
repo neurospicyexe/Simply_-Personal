@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PluralHost.Api.Data;
 
@@ -10,27 +11,14 @@ using PluralHost.Api.Data;
 namespace PluralHost.Api.Data.Migrations
 {
     [DbContext(typeof(PluralHostContext))]
-    partial class PluralHostContextModelSnapshot : ModelSnapshot
+    [Migration("20260313001919_AddLoginPasswordHash")]
+    partial class AddLoginPasswordHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.25");
-
-            modelBuilder.Entity("GroupMember", b =>
-                {
-                    b.Property<Guid>("GroupsId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("MembersId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("GroupsId", "MembersId");
-
-                    b.HasIndex("MembersId");
-
-                    b.ToTable("MemberGroups", (string)null);
-                });
 
             modelBuilder.Entity("PluralHost.Api.Domain.AccessToken", b =>
                 {
@@ -109,9 +97,6 @@ namespace PluralHost.Api.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Emoji")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("INTEGER");
 
@@ -151,6 +136,9 @@ namespace PluralHost.Api.Data.Migrations
                     b.Property<string>("DisplayName")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("INTEGER");
 
@@ -175,6 +163,8 @@ namespace PluralHost.Api.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
 
                     b.ToTable("Members");
                 });
@@ -212,21 +202,6 @@ namespace PluralHost.Api.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("GroupMember", b =>
-                {
-                    b.HasOne("PluralHost.Api.Domain.Group", null)
-                        .WithMany()
-                        .HasForeignKey("GroupsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PluralHost.Api.Domain.Member", null)
-                        .WithMany()
-                        .HasForeignKey("MembersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("PluralHost.Api.Domain.FrontHistory", b =>
                 {
                     b.HasOne("PluralHost.Api.Domain.Member", "Member")
@@ -236,6 +211,18 @@ namespace PluralHost.Api.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("PluralHost.Api.Domain.Member", b =>
+                {
+                    b.HasOne("PluralHost.Api.Domain.Group", null)
+                        .WithMany("Members")
+                        .HasForeignKey("GroupId");
+                });
+
+            modelBuilder.Entity("PluralHost.Api.Domain.Group", b =>
+                {
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }

@@ -25,6 +25,12 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
         modelBuilder.Entity<AccessToken>()
             .HasKey(t => t.TokenValue);
 
+        // ── Group ↔ Member: many-to-many via MemberGroups join table ──────
+        modelBuilder.Entity<Group>()
+            .HasMany(g => g.Members)
+            .WithMany(m => m.Groups)
+            .UsingEntity(j => j.ToTable("MemberGroups"));
+
         // ── Member: CSV column for ParentIds list + value comparer ─────────
         var guidListComparer = new ValueComparer<List<Guid>>(
             (a, b) => a != null && b != null && a.SequenceEqual(b),

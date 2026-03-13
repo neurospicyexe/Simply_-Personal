@@ -16,4 +16,7 @@ public class Member : BaseEntity
 
     // Lineage: for Fused members, the IDs of their parents
     public List<Guid> ParentIds { get; set; } = [];
+
+    // Many-to-many: a member can belong to multiple groups
+    public List<Group> Groups { get; set; } = [];
 }
