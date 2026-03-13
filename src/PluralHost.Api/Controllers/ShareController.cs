@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PluralHost.Api.Data;
@@ -8,6 +9,7 @@ namespace PluralHost.Api.Controllers;
 
 [ApiController]
 [Route("share")]
+[AllowAnonymous]
 public class ShareController(
     IShareTokenService tokenService,
     IGhostModeService ghostMode,

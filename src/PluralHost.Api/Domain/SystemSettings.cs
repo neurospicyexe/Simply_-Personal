@@ -12,6 +12,10 @@ public class SystemSettings
     // Gatekeeper PIN (BCrypt hash) — separate from login password
     public string? GatekeeperPinHash { get; set; }
 
+    // Login password (BCrypt hash, work factor 12)
+    public string? LoginPasswordHash { get; set; }
+    public bool IsLoginSetup => !string.IsNullOrEmpty(LoginPasswordHash);
+
     // Deletion cooldown: set when deletion is requested, finalized 72h later
     public DateTime? DeletionCooldownEnd { get; set; }
 

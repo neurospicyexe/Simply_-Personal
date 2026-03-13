@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PluralHost.Api.Data;
@@ -10,11 +11,13 @@ public record PinRequest(string Pin);
 
 [ApiController]
 [Route("api/secure")]
+[Authorize]
 public class SecureActionController(
     IGhostModeService ghostMode,
     IGatekeeperService gatekeeper) : ControllerBase
 {
-    // POST /api/secure/freeze — Anyone can freeze (it's a safety action)
+    // POST /api/secure/freeze — Anyone can freeze (crisis safety — zero friction)
+    [AllowAnonymous]
     [HttpPost("freeze")]
     public async Task<IActionResult> FreezeAsync([FromBody] FreezeRequest request)
     {

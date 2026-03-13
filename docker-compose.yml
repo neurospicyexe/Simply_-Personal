@@ -13,4 +13,8 @@ services:
     environment:
       - ConnectionStrings__Default=Data Source=/app/data/pluralhost.db
       - ASPNETCORE_URLS=http://+:8080
+      - Jwt__SigningKey=${JWT_SIGNING_KEY}
+      - Jwt__Issuer=plural-host
+      - Jwt__Audience=plural-host
+      - SecureUploads__Root=/app/secure_uploads
     restart: unless-stopped
