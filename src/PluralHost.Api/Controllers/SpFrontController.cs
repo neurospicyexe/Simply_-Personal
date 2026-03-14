@@ -21,7 +21,7 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
                 StartTime: Epoch.ToMs(fh.FrontStart),
                 EndTime: fh.FrontEnd.HasValue ? Epoch.ToMs(fh.FrontEnd.Value) : null,
                 Custom: false,
-                CustomStatus: fh.Note
+                CustomStatus: fh.CustomStatus?.Label
             ));
 
     // GET /v1/fronters — currently fronting (FrontEnd == null)
@@ -67,7 +67,7 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
             MemberId = memberId,
             FrontStart = Epoch.FromMs(body.StartTime),
             FrontEnd = body.EndTime.HasValue ? Epoch.FromMs(body.EndTime.Value) : null,
-            Note = body.CustomStatus
+            // CustomStatus via FK — full fix in Task 15
         };
         context.FrontHistory.Add(entry);
         await context.SaveChangesAsync();
@@ -84,7 +84,7 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
 
         if (body.Live is false && body.EndTime.HasValue)
             entry.FrontEnd = Epoch.FromMs(body.EndTime.Value);
-        if (body.CustomStatus is not null) entry.Note = body.CustomStatus;
+        // CustomStatus via FK — full fix in Task 18
 
         await context.SaveChangesAsync();
         return Ok();
