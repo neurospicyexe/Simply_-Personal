@@ -26,7 +26,7 @@ public record SpMemberContent(
     string? Color,
     string? AvatarUrl,
     bool Private,
-    bool Archived          // maps to Member.Status == Dormant or Gone
+    bool Archived          // maps to Member.IsArchived
 );
 
 public record SpMemberCreateRequest(

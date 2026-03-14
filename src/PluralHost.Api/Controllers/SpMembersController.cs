@@ -22,7 +22,7 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
                 Color: m.Color,
                 AvatarUrl: null,      // avatars served via /api/media/ — no direct URL
                 Private: m.IsPrivate,
-                Archived: m.Status is MemberStatus.Dormant or MemberStatus.Gone
+                Archived: m.IsArchived
             ));
 
     // GET /v1/members/:system — Ghost Mode + soft-delete via global filter
@@ -79,9 +79,7 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
         if (body.Pronouns is not null) member.Pronouns = body.Pronouns;
         if (body.Color is not null) member.Color = body.Color;
         if (body.Private is not null) member.IsPrivate = body.Private.Value;
-        if (body.Archived is true) member.Status = MemberStatus.Dormant;
-        if (body.Archived is false && member.Status == MemberStatus.Dormant)
-            member.Status = MemberStatus.Active;
+        if (body.Archived is not null) member.IsArchived = body.Archived.Value;
 
         await context.SaveChangesAsync();
         return Ok();

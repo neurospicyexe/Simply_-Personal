@@ -29,6 +29,7 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
     public async Task<IActionResult> GetCurrentFrontersAsync()
     {
         var fronters = await context.FrontHistory
+            .Include(f => f.CustomStatus)
             .Where(f => f.FrontEnd == null)
             .ToListAsync();
         return Ok(fronters.Select(ToEnvelope));
@@ -38,7 +39,9 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
     [HttpGet("v1/frontHistory")]
     public async Task<IActionResult> GetHistoryAsync()
     {
-        var history = await context.FrontHistory.ToListAsync();
+        var history = await context.FrontHistory
+            .Include(f => f.CustomStatus)
+            .ToListAsync();
         return Ok(history.Select(ToEnvelope));
     }
 
@@ -47,7 +50,9 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
     public async Task<IActionResult> GetEntryAsync(string id)
     {
         if (!Guid.TryParse(id, out var guid)) return NotFound();
-        var entry = await context.FrontHistory.FirstOrDefaultAsync(f => f.Id == guid);
+        var entry = await context.FrontHistory
+            .Include(f => f.CustomStatus)
+            .FirstOrDefaultAsync(f => f.Id == guid);
         return entry is null ? NotFound() : Ok(ToEnvelope(entry));
     }
 
@@ -67,7 +72,7 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
             MemberId = memberId,
             FrontStart = Epoch.FromMs(body.StartTime),
             FrontEnd = body.EndTime.HasValue ? Epoch.FromMs(body.EndTime.Value) : null,
-            // CustomStatus via FK — full fix in Task 15
+            Comment = body.CustomStatus   // stored as plain comment via SP compat layer
         };
         context.FrontHistory.Add(entry);
         await context.SaveChangesAsync();
@@ -84,7 +89,7 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
 
         if (body.Live is false && body.EndTime.HasValue)
             entry.FrontEnd = Epoch.FromMs(body.EndTime.Value);
-        // CustomStatus via FK — full fix in Task 18
+        if (body.CustomStatus is not null) entry.Comment = body.CustomStatus;
 
         await context.SaveChangesAsync();
         return Ok();
