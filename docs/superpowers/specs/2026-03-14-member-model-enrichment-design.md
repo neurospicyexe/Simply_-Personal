@@ -27,12 +27,16 @@ Seven new columns on the `Member` table:
 | `IsPinned` | `bool` | `false` | Floats member to top of active list |
 | `IsArchived` | `bool` | `false` | Hides from list/count; member still appears in front history and is queryable. Not soft-delete. |
 | `IsUntracked` | `bool` | `false` | Excludes member from analytics and heatmaps |
-| `ExtraImages` | `List<string>` | `[]` | Up to 3 additional image URLs. Stored as JSON string via `ValueConverter<List<string>, string>`, same pattern as `ParentIds`. Max 3 enforced at service layer. |
+| `ExtraImages` | `List<string>` | `[]` | Up to 3 additional image URLs. See storage note below. |
 | `PreventFrontNotification` | `bool` | `false` | Suppresses notifications when this member starts fronting |
 | `ReceiveBoardNotifications` | `bool` | `true` | Notifies system when a message is posted to this member's board |
 | `SpMemberId` | `string?` | `null` | Preserves the original Simply Plural member ID for import compatibility. Nullable — only populated during SP import. |
 
 **`IsArchived` vs soft-delete:** Archived is a visibility flag — the member still participates in front history and can be queried. Soft-delete (`DeletedAt`) is the only path to true removal and remains gated by Gatekeeper PIN + 72-hour cooldown. These are orthogonal; a member can be both archived and soft-deleted.
+
+**`ExtraImages` storage:** Stored as a JSON string in a SQLite `TEXT` column using `ValueConverter<List<string>, string>` with `System.Text.Json.JsonSerializer` (already a transitive dependency via ASP.NET Core). A `ValueComparer<List<string>>` must also be registered in `PluralHostContext.OnModelCreating` to prevent spurious EF Core change-tracking on list mutations — same pattern as `ParentIds`.
+
+**SP DTO — `Archived` field:** The existing `SpMemberContent.Archived` property currently maps from `m.Status is MemberStatus.Dormant or MemberStatus.Gone`. After this migration, it must be updated to map from `m.IsArchived` instead. The `MemberStatus` enum is retained for its own purpose (Active/Dormant/Fused/Gone) — only the `Archived` field mapping changes. The old Status-based `Archived` mapping is removed.
 
 ---
 
@@ -47,26 +51,39 @@ Seven new columns on the `Member` table:
 
 ### 3. FrontStatus entity
 
-A managed picklist for front entry status tags. Replaces the earlier free-text `CustomStatus` string design.
+A managed picklist for front entry status tags.
 
 **Fields:**
 
 | Field | Type | Notes |
 |---|---|---|
-| `Id` | `Guid` | PK |
+| `Id` | `Guid` | PK — use well-known stable GUIDs from seed table below |
 | `Label` | `string` | Max 50 chars |
 | `Color` | `string?` | Hex color string, optional |
 | `IsDefault` | `bool` | Seeded community terms. Visible by default, can be hidden, never deleted. |
 | `IsHidden` | `bool` | Allows suppressing a default term from the picker without losing it. |
 | Inherits `BaseEntity` | | User-created terms: soft-deletable. Default terms: `DeletedAt` never set. |
 
-**Seeded defaults (via `HasData`):**
+**Seeded defaults (via `HasData`) — stable GUIDs:**
 
-Co-con · Blending · Switching · Stressed · Dissociating · Foggy · Passive influence · Full switch · Partial switch · Fronting alone
+| Label | GUID |
+|---|---|
+| Co-con | `a1000000-0000-0000-0000-000000000001` |
+| Blending | `a1000000-0000-0000-0000-000000000002` |
+| Switching | `a1000000-0000-0000-0000-000000000003` |
+| Stressed | `a1000000-0000-0000-0000-000000000004` |
+| Dissociating | `a1000000-0000-0000-0000-000000000005` |
+| Foggy | `a1000000-0000-0000-0000-000000000006` |
+| Passive influence | `a1000000-0000-0000-0000-000000000007` |
+| Full switch | `a1000000-0000-0000-0000-000000000008` |
+| Partial switch | `a1000000-0000-0000-0000-000000000009` |
+| Fronting alone | `a1000000-0000-0000-0000-000000000010` |
 
-`IsDefault = true`, `IsHidden = false` for all seeded entries. Well-known GUIDs used so migrations are stable.
+All seeded entries: `IsDefault = true`, `IsHidden = false`, `Color = null`.
 
-**UX flow:** Tapping the status field on a front entry opens a picker showing visible defaults + user-created terms. New terms can be created from the picker. Existing custom terms are soft-deletable. Default terms can be toggled hidden/visible.
+**Ghost Mode:** `FrontStatus` is a configuration picklist, not member data. It is **excluded** from Ghost Mode suppression. `GET /api/front-statuses` always returns results regardless of `IsFrozen`. The picker must remain available during a freeze so the system owner can still manage configuration.
+
+**UX flow:** Tapping the status field on a front entry opens a picker showing visible statuses. New terms can be created from the picker. Existing custom terms are soft-deletable (Gatekeeper PIN required — see Gatekeeper section). Default terms can be toggled hidden/visible.
 
 ---
 
@@ -80,16 +97,27 @@ Per-alter message board (Tab 3 of the member profile). Internal alter-to-alter m
 |---|---|---|
 | `MemberId` | `Guid` | FK → `Member.Id` |
 | `AuthorName` | `string` | Max 100 chars. Display name of who left the message ("Ash", "System", etc.) |
-| `Content` | `string` | Max 1000 chars |
+| `Content` | `string` | Required. Max 1000 chars. |
 | Inherits `BaseEntity` | | Soft-deletable, timestamps |
 
 No `AuthorId` FK — Plural-Host is single-user/single-system. Author is identified by display name only. Token-sourced messages (Plan 2) will add an optional `TokenId` FK at that time.
+
+**Ghost Mode:** `BoardMessage` must have an explicit `HasQueryFilter` in `PluralHostContext.OnModelCreating`:
+
+```csharp
+modelBuilder.Entity<BoardMessage>()
+    .HasQueryFilter(b =>
+        b.DeletedAt == null &&
+        !Set<SystemSettings>().Where(s => s.Id == 1).Select(s => s.IsFrozen).FirstOrDefault());
+```
+
+This follows the identical pattern used for `Member`, `FrontHistory`, and `Group`.
 
 ---
 
 ### 5. MemberNote entity
 
-Per-alter notes (Tab 5 of the member profile). These are private notes scoped to one member. Global (system-level) journals are deferred to Plan 3.
+Per-alter notes (Tab 5 of the member profile). Private notes scoped to one member. Global (system-level) journals are deferred to Plan 3.
 
 **Fields:**
 
@@ -97,102 +125,118 @@ Per-alter notes (Tab 5 of the member profile). These are private notes scoped to
 |---|---|---|
 | `MemberId` | `Guid` | FK → `Member.Id` |
 | `Title` | `string?` | Max 100 chars, optional |
-| `Content` | `string` | Max 50,000 chars |
+| `Content` | `string` | **Required.** Must be non-empty. Max 50,000 chars. |
 | `IsPinned` | `bool` | Default `false` |
-| `IsLocked` | `bool` | Default `false`. Locked notes cannot be edited until unlocked. |
+| `IsLocked` | `bool` | Default `false`. Locked notes reject all edits until unlocked. |
 | Inherits `BaseEntity` | | Soft-deletable, timestamps |
+
+**Ghost Mode:** `MemberNote` must have an explicit `HasQueryFilter` in `PluralHostContext.OnModelCreating` using the same combined pattern as `BoardMessage` above.
 
 ---
 
 ### 6. Group hierarchy — cycle detection
 
-`Member.ParentIds` (existing) stores parent member IDs as a comma-separated GUID list. Currently there is no guard against circular references (A → B → A). This plan adds cycle detection at the service layer when `ParentIds` is updated:
+`Member.ParentIds` (existing) stores parent member IDs as a comma-separated GUID list. This plan adds cycle detection at the service layer when `ParentIds` is updated.
 
-- Walk the ancestor chain from each proposed parent upward
-- If the current member's ID appears anywhere in the chain, reject with a validation error
-- Max depth guard: reject chains deeper than 20 to prevent pathological traversal
+**Service:** A new `IMemberService` / `MemberService` is introduced. The `UpdateMemberAsync` method in this service is responsible for:
+
+- Walking the ancestor chain from each proposed parent upward (loading `ParentIds` per ancestor)
+- If the current member's own ID appears anywhere in the chain → reject
+- If the traversal depth exceeds 20 → reject
+- On pass → persist the update
 
 No schema changes — cycle detection is purely service-layer logic.
 
 ---
 
-### 7. SP API compatibility
+### 7. Gatekeeper PIN requirements
 
-The SP-compatible controllers (`SpMembersController`, `SpFrontController`) and response DTOs must be updated to include the new fields where SP has equivalents:
+Soft-deleting data is a destructive action consistent with the project's pattern of PIN-gating irreversible operations. The following endpoints require a valid Gatekeeper PIN in the request body:
 
-- `IsArchived` → SP exposes this as a member field
-- `Color` already mapped; `ExtraImages` not in SP spec — omit from SP DTOs
-- `FrontHistory.Comment` → SP includes comment on front entries
-- `CustomStatusId` / `FrontStatus.Label` → SP includes a custom front status concept
-
-New entities (`BoardMessage`, `MemberNote`, `FrontStatus`) are not part of the SP API mirror — they are Plural-Host native endpoints only.
-
----
-
-## Data flow
-
-```
-POST /api/members              → create member (Name required, all new fields optional with defaults)
-PATCH /api/members/{id}        → update any member field including new ones
-GET /api/members               → returns all non-archived, non-deleted members by default
-                                  ?includeArchived=true → include archived
-GET /api/members/{id}          → full member detail
-
-GET  /api/members/{id}/board        → list board messages (soft-delete filtered)
-POST /api/members/{id}/board        → post a message
-DELETE /api/members/{id}/board/{msgId} → soft-delete a message
-
-GET  /api/members/{id}/notes        → list notes (soft-delete filtered)
-POST /api/members/{id}/notes        → create note
-PATCH /api/members/{id}/notes/{noteId} → update (blocked if IsLocked = true)
-DELETE /api/members/{id}/notes/{noteId} → soft-delete
-
-GET  /api/front-statuses            → list visible statuses (IsHidden = false)
-POST /api/front-statuses            → create custom status
-PATCH /api/front-statuses/{id}      → update label/color or toggle IsHidden
-DELETE /api/front-statuses/{id}     → soft-delete (user-created only; IsDefault = true rejected)
-```
-
----
-
-## Error handling
-
-| Scenario | Behaviour |
+| Endpoint | PIN required |
 |---|---|
-| `ExtraImages` count > 3 | 400 Bad Request — "Maximum 3 extra images allowed" |
-| `ParentIds` creates a cycle | 400 Bad Request — "Circular parent reference detected" |
-| `ParentIds` chain depth > 20 | 400 Bad Request — "Parent chain exceeds maximum depth" |
-| Delete a default `FrontStatus` | 400 Bad Request — "Default statuses cannot be deleted" |
-| Edit a locked `MemberNote` | 400 Bad Request — "Note is locked. Unlock it before editing." |
-| `CustomStatusId` references deleted/hidden status | Accepted — stored FK is preserved; picker just won't show it as selectable going forward |
+| `DELETE /api/members/{id}/board/{msgId}` | Yes |
+| `DELETE /api/members/{id}/notes/{noteId}` | Yes |
+| `DELETE /api/front-statuses/{id}` (user-created only) | Yes |
 
-Ghost Mode: all member, board, and note queries return `[]` (200 OK) when `SystemSettings.IsFrozen = true`. This is enforced automatically by the existing EF Core global query filter — no controller changes needed.
+Toggling `FrontStatus.IsHidden` does not require PIN — it is reversible.
 
 ---
 
-## Testing
+### 8. API endpoints
 
-Each new area gets dedicated test coverage:
+```
+POST   /api/members                           → create member (Name required, all new fields optional)
+PATCH  /api/members/{id}                      → update any member field including new ones
+GET    /api/members                           → list non-deleted members
+                                                  default: excludes archived (?includeArchived=true to include)
+                                                  IsPrivate members ARE included (authenticated owner only)
+                                                  Privacy filtering for share tokens is Plan 2
+GET    /api/members/{id}                      → full member detail
 
-- **Member fields:** update round-trip for each new bool flag and `ExtraImages`; verify `IsArchived` does not affect soft-delete
-- **FrontHistory:** comment and custom status FK round-trip; null status accepted
-- **FrontStatus:** seed verification (10 defaults present after migration); create/hide/unhide/delete user term; delete-default rejected
-- **BoardMessage:** post/list/soft-delete; verify Ghost Mode returns empty
-- **MemberNote:** create/edit/pin/lock; edit-while-locked rejected; soft-delete
-- **Cycle detection:** direct cycle (A→A), indirect cycle (A→B→A), valid chain, depth overflow
+GET    /api/members/{id}/board                → list board messages (Ghost Mode + soft-delete filtered)
+POST   /api/members/{id}/board                → post a message (AuthorName + Content required)
+DELETE /api/members/{id}/board/{msgId}        → soft-delete (Gatekeeper PIN required)
+
+GET    /api/members/{id}/notes                → list notes (Ghost Mode + soft-delete filtered)
+POST   /api/members/{id}/notes                → create note (Content required, Title optional)
+PATCH  /api/members/{id}/notes/{noteId}       → update (blocked if IsLocked = true)
+DELETE /api/members/{id}/notes/{noteId}       → soft-delete (Gatekeeper PIN required)
+
+GET    /api/front-statuses                    → list visible statuses (IsHidden = false; Ghost Mode exempt)
+POST   /api/front-statuses                    → create custom status
+PATCH  /api/front-statuses/{id}              → update Label/Color or toggle IsHidden
+DELETE /api/front-statuses/{id}              → soft-delete user-created only (Gatekeeper PIN required)
+```
 
 ---
 
-## Migration
+### 9. Error handling
+
+| Scenario | Response |
+|---|---|
+| `ExtraImages` count > 3 | 400 — "Maximum 3 extra images allowed" |
+| `FrontHistory.Comment` > 500 chars | 400 — "Comment must be 500 characters or fewer" |
+| `ParentIds` creates a cycle | 400 — "Circular parent reference detected" |
+| `ParentIds` chain depth > 20 | 400 — "Parent chain exceeds maximum depth of 20" |
+| Delete a default `FrontStatus` (`IsDefault = true`) | 400 — "Default statuses cannot be deleted" |
+| Edit a locked `MemberNote` | 400 — "Note is locked. Unlock it before editing." |
+| `MemberNote.Content` empty or whitespace | 400 — "Note content is required" |
+| `CustomStatusId` references a deleted/hidden status | Accepted — stored FK preserved; picker simply omits it from selectable options going forward |
+| Any PIN-gated delete with invalid PIN | 403 — existing Gatekeeper pattern |
+
+Ghost Mode: `BoardMessage` and `MemberNote` queries return `[]` (200 OK) when `SystemSettings.IsFrozen = true`, enforced via `HasQueryFilter` (see entities above). `FrontStatus` is exempt from Ghost Mode.
+
+---
+
+### 10. Testing
+
+| Area | Test cases |
+|---|---|
+| **Member fields** | Round-trip update for each new bool flag; `ExtraImages` add/update/clear; `IsArchived` does not affect `DeletedAt`; `SpMemberId` round-trip |
+| **FrontHistory** | `Comment` and `CustomStatusId` round-trip; null status accepted; comment > 500 chars rejected |
+| **FrontStatus** | 10 seed entries present after migration; create user term; hide/unhide default; delete user term (PIN); delete default rejected; `IsHidden` filter on GET |
+| **BoardMessage** | Post/list/soft-delete (PIN); empty/oversized content rejected; Ghost Mode returns `[]` |
+| **MemberNote** | Create/edit/pin/lock; edit-while-locked rejected; unlock then edit succeeds; empty content rejected; soft-delete (PIN); Ghost Mode returns `[]` |
+| **Cycle detection** | Direct self-reference (A→A); indirect cycle (A→B→A); valid 3-level chain; depth > 20 rejected |
+| **SP DTO** | `SpMemberContent.Archived` maps from `IsArchived`, not `MemberStatus` |
+
+---
+
+### 11. Migration
 
 One EF Core migration covering:
-- 7 new columns on `Member`
-- 2 new columns on `FrontHistory`
-- New `FrontStatus` table with `HasData` seed
+
+- 7 new columns on `Member` (`IsPinned`, `IsArchived`, `IsUntracked`, `ExtraImages`, `PreventFrontNotification`, `ReceiveBoardNotifications`, `SpMemberId`)
+- 2 new columns on `FrontHistory` (`CustomStatusId`, `Comment`)
+- New `FrontStatuses` table with `HasData` seed (10 rows, stable GUIDs)
 - New `BoardMessages` table
 - New `MemberNotes` table
-- FK constraint: `FrontHistory.CustomStatusId → FrontStatus.Id` (nullable, no cascade delete)
-- FK constraints: `BoardMessage.MemberId → Member.Id`, `MemberNote.MemberId → Member.Id`
+- FK: `FrontHistory.CustomStatusId → FrontStatus.Id` (nullable, no cascade delete — preserves front history if status later soft-deleted)
+- FK: `BoardMessage.MemberId → Member.Id`
+- FK: `MemberNote.MemberId → Member.Id`
+- `HasQueryFilter` additions in `PluralHostContext` for `BoardMessage` and `MemberNote`
+- `ValueConverter` + `ValueComparer` for `Member.ExtraImages` in `PluralHostContext`
 
 Auto-applied on startup via `context.Database.MigrateAsync()` (existing pattern).
 
