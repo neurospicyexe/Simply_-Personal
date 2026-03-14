@@ -41,6 +41,7 @@ builder.Services.AddScoped<IGhostModeService, GhostModeService>();
 builder.Services.AddScoped<IGatekeeperService, GatekeeperService>();
 builder.Services.AddScoped<IShareTokenService, ShareTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddHostedService<AutoUnfreezeService>();
 
 var app = builder.Build();
