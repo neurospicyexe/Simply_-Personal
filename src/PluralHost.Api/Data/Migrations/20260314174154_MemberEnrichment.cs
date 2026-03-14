@@ -13,10 +13,15 @@ namespace PluralHost.Api.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
+            migrationBuilder.DropColumn(
                 name: "Note",
+                table: "FrontHistory");
+
+            migrationBuilder.AddColumn<Guid>(
+                name: "CustomStatusId",
                 table: "FrontHistory",
-                newName: "CustomStatusId");
+                type: "TEXT",
+                nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ExtraImages",
@@ -58,7 +63,7 @@ namespace PluralHost.Api.Data.Migrations
                 table: "Members",
                 type: "INTEGER",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "SpMemberId",
@@ -230,10 +235,15 @@ namespace PluralHost.Api.Data.Migrations
                 name: "Comment",
                 table: "FrontHistory");
 
-            migrationBuilder.RenameColumn(
+            migrationBuilder.DropColumn(
                 name: "CustomStatusId",
+                table: "FrontHistory");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Note",
                 table: "FrontHistory",
-                newName: "Note");
+                type: "TEXT",
+                nullable: true);
         }
     }
 }
