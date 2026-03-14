@@ -30,4 +30,28 @@ public class MemberTests
 
         Assert.Equal(2, fused.ParentIds.Count);
     }
+
+    [Fact]
+    public void Member_NewBoolFields_DefaultToCorrectValues()
+    {
+        var m = new Member { Name = "Ash" };
+        Assert.False(m.IsPinned);
+        Assert.False(m.IsArchived);
+        Assert.False(m.IsUntracked);
+        Assert.False(m.PreventFrontNotification);
+        Assert.True(m.ReceiveBoardNotifications);
+        Assert.Empty(m.ExtraImages);
+        Assert.Null(m.SpMemberId);
+    }
+
+    [Fact]
+    public void Member_IsArchived_IsIndependentOfSoftDelete()
+    {
+        var m = new Member { Name = "Ash" };
+        m.IsArchived = true;
+        Assert.Null(m.DeletedAt);   // soft-delete untouched
+        m.SoftDelete();
+        Assert.True(m.IsArchived);  // archive flag untouched
+        Assert.NotNull(m.DeletedAt);
+    }
 }

@@ -19,4 +19,13 @@ public class Member : BaseEntity
 
     // Many-to-many: a member can belong to multiple groups
     public List<Group> Groups { get; set; } = [];
+
+    // ── New fields ────────────────────────────────────────────────────
+    public bool IsPinned { get; set; } = false;
+    public bool IsArchived { get; set; } = false;
+    public bool IsUntracked { get; set; } = false;
+    public List<string> ExtraImages { get; set; } = [];
+    public bool PreventFrontNotification { get; set; } = false;
+    public bool ReceiveBoardNotifications { get; set; } = true;
+    public string? SpMemberId { get; set; }
 }
