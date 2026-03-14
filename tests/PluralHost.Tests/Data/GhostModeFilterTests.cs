@@ -65,5 +65,42 @@ public class GhostModeFilterTests : IDisposable
         Assert.Single(result);
     }
 
+    [Fact]
+    public async Task WhenFrozen_BoardMessagesQueryReturnsEmpty()
+    {
+        var member = new Member { Name = "Ash" };
+        _context.Members.Add(member);
+        _context.BoardMessages.Add(new BoardMessage
+        {
+            MemberId = member.Id,
+            AuthorName = "System",
+            Content = "hello"
+        });
+        await _context.SaveChangesAsync();
+
+        await FreezeSystem();
+
+        var result = await _context.BoardMessages.ToListAsync();
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task WhenFrozen_MemberNotesQueryReturnsEmpty()
+    {
+        var member = new Member { Name = "Ash" };
+        _context.Members.Add(member);
+        _context.MemberNotes.Add(new MemberNote
+        {
+            MemberId = member.Id,
+            Content = "a note"
+        });
+        await _context.SaveChangesAsync();
+
+        await FreezeSystem();
+
+        var result = await _context.MemberNotes.ToListAsync();
+        Assert.Empty(result);
+    }
+
     public void Dispose() => _context.Dispose();
 }
