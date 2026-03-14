@@ -9,34 +9,37 @@ public class MemberService(PluralHostContext context) : IMemberService
 
     public async Task<ValidationResult> ValidateParentIdsAsync(Guid memberId, List<Guid> proposedParentIds)
     {
-        foreach (var parentId in proposedParentIds)
-        {
-            var visited = new HashSet<Guid> { memberId };
-            var current = parentId;
-            int depth = 0;
+        var visited = new HashSet<Guid> { memberId };
+        var queue = new Queue<Guid>(proposedParentIds);
+        int depth = 0;
 
-            while (current != Guid.Empty)
+        while (queue.Count > 0)
+        {
+            if (depth >= MaxDepth)
+                return ValidationResult.Fail("Parent chain exceeds maximum depth of 20");
+
+            int levelSize = queue.Count;
+            for (int i = 0; i < levelSize; i++)
             {
+                var current = queue.Dequeue();
+
                 if (visited.Contains(current))
                     return ValidationResult.Fail("Circular parent reference detected");
 
-                if (depth >= MaxDepth)
-                    return ValidationResult.Fail("Parent chain exceeds maximum depth of 20");
-
                 visited.Add(current);
-                depth++;
 
                 var ancestor = await context.Members
                     .IgnoreQueryFilters()
-                    .Where(m => m.Id == current && m.DeletedAt == null)
+                    .Where(m => m.Id == current)
                     .Select(m => new { m.ParentIds })
                     .FirstOrDefaultAsync();
 
-                if (ancestor == null || ancestor.ParentIds.Count == 0)
-                    break;
-
-                current = ancestor.ParentIds[0]; // walk first parent
+                if (ancestor != null)
+                    foreach (var parentId in ancestor.ParentIds)
+                        queue.Enqueue(parentId);
             }
+
+            depth++;
         }
 
         return ValidationResult.Ok();
