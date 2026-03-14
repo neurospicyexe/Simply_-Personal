@@ -1,120 +1,55 @@
+// src/PluralHost.Api/Dto/NativeDtos.cs
+using PluralHost.Api.Domain;
+
 namespace PluralHost.Api.Dto;
 
-// ── FrontStatus DTOs ────────────────────────────────────────────────────────
-
+// ── FrontStatus ───────────────────────────────────────────────────────
 public record FrontStatusResponse(
-    Guid Id,
-    string Label,
-    string? Color,
-    bool IsDefault,
-    bool IsHidden
-);
+    Guid Id, string Label, string? Color,
+    bool IsDefault, bool IsHidden, DateTime CreatedAt);
 
-public record FrontStatusCreateRequest(
-    string Label,
-    string? Color
-);
+public record FrontStatusCreateRequest(string Label, string? Color = null);
 
 public record FrontStatusUpdateRequest(
-    string? Label,
-    string? Color,
-    bool? IsHidden
-);
+    string? Label = null, string? Color = null, bool? IsHidden = null);
 
-// ── Member DTOs ─────────────────────────────────────────────────────────────
-
+// ── Member (native) ───────────────────────────────────────────────────
 public record MemberResponse(
-    Guid Id,
-    string Name,
-    string? DisplayName,
-    string? Pronouns,
-    string? Color,
-    string? AvatarPath,
-    string? Role,
-    string? Description,
-    bool IsPrivate,
-    bool IsPinned,
-    bool IsArchived,
-    bool IsUntracked,
-    List<string> ExtraImages,
-    bool PreventFrontNotification,
-    bool ReceiveBoardNotifications,
-    string? SpMemberId,
-    List<Guid> ParentIds,
-    DateTime CreatedAt,
-    DateTime UpdatedAt
-);
+    Guid Id, string Name, string? DisplayName, string? Pronouns,
+    string? Color, string? Role, string? Description, string? AvatarPath,
+    bool IsPrivate, bool IsPinned, bool IsArchived, bool IsUntracked,
+    bool PreventFrontNotification, bool ReceiveBoardNotifications,
+    List<string> ExtraImages, string? SpMemberId,
+    MemberStatus Status, List<Guid> ParentIds, List<Guid> GroupIds,
+    DateTime CreatedAt, DateTime UpdatedAt);
 
 public record MemberCreateRequest(
-    string Name,
-    string? DisplayName,
-    string? Pronouns,
-    string? Color,
-    string? Role,
-    string? Description,
-    bool? IsPrivate,
-    bool? IsPinned,
-    bool? IsArchived,
-    bool? IsUntracked,
-    List<string>? ExtraImages,
-    bool? PreventFrontNotification,
-    bool? ReceiveBoardNotifications,
-    string? SpMemberId,
-    List<Guid>? ParentIds
-);
+    string Name, string? DisplayName = null, string? Pronouns = null,
+    string? Color = null, string? Role = null, string? Description = null,
+    bool IsPrivate = false);
 
 public record MemberUpdateRequest(
-    string? Name,
-    string? DisplayName,
-    string? Pronouns,
-    string? Color,
-    string? Role,
-    string? Description,
-    bool? IsPrivate,
-    bool? IsPinned,
-    bool? IsArchived,
-    bool? IsUntracked,
-    List<string>? ExtraImages,
-    bool? PreventFrontNotification,
-    bool? ReceiveBoardNotifications,
-    string? SpMemberId,
-    List<Guid>? ParentIds
-);
+    string? Name = null, string? DisplayName = null, string? Pronouns = null,
+    string? Color = null, string? Role = null, string? Description = null,
+    bool? IsPrivate = null, bool? IsPinned = null, bool? IsArchived = null,
+    bool? IsUntracked = null, bool? PreventFrontNotification = null,
+    bool? ReceiveBoardNotifications = null, List<string>? ExtraImages = null,
+    string? SpMemberId = null, MemberStatus? Status = null,
+    List<Guid>? ParentIds = null);
 
-// ── BoardMessage DTOs ───────────────────────────────────────────────────────
-
+// ── BoardMessage ──────────────────────────────────────────────────────
 public record BoardMessageResponse(
-    Guid Id,
-    string AuthorName,
-    string Content,
-    DateTime CreatedAt
-);
+    Guid Id, Guid MemberId, string AuthorName, string Content, DateTime CreatedAt);
 
-public record BoardMessageCreateRequest(
-    string AuthorName,
-    string Content
-);
+public record BoardMessageCreateRequest(string AuthorName, string Content);
 
-// ── MemberNote DTOs ─────────────────────────────────────────────────────────
-
+// ── MemberNote ────────────────────────────────────────────────────────
 public record MemberNoteResponse(
-    Guid Id,
-    string? Title,
-    string Content,
-    bool IsPinned,
-    bool IsLocked,
-    DateTime CreatedAt,
-    DateTime UpdatedAt
-);
+    Guid Id, Guid MemberId, string? Title, string Content,
+    bool IsPinned, bool IsLocked, DateTime CreatedAt, DateTime UpdatedAt);
 
-public record MemberNoteCreateRequest(
-    string Content,
-    string? Title
-);
+public record MemberNoteCreateRequest(string Content, string? Title = null);
 
 public record MemberNoteUpdateRequest(
-    string? Content,
-    string? Title,
-    bool? IsPinned,
-    bool? IsLocked
-);
+    string? Title = null, string? Content = null,
+    bool? IsPinned = null, bool? IsLocked = null);
