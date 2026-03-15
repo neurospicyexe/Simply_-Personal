@@ -71,3 +71,54 @@ public record TokenCreateRequest(
 
 // ── Share (token-holder endpoints) ───────────────────────────────────
 public record ShareBoardPostRequest(string AuthorName, string Content);
+
+// ── CustomField (definitions) ─────────────────────────────────────────
+public record CustomFieldResponse(
+    Guid Id, string Label, FieldType FieldType, int SortOrder,
+    DateTime CreatedAt, DateTime UpdatedAt, DateTime? DeletedAt);
+
+public record CustomFieldCreateRequest(
+    string Label,
+    FieldType? FieldType,   // nullable so missing JSON field returns 400, not silently default to Text
+    int SortOrder = 0);
+
+public record CustomFieldUpdateRequest(
+    string? Label = null,
+    int? SortOrder = null,
+    FieldType? FieldType = null); // FieldType present → 400 (immutable)
+
+// ── CustomFieldValue ──────────────────────────────────────────────────
+public record CustomFieldValueResponse(
+    Guid Id, Guid FieldId, Guid MemberId,
+    string Value, MemberPrivacy PrivacyTier,
+    DateTime CreatedAt, DateTime UpdatedAt);
+
+// Used in GET /api/members/{id}/fields — one entry per field definition
+public record MemberFieldEntry(
+    Guid FieldId, string Label, FieldType FieldType, int SortOrder,
+    string? Value, MemberPrivacy PrivacyTier);  // Value null = not set
+
+public record CustomFieldValueUpsertRequest(
+    string Value,
+    MemberPrivacy PrivacyTier = MemberPrivacy.Public);
+
+// Slim DTO used in GET /share/{token} member response
+public record SharedCustomFieldDto(string Label, FieldType FieldType, string Value);
+
+// ── JournalEntry ──────────────────────────────────────────────────────
+public record JournalEntryResponse(
+    Guid Id, string? Title, string Content, bool IsPrivate,
+    DateTime CreatedAt, DateTime UpdatedAt);
+
+public record JournalCreateRequest(
+    string Content,
+    string? Title = null,
+    bool IsPrivate = true);
+
+public record JournalUpdateRequest(
+    string? Title = null,
+    string? Content = null,
+    bool? IsPrivate = null);
+
+// Slim DTO for GET /share/{token}/journals
+public record SharedJournalDto(Guid Id, string? Title, string Content, DateTime CreatedAt);
