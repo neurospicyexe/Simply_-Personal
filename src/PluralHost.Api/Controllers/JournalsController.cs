@@ -12,6 +12,8 @@ namespace PluralHost.Api.Controllers;
 [Route("api/journals")]
 public class JournalsController(PluralHostContext context) : ControllerBase
 {
+    private const int MaxJournalPageSize = 500;
+
     private static JournalEntryResponse ToResponse(JournalEntry e) => new(
         e.Id, e.Title, e.Content, e.IsPrivate, e.CreatedAt, e.UpdatedAt);
 
@@ -20,7 +22,7 @@ public class JournalsController(PluralHostContext context) : ControllerBase
     {
         var entries = await context.JournalEntries
             .OrderByDescending(e => e.CreatedAt)
-            .Take(500)
+            .Take(MaxJournalPageSize)
             .ToListAsync();
         return Ok(entries.Select(ToResponse));
     }
@@ -39,7 +41,7 @@ public class JournalsController(PluralHostContext context) : ControllerBase
         };
         context.JournalEntries.Add(entry);
         await context.SaveChangesAsync();
-        return Ok(ToResponse(entry));
+        return CreatedAtAction(nameof(PatchAsync), new { id = entry.Id }, ToResponse(entry));
     }
 
     [HttpPatch("{id:guid}")]
@@ -64,6 +66,6 @@ public class JournalsController(PluralHostContext context) : ControllerBase
 
         entry.SoftDelete();
         await context.SaveChangesAsync();
-        return Ok();
+        return NoContent();
     }
 }

@@ -27,7 +27,7 @@ public class JournalsControllerTests : IDisposable
     public async Task Create_DefaultsIsPrivateToTrue()
     {
         var result = await _controller.CreateAsync(
-            new JournalCreateRequest("Today was okay.")) as OkObjectResult;
+            new JournalCreateRequest("Today was okay.")) as CreatedAtActionResult;
         var response = result!.Value as JournalEntryResponse;
 
         Assert.True(response!.IsPrivate);
@@ -45,7 +45,7 @@ public class JournalsControllerTests : IDisposable
     public async Task Create_WithTitle_StoresTitle()
     {
         var result = await _controller.CreateAsync(
-            new JournalCreateRequest("Body", "My Title")) as OkObjectResult;
+            new JournalCreateRequest("Body", "My Title")) as CreatedAtActionResult;
         var response = result!.Value as JournalEntryResponse;
 
         Assert.Equal("My Title", response!.Title);
@@ -92,7 +92,7 @@ public class JournalsControllerTests : IDisposable
         await _controller.PatchAsync(entry.Id,
             new JournalUpdateRequest(IsPrivate: false));
 
-        var updated = await _context.JournalEntries.FirstAsync();
+        var updated = await _context.JournalEntries.FirstAsync(e => e.Id == entry.Id);
         Assert.False(updated.IsPrivate);
     }
 
@@ -106,7 +106,7 @@ public class JournalsControllerTests : IDisposable
         await _controller.PatchAsync(entry.Id,
             new JournalUpdateRequest(Content: "Updated"));
 
-        var updated = await _context.JournalEntries.FirstAsync();
+        var updated = await _context.JournalEntries.FirstAsync(e => e.Id == entry.Id);
         Assert.Equal("Updated", updated.Content);
     }
 
@@ -124,6 +124,21 @@ public class JournalsControllerTests : IDisposable
             .FirstAsync();
 
         Assert.NotNull(inDb.DeletedAt);
+    }
+
+    [Fact]
+    public async Task Patch_UnknownId_Returns404()
+    {
+        var result = await _controller.PatchAsync(Guid.NewGuid(),
+            new JournalUpdateRequest(Content: "Anything"));
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_UnknownId_Returns404()
+    {
+        var result = await _controller.DeleteAsync(Guid.NewGuid());
+        Assert.IsType<NotFoundResult>(result);
     }
 
     public void Dispose() => _context.Dispose();
