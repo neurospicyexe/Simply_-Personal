@@ -107,5 +107,40 @@ public class MembersControllerTests : IDisposable
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
+    [Fact]
+    public async Task Create_DefaultPrivacyTier_IsPublic()
+    {
+        var result = await _controller.CreateAsync(
+            new MemberCreateRequest("Ash")) as OkObjectResult;
+        var member = result!.Value as MemberResponse;
+        Assert.Equal(MemberPrivacy.Public, member!.PrivacyTier);
+    }
+
+    [Fact]
+    public async Task Update_PrivacyTier_Persists()
+    {
+        var created = _context.Members.Add(new Member { Name = "Ash" });
+        await _context.SaveChangesAsync();
+
+        await _controller.UpdateAsync(created.Entity.Id,
+            new MemberUpdateRequest(PrivacyTier: MemberPrivacy.Trusted));
+
+        var updated = await _context.Members.FindAsync(created.Entity.Id);
+        Assert.Equal(MemberPrivacy.Trusted, updated!.PrivacyTier);
+    }
+
+    [Fact]
+    public async Task Update_AllowsBoardPosting_Persists()
+    {
+        var created = _context.Members.Add(new Member { Name = "Ash" });
+        await _context.SaveChangesAsync();
+
+        await _controller.UpdateAsync(created.Entity.Id,
+            new MemberUpdateRequest(AllowsBoardPosting: false));
+
+        var updated = await _context.Members.FindAsync(created.Entity.Id);
+        Assert.False(updated!.AllowsBoardPosting);
+    }
+
     public void Dispose() => _context.Dispose();
 }

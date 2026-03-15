@@ -17,8 +17,9 @@ public class MembersController(
 {
     private static MemberResponse ToResponse(Member m) => new(
         m.Id, m.Name, m.DisplayName, m.Pronouns, m.Color, m.Role,
-        m.Description, m.AvatarPath, m.PrivacyTier == MemberPrivacy.Private, m.IsPinned, m.IsArchived,
-        m.IsUntracked, m.PreventFrontNotification, m.ReceiveBoardNotifications,
+        m.Description, m.AvatarPath, m.PrivacyTier, m.AllowsBoardPosting,
+        m.IsPinned, m.IsArchived, m.IsUntracked,
+        m.PreventFrontNotification, m.ReceiveBoardNotifications,
         m.ExtraImages, m.SpMemberId, m.Status, m.ParentIds,
         m.Groups.Select(g => g.Id).ToList(),
         m.CreatedAt, m.UpdatedAt);
@@ -57,7 +58,7 @@ public class MembersController(
             Color = body.Color,
             Role = body.Role,
             Description = body.Description,
-            PrivacyTier = body.IsPrivate ? MemberPrivacy.Private : MemberPrivacy.Public
+            PrivacyTier = body.PrivacyTier
         };
         context.Members.Add(member);
         await context.SaveChangesAsync();
@@ -87,7 +88,8 @@ public class MembersController(
         if (body.Color is not null)                       member.Color = body.Color;
         if (body.Role is not null)                        member.Role = body.Role;
         if (body.Description is not null)                 member.Description = body.Description;
-        if (body.IsPrivate is not null)                   member.PrivacyTier = body.IsPrivate.Value ? MemberPrivacy.Private : MemberPrivacy.Public;
+        if (body.PrivacyTier is not null)                 member.PrivacyTier = body.PrivacyTier.Value;
+        if (body.AllowsBoardPosting is not null)          member.AllowsBoardPosting = body.AllowsBoardPosting.Value;
         if (body.IsPinned is not null)                    member.IsPinned = body.IsPinned.Value;
         if (body.IsArchived is not null)                  member.IsArchived = body.IsArchived.Value;
         if (body.IsUntracked is not null)                 member.IsUntracked = body.IsUntracked.Value;

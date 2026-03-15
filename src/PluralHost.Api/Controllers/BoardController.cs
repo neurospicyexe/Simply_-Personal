@@ -17,7 +17,7 @@ public class BoardController(
     IGatekeeperService gatekeeper) : ControllerBase
 {
     private static BoardMessageResponse ToResponse(BoardMessage m) =>
-        new(m.Id, m.MemberId, m.AuthorName, m.Content, m.CreatedAt);
+        new(m.Id, m.MemberId, m.AuthorName, m.Content, m.TokenId, m.CreatedAt);
 
     [HttpGet]
     public async Task<IActionResult> ListAsync(Guid memberId)
