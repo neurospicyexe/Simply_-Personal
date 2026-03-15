@@ -17,7 +17,8 @@ public record FrontStatusUpdateRequest(
 public record MemberResponse(
     Guid Id, string Name, string? DisplayName, string? Pronouns,
     string? Color, string? Role, string? Description, string? AvatarPath,
-    bool IsPrivate, bool IsPinned, bool IsArchived, bool IsUntracked,
+    MemberPrivacy PrivacyTier, bool AllowsBoardPosting,
+    bool IsPinned, bool IsArchived, bool IsUntracked,
     bool PreventFrontNotification, bool ReceiveBoardNotifications,
     List<string> ExtraImages, string? SpMemberId,
     MemberStatus Status, List<Guid> ParentIds, List<Guid> GroupIds,
@@ -26,12 +27,13 @@ public record MemberResponse(
 public record MemberCreateRequest(
     string Name, string? DisplayName = null, string? Pronouns = null,
     string? Color = null, string? Role = null, string? Description = null,
-    bool IsPrivate = false);
+    MemberPrivacy PrivacyTier = MemberPrivacy.Public);
 
 public record MemberUpdateRequest(
     string? Name = null, string? DisplayName = null, string? Pronouns = null,
     string? Color = null, string? Role = null, string? Description = null,
-    bool? IsPrivate = null, bool? IsPinned = null, bool? IsArchived = null,
+    MemberPrivacy? PrivacyTier = null, bool? AllowsBoardPosting = null,
+    bool? IsPinned = null, bool? IsArchived = null,
     bool? IsUntracked = null, bool? PreventFrontNotification = null,
     bool? ReceiveBoardNotifications = null, List<string>? ExtraImages = null,
     string? SpMemberId = null, MemberStatus? Status = null,
@@ -39,7 +41,8 @@ public record MemberUpdateRequest(
 
 // ── BoardMessage ──────────────────────────────────────────────────────
 public record BoardMessageResponse(
-    Guid Id, Guid MemberId, string AuthorName, string Content, DateTime CreatedAt);
+    Guid Id, Guid MemberId, string AuthorName, string Content,
+    string? TokenId, DateTime CreatedAt);
 
 public record BoardMessageCreateRequest(string AuthorName, string Content);
 
@@ -53,3 +56,18 @@ public record MemberNoteCreateRequest(string Content, string? Title = null);
 public record MemberNoteUpdateRequest(
     string? Title = null, string? Content = null,
     bool? IsPinned = null, bool? IsLocked = null);
+
+// ── AccessToken ───────────────────────────────────────────────────────
+public record TokenResponse(
+    string TokenValue, string? Label, TokenPermission Permission,
+    bool AllowsBoardPosting, DateTime? ExpiresAt,
+    DateTime? RevokedAt, DateTime CreatedAt);
+
+public record TokenCreateRequest(
+    string Label,
+    TokenPermission Permission,
+    bool AllowsBoardPosting = false,
+    DateTime? ExpiresAt = null);
+
+// ── Share (token-holder endpoints) ───────────────────────────────────
+public record ShareBoardPostRequest(string AuthorName, string Content);
