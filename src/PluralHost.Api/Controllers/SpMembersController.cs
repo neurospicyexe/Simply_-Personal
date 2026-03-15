@@ -78,7 +78,14 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
         if (body.Desc is not null) member.Description = body.Desc;
         if (body.Pronouns is not null) member.Pronouns = body.Pronouns;
         if (body.Color is not null) member.Color = body.Color;
-        if (body.Private is not null) member.PrivacyTier = body.Private.Value ? MemberPrivacy.Private : MemberPrivacy.Public;
+        if (body.Private is not null)
+        {
+            if (body.Private.Value)
+                member.PrivacyTier = MemberPrivacy.Private;
+            else if (member.PrivacyTier == MemberPrivacy.Private)
+                member.PrivacyTier = MemberPrivacy.Public;
+            // else: Private=false on a non-Private tier → leave unchanged (SP has no intermediate tiers)
+        }
         if (body.Archived is not null) member.IsArchived = body.Archived.Value;
 
         await context.SaveChangesAsync();

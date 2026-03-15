@@ -125,5 +125,79 @@ public class SpMembersControllerTests : IDisposable
         Assert.IsType<NotFoundResult>(result);
     }
 
+    [Fact]
+    public async Task Create_WithPrivateTrue_SetsPrivacyTierToPrivate()
+    {
+        var result = await _controller.CreateAsync(
+            new SpMemberCreateRequest("Ash", Private: true)) as OkObjectResult;
+
+        var id = Guid.Parse(result!.Value!.ToString()!);
+        var member = await _context.Members.FindAsync(id);
+        Assert.Equal(MemberPrivacy.Private, member!.PrivacyTier);
+    }
+
+    [Fact]
+    public async Task Create_WithPrivateFalse_SetsPrivacyTierToPublic()
+    {
+        var result = await _controller.CreateAsync(
+            new SpMemberCreateRequest("Ash", Private: false)) as OkObjectResult;
+
+        var id = Guid.Parse(result!.Value!.ToString()!);
+        var member = await _context.Members.FindAsync(id);
+        Assert.Equal(MemberPrivacy.Public, member!.PrivacyTier);
+    }
+
+    [Fact]
+    public async Task Update_PrivateFalse_OnFriendTier_LeavesUnchanged()
+    {
+        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Friend };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+
+        await _controller.UpdateAsync(m.Id.ToString(),
+            new SpMemberUpdateRequest { Private = false });
+
+        var updated = await _context.Members.FindAsync(m.Id);
+        Assert.Equal(MemberPrivacy.Friend, updated!.PrivacyTier);
+    }
+
+    [Fact]
+    public async Task Update_PrivateFalse_OnPrivateTier_SetsToPublic()
+    {
+        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Private };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+
+        await _controller.UpdateAsync(m.Id.ToString(),
+            new SpMemberUpdateRequest { Private = false });
+
+        var updated = await _context.Members.FindAsync(m.Id);
+        Assert.Equal(MemberPrivacy.Public, updated!.PrivacyTier);
+    }
+
+    [Fact]
+    public async Task ToEnvelope_PrivateTierMember_ReturnsPrivateTrue()
+    {
+        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Private };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+
+        var result = await _controller.GetAsync("owner", m.Id.ToString()) as OkObjectResult;
+        var envelope = result!.Value as SpEnvelope<SpMemberContent>;
+        Assert.True(envelope!.Content.Private);
+    }
+
+    [Fact]
+    public async Task ToEnvelope_FriendTierMember_ReturnsPrivateFalse()
+    {
+        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Friend };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+
+        var result = await _controller.GetAsync("owner", m.Id.ToString()) as OkObjectResult;
+        var envelope = result!.Value as SpEnvelope<SpMemberContent>;
+        Assert.False(envelope!.Content.Private);
+    }
+
     public void Dispose() => _context.Dispose();
 }
