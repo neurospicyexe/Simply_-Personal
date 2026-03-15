@@ -15,6 +15,7 @@ public class BoardControllerTests : IDisposable
 {
     private readonly PluralHostContext _context;
     private readonly Mock<IGatekeeperService> _gatekeeper;
+    private readonly Mock<IGhostModeService> _ghostMode;
     private readonly BoardController _controller;
     private readonly Member _member;
 
@@ -29,7 +30,9 @@ public class BoardControllerTests : IDisposable
         _context.Members.Add(_member);
         _context.SaveChanges();
         _gatekeeper = new Mock<IGatekeeperService>();
-        _controller = new BoardController(_context, _gatekeeper.Object);
+        _ghostMode = new Mock<IGhostModeService>();
+        _ghostMode.Setup(g => g.IsFrozenAsync()).ReturnsAsync(false);
+        _controller = new BoardController(_context, _gatekeeper.Object, _ghostMode.Object);
     }
 
     [Fact]
@@ -98,6 +101,35 @@ public class BoardControllerTests : IDisposable
 
         var result = await _controller.DeleteAsync(_member.Id, msg.Id, "bad");
         Assert.IsType<ForbidResult>(result);
+    }
+
+    [Fact]
+    public async Task Post_WhenFrozen_ReturnsOkSilently()
+    {
+        _ghostMode.Setup(g => g.IsFrozenAsync()).ReturnsAsync(true);
+        var m = new Member { Name = "Ash" };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+
+        var result = await _controller.PostAsync(m.Id,
+            new BoardMessageCreateRequest("Author", "Hello"));
+
+        Assert.IsType<OkResult>(result);
+        Assert.Empty(_context.BoardMessages.IgnoreQueryFilters().ToList());
+    }
+
+    [Fact]
+    public async Task Post_OwnerPost_HasNullTokenId()
+    {
+        var m = new Member { Name = "Ash" };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+
+        var result = await _controller.PostAsync(m.Id,
+            new BoardMessageCreateRequest("Ash", "Hello")) as OkObjectResult;
+        var response = result!.Value as BoardMessageResponse;
+
+        Assert.Null(response!.TokenId);
     }
 
     public void Dispose() => _context.Dispose();

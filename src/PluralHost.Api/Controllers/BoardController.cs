@@ -14,7 +14,8 @@ namespace PluralHost.Api.Controllers;
 [Route("api/members/{memberId:guid}/board")]
 public class BoardController(
     PluralHostContext context,
-    IGatekeeperService gatekeeper) : ControllerBase
+    IGatekeeperService gatekeeper,
+    IGhostModeService ghostMode) : ControllerBase
 {
     private static BoardMessageResponse ToResponse(BoardMessage m) =>
         new(m.Id, m.MemberId, m.AuthorName, m.Content, m.TokenId, m.CreatedAt);
@@ -33,6 +34,8 @@ public class BoardController(
     public async Task<IActionResult> PostAsync(Guid memberId,
         [FromBody] BoardMessageCreateRequest body)
     {
+        if (await ghostMode.IsFrozenAsync()) return Ok();
+
         if (string.IsNullOrWhiteSpace(body.Content))
             return BadRequest(new { error = "Content is required" });
         if (string.IsNullOrWhiteSpace(body.AuthorName))
@@ -45,7 +48,8 @@ public class BoardController(
         {
             MemberId = memberId,
             AuthorName = body.AuthorName.Trim(),
-            Content = body.Content.Trim()
+            Content = body.Content.Trim(),
+            TokenId = null   // owner post
         };
         context.BoardMessages.Add(msg);
         await context.SaveChangesAsync();
