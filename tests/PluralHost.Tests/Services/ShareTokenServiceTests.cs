@@ -26,7 +26,7 @@ public class ShareTokenServiceTests : IDisposable
     {
         var token = await _service.CreateTokenAsync(
             label: "Partner",
-            permission: TokenPermission.ReadOnly,
+            permission: TokenPermission.Public,
             expiresAt: DateTime.UtcNow.AddDays(30));
 
         Assert.NotEmpty(token.TokenValue);
@@ -35,15 +35,15 @@ public class ShareTokenServiceTests : IDisposable
     [Fact]
     public async Task CreateTwoTokens_HaveDifferentValues()
     {
-        var t1 = await _service.CreateTokenAsync("A", TokenPermission.ReadOnly, null);
-        var t2 = await _service.CreateTokenAsync("B", TokenPermission.ReadOnly, null);
+        var t1 = await _service.CreateTokenAsync("A", TokenPermission.Public, null);
+        var t2 = await _service.CreateTokenAsync("B", TokenPermission.Public, null);
         Assert.NotEqual(t1.TokenValue, t2.TokenValue);
     }
 
     [Fact]
     public async Task RevokeToken_SetsRevokedAt()
     {
-        var token = await _service.CreateTokenAsync("Partner", TokenPermission.ReadOnly, null);
+        var token = await _service.CreateTokenAsync("Partner", TokenPermission.Public, null);
         await _service.RevokeTokenAsync(token.TokenValue);
 
         var updated = await _context.AccessTokens

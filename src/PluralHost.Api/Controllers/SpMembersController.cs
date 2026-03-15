@@ -21,7 +21,7 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
                 Pronouns: m.Pronouns,
                 Color: m.Color,
                 AvatarUrl: null,      // avatars served via /api/media/ — no direct URL
-                Private: m.IsPrivate,
+                Private: m.PrivacyTier == MemberPrivacy.Private,
                 Archived: m.IsArchived
             ));
 
@@ -57,7 +57,7 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
             Description = body.Desc,
             Pronouns = body.Pronouns,
             Color = body.Color,
-            IsPrivate = body.Private
+            PrivacyTier = body.Private ? MemberPrivacy.Private : MemberPrivacy.Public
         };
         context.Members.Add(member);
         await context.SaveChangesAsync();
@@ -78,7 +78,7 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
         if (body.Desc is not null) member.Description = body.Desc;
         if (body.Pronouns is not null) member.Pronouns = body.Pronouns;
         if (body.Color is not null) member.Color = body.Color;
-        if (body.Private is not null) member.IsPrivate = body.Private.Value;
+        if (body.Private is not null) member.PrivacyTier = body.Private.Value ? MemberPrivacy.Private : MemberPrivacy.Public;
         if (body.Archived is not null) member.IsArchived = body.Archived.Value;
 
         await context.SaveChangesAsync();

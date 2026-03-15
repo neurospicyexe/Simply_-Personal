@@ -32,7 +32,7 @@ public class ShareController(
         {
             var front = await context.FrontHistory
                 .Include(f => f.Member)
-                .Where(f => f.FrontEnd == null && f.Member != null && !f.Member.IsPrivate)
+                .Where(f => f.FrontEnd == null && f.Member != null && f.Member.PrivacyTier != MemberPrivacy.Private)
                 .Select(f => new { f.Member!.Name, f.Member.DisplayName, f.Member.Color })
                 .ToListAsync();
             return Ok(new { currentFront = front });
@@ -40,13 +40,13 @@ public class ShareController(
 
         // ReadOnly: return public members + current front
         var members = await context.Members
-            .Where(m => !m.IsPrivate)
+            .Where(m => m.PrivacyTier != MemberPrivacy.Private)
             .Select(m => new { m.Name, m.DisplayName, m.Pronouns, m.Color, m.Status })
             .ToListAsync();
 
         var currentFront = await context.FrontHistory
             .Include(f => f.Member)
-            .Where(f => f.FrontEnd == null && f.Member != null && !f.Member.IsPrivate)
+            .Where(f => f.FrontEnd == null && f.Member != null && f.Member.PrivacyTier != MemberPrivacy.Private)
             .Select(f => new { f.Member!.Name, f.Member.DisplayName })
             .ToListAsync();
 

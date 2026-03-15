@@ -17,7 +17,7 @@ public class MembersController(
 {
     private static MemberResponse ToResponse(Member m) => new(
         m.Id, m.Name, m.DisplayName, m.Pronouns, m.Color, m.Role,
-        m.Description, m.AvatarPath, m.IsPrivate, m.IsPinned, m.IsArchived,
+        m.Description, m.AvatarPath, m.PrivacyTier == MemberPrivacy.Private, m.IsPinned, m.IsArchived,
         m.IsUntracked, m.PreventFrontNotification, m.ReceiveBoardNotifications,
         m.ExtraImages, m.SpMemberId, m.Status, m.ParentIds,
         m.Groups.Select(g => g.Id).ToList(),
@@ -57,7 +57,7 @@ public class MembersController(
             Color = body.Color,
             Role = body.Role,
             Description = body.Description,
-            IsPrivate = body.IsPrivate
+            PrivacyTier = body.IsPrivate ? MemberPrivacy.Private : MemberPrivacy.Public
         };
         context.Members.Add(member);
         await context.SaveChangesAsync();
@@ -87,7 +87,7 @@ public class MembersController(
         if (body.Color is not null)                       member.Color = body.Color;
         if (body.Role is not null)                        member.Role = body.Role;
         if (body.Description is not null)                 member.Description = body.Description;
-        if (body.IsPrivate is not null)                   member.IsPrivate = body.IsPrivate.Value;
+        if (body.IsPrivate is not null)                   member.PrivacyTier = body.IsPrivate.Value ? MemberPrivacy.Private : MemberPrivacy.Public;
         if (body.IsPinned is not null)                    member.IsPinned = body.IsPinned.Value;
         if (body.IsArchived is not null)                  member.IsArchived = body.IsArchived.Value;
         if (body.IsUntracked is not null)                 member.IsUntracked = body.IsUntracked.Value;
