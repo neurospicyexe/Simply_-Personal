@@ -82,6 +82,37 @@ public class ShareController(
         return Ok(new { members, currentFront = visibleFront });
     }
 
+    // GET /share/{token}/journals
+    [HttpGet("{token}/journals")]
+    public async Task<IActionResult> GetSharedJournalsAsync(string token)
+    {
+        // 1. Ghost Mode FIRST — before any token DB lookup
+        if (await ghostMode.IsFrozenAsync())
+            return Ok(Array.Empty<object>());
+
+        // 2. Token validation
+        var result = await tokenService.ResolveTokenAsync(token);
+        if (result.Status == TokenResolveStatus.Expired)
+            return Unauthorized(new { error = "Token has expired" });
+        if (result.Status != TokenResolveStatus.Valid)
+            return Unauthorized(new { error = "Token is invalid" });
+
+        var accessToken = result.Token!;
+
+        // 3. ReadFrontOnly tokens cannot access journals
+        if (accessToken.Permission == TokenPermission.ReadFrontOnly)
+            return StatusCode(403, new { error = "Not permitted" });
+
+        // 4. Return public journals ordered by CreatedAt DESC
+        var journals = await context.JournalEntries
+            .Where(j => !j.IsPrivate)
+            .OrderByDescending(j => j.CreatedAt)
+            .Select(j => new SharedJournalDto(j.Id, j.Title, j.Content, j.CreatedAt))
+            .ToListAsync();
+
+        return Ok(journals);
+    }
+
     // POST /share/{token}/board/{memberId}
     [HttpPost("{token}/board/{memberId:guid}")]
     public async Task<IActionResult> PostToBoardAsync(

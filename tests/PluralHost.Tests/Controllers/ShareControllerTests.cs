@@ -354,5 +354,76 @@ public class ShareControllerTests : IDisposable
         Assert.Empty(customFieldsList);
     }
 
+    // ── GET /share/{token}/journals ───────────────────────────────────
+
+    [Fact]
+    public async Task GetSharedJournals_GhostMode_Returns200Empty()
+    {
+        _ghostMode.Setup(g => g.IsFrozenAsync()).ReturnsAsync(true);
+        // tokenService NOT set up — would throw if called
+        var result = await _controller.GetSharedJournalsAsync("anytoken") as OkObjectResult;
+        Assert.NotNull(result);
+        var items = result!.Value as System.Collections.IEnumerable;
+        Assert.NotNull(items);
+        Assert.Empty(items!.Cast<object>());
+        _tokenService.Verify(s => s.ResolveTokenAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSharedJournals_InvalidToken_Returns401()
+    {
+        _tokenService.Setup(s => s.ResolveTokenAsync("bogus"))
+            .ReturnsAsync(new TokenResolveResult(null, TokenResolveStatus.NotFound));
+
+        var result = await _controller.GetSharedJournalsAsync("bogus") as UnauthorizedObjectResult;
+        Assert.NotNull(result);
+        Assert.Contains("invalid", result!.Value!.ToString()!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task GetSharedJournals_ReadFrontOnlyToken_Returns403()
+    {
+        var token = MakeToken(TokenPermission.ReadFrontOnly);
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(token, TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedJournalsAsync("t") as ObjectResult;
+        Assert.NotNull(result);
+        Assert.Equal(403, result!.StatusCode);
+        Assert.Contains("Not permitted", result.Value!.ToString()!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task GetSharedJournals_ValidToken_ReturnsPublicJournals()
+    {
+        _context.JournalEntries.AddRange(
+            new JournalEntry { Title = "Public Entry", Content = "visible", IsPrivate = false },
+            new JournalEntry { Title = "Private Entry", Content = "hidden", IsPrivate = true });
+        await _context.SaveChangesAsync();
+
+        var token = MakeToken(TokenPermission.Public);
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(token, TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedJournalsAsync("t") as OkObjectResult;
+        Assert.NotNull(result);
+
+        var journals = result!.Value as IList<SharedJournalDto>;
+        Assert.NotNull(journals);
+        Assert.Single(journals!);
+
+        var entry = journals![0];
+        Assert.Equal("Public Entry", entry.Title);
+        Assert.Equal("visible", entry.Content);
+        // isPrivate field must NOT be present on SharedJournalDto (it's a record with only 4 properties)
+        var props = typeof(SharedJournalDto).GetProperties().Select(p => p.Name).ToList();
+        Assert.Contains("Id", props);
+        Assert.Contains("Title", props);
+        Assert.Contains("Content", props);
+        Assert.Contains("CreatedAt", props);
+        Assert.DoesNotContain("IsPrivate", props);
+        Assert.DoesNotContain("UpdatedAt", props);
+    }
+
     public void Dispose() => _context.Dispose();
 }
