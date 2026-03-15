@@ -17,6 +17,9 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
     public DbSet<FrontStatus> FrontStatuses => Set<FrontStatus>();
     public DbSet<BoardMessage> BoardMessages => Set<BoardMessage>();
     public DbSet<MemberNote> MemberNotes => Set<MemberNote>();
+    public DbSet<CustomField> CustomFields => Set<CustomField>();
+    public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
+    public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -115,6 +118,36 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
         // FrontStatus: soft-delete only (NOT Ghost Mode — it's a config picklist)
         modelBuilder.Entity<FrontStatus>()
             .HasQueryFilter(fs => fs.DeletedAt == null);
+
+        // CustomField + CustomFieldValue: soft-delete only (NOT Ghost Mode — follow FrontStatus pattern)
+        modelBuilder.Entity<CustomField>()
+            .HasQueryFilter(cf => cf.DeletedAt == null);
+
+        modelBuilder.Entity<CustomFieldValue>()
+            .HasQueryFilter(cfv => cfv.DeletedAt == null);
+
+        // CustomFieldValue: unique constraint on (FieldId, MemberId)
+        // Note: covers soft-deleted rows — upsert must use IgnoreQueryFilters() to find them
+        modelBuilder.Entity<CustomFieldValue>()
+            .HasIndex(cfv => new { cfv.FieldId, cfv.MemberId })
+            .IsUnique();
+
+        // CustomFieldValue FKs — no cascade delete (preserve values if field/member soft-deleted)
+        modelBuilder.Entity<CustomFieldValue>()
+            .HasOne(cfv => cfv.Field)
+            .WithMany(cf => cf.Values)
+            .HasForeignKey(cfv => cfv.FieldId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<CustomFieldValue>()
+            .HasOne(cfv => cfv.Member)
+            .WithMany()
+            .HasForeignKey(cfv => cfv.MemberId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // JournalEntry: soft-delete only
+        modelBuilder.Entity<JournalEntry>()
+            .HasQueryFilter(j => j.DeletedAt == null);
     }
 
     private static FrontStatus Seed(Guid id, string label) => new()
