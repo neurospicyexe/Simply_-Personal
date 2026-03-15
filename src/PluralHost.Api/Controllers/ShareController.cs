@@ -93,9 +93,9 @@ public class ShareController(
         // 2. Token validation
         var result = await tokenService.ResolveTokenAsync(token);
         if (result.Status == TokenResolveStatus.Expired)
-            return Unauthorized(new { error = "Token has expired" });
+            return Unauthorized(new { error = "Token has expired." });
         if (result.Status != TokenResolveStatus.Valid)
-            return Unauthorized(new { error = "Token is invalid" });
+            return Unauthorized(new { error = "Token is invalid." });
 
         var accessToken = result.Token!;
 
