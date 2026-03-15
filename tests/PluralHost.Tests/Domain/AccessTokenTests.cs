@@ -66,4 +66,16 @@ public class AccessTokenTests
     {
         Assert.Equal(0, (int)TokenPermission.ReadFrontOnly);
     }
+
+    [Fact]
+    public void TokenPermission_FriendHasIntValue2()
+    {
+        Assert.Equal(2, (int)TokenPermission.Friend);
+    }
+
+    [Fact]
+    public void TokenPermission_TrustedHasIntValue3()
+    {
+        Assert.Equal(3, (int)TokenPermission.Trusted);
+    }
 }

@@ -13,10 +13,10 @@ public class MemberTests
     }
 
     [Fact]
-    public void NewMember_DefaultPrivacyTier_IsNotPrivate()
+    public void MemberPrivacy_PrivateHasOrdinalValue3()
     {
-        var member = new Member { Name = "Test" };
-        Assert.NotEqual(MemberPrivacy.Private, member.PrivacyTier);
+        // Load-bearing: ITokenVisibilityService uses ordinal comparison (int)tier < (int)permission
+        Assert.Equal(3, (int)MemberPrivacy.Private);
     }
 
     [Fact]
