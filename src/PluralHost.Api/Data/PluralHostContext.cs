@@ -141,7 +141,7 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
 
         modelBuilder.Entity<CustomFieldValue>()
             .HasOne(cfv => cfv.Member)
-            .WithMany()
+            .WithMany(m => m.CustomFieldValues)
             .HasForeignKey(cfv => cfv.MemberId)
             .OnDelete(DeleteBehavior.NoAction);
 

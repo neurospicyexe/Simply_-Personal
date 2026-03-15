@@ -45,10 +45,27 @@ public class ShareController(
             return Ok(new { currentFront = front });
         }
 
-        var members = await visibility
+        var rawMembers = await visibility
             .FilterByPermission(context.Members, accessToken.Permission)
-            .Select(m => new { m.Name, m.DisplayName, m.Pronouns, m.Color, m.Status })
+            .Include(m => m.CustomFieldValues)
+                .ThenInclude(cfv => cfv.Field)
             .ToListAsync();
+
+        var members = rawMembers.Select(m => new
+        {
+            m.Name,
+            m.DisplayName,
+            m.Pronouns,
+            m.Color,
+            m.Status,
+            customFields = m.CustomFieldValues
+                // Must match ITokenVisibilityService.FilterByPermission tier logic
+                .Where(cfv => cfv.Field != null &&
+                              cfv.Field.DeletedAt == null &&
+                              (int)cfv.PrivacyTier < (int)accessToken.Permission)
+                .Select(cfv => new SharedCustomFieldDto(cfv.Field.Label, cfv.Field.FieldType, cfv.Value))
+                .ToList()
+        }).ToList();
 
         var currentFront = await context.FrontHistory
             .Include(f => f.Member)

@@ -195,5 +195,164 @@ public class ShareControllerTests : IDisposable
         Assert.Equal(403, ((ObjectResult)result).StatusCode);
     }
 
+    // ── Custom Fields in share response ───────────────────────────────
+
+    [Fact]
+    public async Task GetSharedView_PublicToken_IncludesPublicTierCustomFields()
+    {
+        var member = new Member { Name = "Ember", PrivacyTier = MemberPrivacy.Public };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        var field = new CustomField { Label = "Age", FieldType = FieldType.Number };
+        _context.CustomFields.Add(field);
+        await _context.SaveChangesAsync();
+
+        var cfv = new CustomFieldValue
+        {
+            MemberId = member.Id,
+            FieldId = field.Id,
+            Value = "25",
+            PrivacyTier = MemberPrivacy.Public
+        };
+        _context.CustomFieldValues.Add(cfv);
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Friend), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
+        Assert.NotNull(result);
+
+        var value = result!.Value!;
+        var membersProperty = value.GetType().GetProperty("members")!.GetValue(value) as System.Collections.IEnumerable;
+        var membersList = membersProperty!.Cast<object>().ToList();
+        Assert.Single(membersList);
+
+        var firstMember = membersList[0];
+        var customFieldsProp = firstMember.GetType().GetProperty("customFields")!.GetValue(firstMember) as System.Collections.IEnumerable;
+        var customFieldsList = customFieldsProp!.Cast<object>().ToList();
+        Assert.Single(customFieldsList);
+    }
+
+    [Fact]
+    public async Task GetSharedView_FriendToken_IncludesFriendTierFields()
+    {
+        var member = new Member { Name = "Ember", PrivacyTier = MemberPrivacy.Public };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        var field = new CustomField { Label = "Nickname", FieldType = FieldType.Text };
+        _context.CustomFields.Add(field);
+        await _context.SaveChangesAsync();
+
+        var cfv = new CustomFieldValue
+        {
+            MemberId = member.Id,
+            FieldId = field.Id,
+            Value = "Em",
+            PrivacyTier = MemberPrivacy.Friend
+        };
+        _context.CustomFieldValues.Add(cfv);
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Friend), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
+        Assert.NotNull(result);
+
+        var value = result!.Value!;
+        var membersProperty = value.GetType().GetProperty("members")!.GetValue(value) as System.Collections.IEnumerable;
+        var membersList = membersProperty!.Cast<object>().ToList();
+        Assert.Single(membersList);
+
+        var firstMember = membersList[0];
+        var customFieldsProp = firstMember.GetType().GetProperty("customFields")!.GetValue(firstMember) as System.Collections.IEnumerable;
+        var customFieldsList = customFieldsProp!.Cast<object>().ToList();
+        Assert.Single(customFieldsList);
+    }
+
+    [Fact]
+    public async Task GetSharedView_PrivateValueExcluded()
+    {
+        var member = new Member { Name = "Ember", PrivacyTier = MemberPrivacy.Public };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        var field = new CustomField { Label = "Secret", FieldType = FieldType.Text };
+        _context.CustomFields.Add(field);
+        await _context.SaveChangesAsync();
+
+        var cfv = new CustomFieldValue
+        {
+            MemberId = member.Id,
+            FieldId = field.Id,
+            Value = "hidden",
+            PrivacyTier = MemberPrivacy.Private
+        };
+        _context.CustomFieldValues.Add(cfv);
+        await _context.SaveChangesAsync();
+
+        // Use Trusted token (int=3): Private is 3, and 3 < 3 is false → excluded
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Trusted), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
+        Assert.NotNull(result);
+
+        var value = result!.Value!;
+        var membersProperty = value.GetType().GetProperty("members")!.GetValue(value) as System.Collections.IEnumerable;
+        var membersList = membersProperty!.Cast<object>().ToList();
+        Assert.Single(membersList);
+
+        var firstMember = membersList[0];
+        var customFieldsProp = firstMember.GetType().GetProperty("customFields")!.GetValue(firstMember) as System.Collections.IEnumerable;
+        var customFieldsList = customFieldsProp!.Cast<object>().ToList();
+        Assert.Empty(customFieldsList);
+    }
+
+    [Fact]
+    public async Task GetSharedView_SoftDeletedFieldExcluded()
+    {
+        var member = new Member { Name = "Ember", PrivacyTier = MemberPrivacy.Public };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        var field = new CustomField { Label = "Gone", FieldType = FieldType.Text };
+        _context.CustomFields.Add(field);
+        await _context.SaveChangesAsync();
+
+        var cfv = new CustomFieldValue
+        {
+            MemberId = member.Id,
+            FieldId = field.Id,
+            Value = "somevalue",
+            PrivacyTier = MemberPrivacy.Public
+        };
+        _context.CustomFieldValues.Add(cfv);
+        await _context.SaveChangesAsync();
+
+        // Soft-delete the field definition
+        field.DeletedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Friend), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
+        Assert.NotNull(result);
+
+        var value = result!.Value!;
+        var membersProperty = value.GetType().GetProperty("members")!.GetValue(value) as System.Collections.IEnumerable;
+        var membersList = membersProperty!.Cast<object>().ToList();
+        Assert.Single(membersList);
+
+        var firstMember = membersList[0];
+        var customFieldsProp = firstMember.GetType().GetProperty("customFields")!.GetValue(firstMember) as System.Collections.IEnumerable;
+        var customFieldsList = customFieldsProp!.Cast<object>().ToList();
+        Assert.Empty(customFieldsList);
+    }
+
     public void Dispose() => _context.Dispose();
 }
