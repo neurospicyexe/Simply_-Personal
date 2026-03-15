@@ -1,5 +1,13 @@
 namespace PluralHost.Api.Domain;
 
+public enum MemberPrivacy
+{
+    Public  = 0,   // visible to all token levels
+    Friend  = 1,   // visible to Friend and Trusted tokens
+    Trusted = 2,   // visible to Trusted tokens only
+    Private = 3    // never visible to any token
+}
+
 public enum MemberStatus { Active, Dormant, Fused, Gone }
 
 public class Member : BaseEntity
@@ -7,20 +15,15 @@ public class Member : BaseEntity
     public required string Name { get; set; }
     public string? DisplayName { get; set; }
     public string? Pronouns { get; set; }
-    public string? AvatarPath { get; set; }   // Relative path under /secure_uploads/
-    public string? Color { get; set; }         // Hex color for UI
+    public string? AvatarPath { get; set; }
+    public string? Color { get; set; }
     public string? Role { get; set; }
     public string? Description { get; set; }
-    public bool IsPrivate { get; set; } = false;
+    public MemberPrivacy PrivacyTier { get; set; } = MemberPrivacy.Public;
+    public bool AllowsBoardPosting { get; set; } = true;
     public MemberStatus Status { get; set; } = MemberStatus.Active;
-
-    // Lineage: for Fused members, the IDs of their parents
     public List<Guid> ParentIds { get; set; } = [];
-
-    // Many-to-many: a member can belong to multiple groups
     public List<Group> Groups { get; set; } = [];
-
-    // ── New fields ────────────────────────────────────────────────────
     public bool IsPinned { get; set; } = false;
     public bool IsArchived { get; set; } = false;
     public bool IsUntracked { get; set; } = false;

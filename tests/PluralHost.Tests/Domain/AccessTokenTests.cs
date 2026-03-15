@@ -47,4 +47,23 @@ public class AccessTokenTests
         var token = new AccessToken { TokenValue = "abc123" };
         Assert.True(token.IsValid());
     }
+
+    [Fact]
+    public void AccessToken_DefaultAllowsBoardPosting_IsFalse()
+    {
+        var t = new AccessToken { TokenValue = "test" };
+        Assert.False(t.AllowsBoardPosting);
+    }
+
+    [Fact]
+    public void TokenPermission_PublicHasIntValue1()
+    {
+        Assert.Equal(1, (int)TokenPermission.Public);
+    }
+
+    [Fact]
+    public void TokenPermission_ReadFrontOnlyHasIntValue0()
+    {
+        Assert.Equal(0, (int)TokenPermission.ReadFrontOnly);
+    }
 }

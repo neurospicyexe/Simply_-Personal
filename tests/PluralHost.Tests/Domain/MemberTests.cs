@@ -54,4 +54,18 @@ public class MemberTests
         Assert.True(m.IsArchived);  // archive flag untouched
         Assert.NotNull(m.DeletedAt);
     }
+
+    [Fact]
+    public void Member_DefaultPrivacyTier_IsPublic()
+    {
+        var m = new Member { Name = "Ash" };
+        Assert.Equal(MemberPrivacy.Public, m.PrivacyTier);
+    }
+
+    [Fact]
+    public void Member_DefaultAllowsBoardPosting_IsTrue()
+    {
+        var m = new Member { Name = "Ash" };
+        Assert.True(m.AllowsBoardPosting);
+    }
 }
