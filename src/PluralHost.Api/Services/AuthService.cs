@@ -34,20 +34,27 @@ public class AuthService(
         if (!BCrypt.Net.BCrypt.Verify(plainPassword, settings.LoginPasswordHash))
             return null;
 
-        // TODO: Build and return the JWT string here.
-        // You have access to:
-        //   - configuration["Jwt:Issuer"], ["Jwt:Audience"], ["Jwt:SigningKey"], ["Jwt:ExpiryHours"]
-        //   - JwtSecurityToken, SigningCredentials, SymmetricSecurityKey, SecurityAlgorithms.HmacSha256Signature
-        //   - JwtSecurityTokenHandler to write the token to a string
-        //   - Claims to include: sub="owner", jti=Guid.NewGuid().ToString()
-        //
-        // Trade-off to consider: what expiry strategy makes sense for a self-hosted personal app?
-        // - Short expiry (1h): more secure, but annoying if you're actively using it
-        // - Long expiry (7d): convenient, but a stolen token has a long window
-        // - 24h with manual revocation: what we planned — balanced for personal use
-        //
-        // The ExpiryHours value comes from configuration (default 24).
-        throw new NotImplementedException("JWT generation not yet implemented — see TODO above.");
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(configuration["Jwt:SigningKey"]!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+
+        var expiryHours = int.TryParse(configuration["Jwt:ExpiryHours"], out var h) ? h : 24;
+
+        var token = new JwtSecurityToken(
+            issuer: configuration["Jwt:Issuer"],
+            audience: configuration["Jwt:Audience"],
+            claims: new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, "owner"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Iat,
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                    ClaimValueTypes.Integer64)
+            },
+            expires: DateTime.UtcNow.AddHours(expiryHours),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     public async Task<bool> ChangePasswordAsync(string newPlainPassword, string gatekeeperPin)
