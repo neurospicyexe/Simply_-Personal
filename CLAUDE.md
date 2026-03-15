@@ -27,11 +27,11 @@ Built as a Simply Plural replacement with "Privacy by Design" and "Crisis Manage
 PluralHost.sln
 src/
   PluralHost.Api/
-    Domain/             # ISoftDeletable, BaseEntity, Member (PrivacyTier), SystemSettings, AccessToken, FrontHistory, Group, BoardMessage, MemberNote, FrontStatus
+    Domain/             # ISoftDeletable, BaseEntity, Member (PrivacyTier), SystemSettings, AccessToken, FrontHistory, Group, BoardMessage, MemberNote, FrontStatus, CustomField, CustomFieldValue, JournalEntry
     Data/               # PluralHostContext (EF Core DbContext with global filters)
       Migrations/       # EF Core migration files (committed to repo)
     Services/           # IGhostModeService, IGatekeeperService, IShareTokenService, ITokenVisibilityService, IAuthService, IMemberService
-    Controllers/        # SecureActionController, ShareController, TokensController, MembersController, BoardController, MemberNotesController, FrontStatusController, SpMembersController, SpFrontController, SpGroupsController, MediaController
+    Controllers/        # SecureActionController, ShareController, TokensController, MembersController, BoardController, MemberNotesController, FrontStatusController, SpMembersController, SpFrontController, SpGroupsController, MediaController, FieldsController, MemberFieldsController, JournalsController
     BackgroundServices/ # AutoUnfreezeService
     Dto/                # NativeDtos.cs, SpDtos.cs
 tests/
@@ -39,14 +39,16 @@ tests/
     Domain/             # BaseEntityTests, MemberTests, SystemSettingsTests, AccessTokenTests
     Data/               # SoftDeleteFilterTests, GhostModeFilterTests
     Services/           # GhostModeServiceTests, GatekeeperServiceTests, ShareTokenServiceTests, TokenVisibilityServiceTests
-    Controllers/        # SecureActionControllerTests, MembersControllerTests, SpMembersControllerTests, BoardControllerTests, TokensControllerTests, ShareControllerTests
+    Controllers/        # SecureActionControllerTests, MembersControllerTests, SpMembersControllerTests, BoardControllerTests, TokensControllerTests, ShareControllerTests, FieldsControllerTests, MemberFieldsControllerTests, JournalsControllerTests
 docs/
   superpowers/
     plans/
       2026-03-11-plural-host-database-schema-crisis-shield.md  ← COMPLETED
       2026-03-14-plan2-privacy-tiers-share-tokens.md           ← COMPLETED
+      2026-03-15-plan3-custom-fields-journals.md               ← COMPLETED
     specs/
       2026-03-14-plan2-share-tokens-privacy-tiers-design.md
+      2026-03-15-plan3-custom-fields-journals.md
 ```
 
 ## Build & Run Commands
@@ -55,7 +57,7 @@ docs/
 # Build
 dotnet build
 
-# Run tests (183 passing, 3 pre-existing JWT stubs failing)
+# Run tests (229/229 passing)
 dotnet test
 dotnet test --filter "ClassName" -v minimal
 
@@ -86,23 +88,26 @@ docker compose down
 - `MediaController` (`GET /api/media/{id}`) serving secure uploads behind auth
 - SP v1 API mirror: members, front history, groups, system endpoints
 
-**Plan 2 `2026-03-14-plan2-privacy-tiers-share-tokens.md` — COMPLETE (all 11 tasks done)**
+**Plan 2 `2026-03-14-plan2-privacy-tiers-share-tokens.md` — COMPLETE**
 
-What's built:
 - `MemberPrivacy` enum (Public=0 / Friend=1 / Trusted=2 / Private=3) replacing `IsPrivate` bool
 - `TokenPermission` upgraded: ReadFrontOnly=0 / Public=1 / Friend=2 / Trusted=3 (with data migration)
 - `ITokenVisibilityService` — `FilterByPermission` (strict `<`) and `CanPostToBoard`
-- `IShareTokenService` updated: discriminated `TokenResolveResult`, `bool`-returning revoke
-- `GET/POST/DELETE /api/tokens` — owner token management (label, expiry, allowsBoardPosting)
-- `POST /share/{token}/board/{memberId}` — token-holder board posting (Ghost Mode safe)
-- Ghost Mode guard added to `BoardController.PostAsync`
-- Ghost Mode ordering bug fixed in `ShareController` (now checks BEFORE token DB lookup)
-- SP three-way `Private` write mapping (prevents silent Friend/Trusted tier downgrades)
-- `BoardMessage.TokenId` nullable FK — traces which token posted each message
-- 183/186 tests passing (3 pre-existing JWT stubs pending Plan 3)
+- `GET/POST/DELETE /api/tokens`, `POST /share/{token}/board/{memberId}`, Ghost Mode fixes
 
-**Next plans (spec: Plan 3 of 5 onwards):**
-- Plan 3: Custom fields (programmable "Additional Info" tab) + Global journals
+**Plan 3 `2026-03-15-plan3-custom-fields-journals.md` — COMPLETE (2026-03-15)**
+
+- JWT fix: `AuthService.GenerateTokenAsync` implemented (HS256, sub/jti/iat, configurable expiry)
+- `CustomField`, `CustomFieldValue`, `JournalEntry` entities — soft-delete-only `HasQueryFilter`
+- EF Core migration: 3 new tables, unique index on `(FieldId, MemberId)`
+- `FieldsController` — GET/POST/PATCH/DELETE `/api/fields` (owner, includes soft-deleted in GET)
+- `MemberFieldsController` — GET/PUT/DELETE `/api/members/{id}/fields` with upsert+restore pattern
+- `JournalsController` — GET/POST/PATCH/DELETE `/api/journals` (500-entry safety limit)
+- Share: `customFields` array per member in `GET /share/{token}` with inline privacy-tier filter
+- `GET /share/{token}/journals` — Ghost Mode → 401 → ReadFrontOnly 403 → public entries only
+- 229/229 tests passing
+
+**Next plans:**
 - Plan 4: Simply Plural / PluralKit import pipeline
 - Plan 5: React Flow mind map, 24h heatmaps, PWA shell
 
@@ -124,6 +129,8 @@ This means Ghost Mode works automatically on every LINQ query without touching c
 **Never use `.IgnoreQueryFilters()` in production code paths.** Acceptable in:
 - Admin-level revoke operations (e.g., `RevokeTokenAsync`) — needs to see revoked tokens
 - `ShareController.PostToBoardAsync` member lookup — intentionally bypasses to distinguish 404 (deleted) from 403 (tier too high), Ghost Mode already checked at step 1
+- `FieldsController.GetAllAsync` — owner needs to see soft-deleted field definitions
+- `FieldsController.DeleteAsync` / `MemberFieldsController.UpsertAsync` — must find soft-deleted rows due to unique constraint on `(FieldId, MemberId)` covering deleted rows
 - Tests
 
 ### Soft Delete
@@ -166,3 +173,134 @@ Stored as comma-separated GUIDs in SQLite. Has a `ValueComparer<List<Guid>>` con
 - Secure uploads persisted via volume mount: `./secure_uploads:/app/secure_uploads`
 - Connection string override via env var: `ConnectionStrings__Default=Data Source=/app/data/pluralhost.db`
 - API port: `8080`
+
+## Known Security Issues (Pending Fix)
+
+Reviewed 2026-03-15. Items ordered by severity.
+
+### HIGH — Gatekeeper PIN in Query String
+`DELETE /api/tokens/{tokenValue}?pin=...` passes the PIN in the URL. Query strings appear in server access logs, nginx logs, browser history, and `Referer` headers.
+**Fix:** Move to request body using the existing `PinRequest` record (`[FromBody] PinRequest body`).
+**Location:** `TokensController.cs:45`
+
+### MEDIUM — No HTTPS Enforcement in Application
+`Program.cs` does not call `UseHttpsRedirection()`. JWT tokens, passwords, and the PIN query string travel plaintext if a client connects over HTTP. Relies entirely on the reverse proxy being correctly configured.
+**Fix:** Add `app.UseHttpsRedirection()` before `UseAuthentication()`. Document TLS requirement in docker-compose comments.
+
+### MEDIUM — Unauthenticated Freeze Endpoint Has No Rate Limit
+`POST /api/secure/freeze` is `[AllowAnonymous]` (intentional — crisis safety). Without rate limiting, any IP can call it repeatedly to keep the system permanently frozen (DoS against the owner).
+**Fix:** Apply a rate limiter (e.g. 5 req/min per IP) via ASP.NET Core rate limiting middleware.
+**Location:** `SecureActionController.cs:20`
+
+### MEDIUM — No Brute-Force Protection on Login
+`POST /api/auth/login` has no rate limiting. BCrypt wf=12 alone (~250ms/check) is insufficient — sustained dictionary attacks can proceed at ~240 attempts/minute.
+**Fix:** Apply rate limiting (10 attempts/min per IP with back-off).
+
+### LOW — `IsFrozenAsync` Ignores `FreezeEndDate` Expiry
+`GhostModeService.IsFrozenAsync()` returns `settings.IsFrozen` without checking if `FreezeEndDate` has already passed. The `AutoUnfreezeService` polls every 5 minutes, so data can stay hidden up to 5 minutes after a timed freeze should have lifted.
+**Fix:** `return settings.IsFrozen && (settings.FreezeEndDate == null || settings.FreezeEndDate > DateTime.UtcNow);`
+**Location:** `GhostModeService.cs:37`
+
+### LOW — Integer Overflow on Extreme `DurationHours`
+`TimeSpan.FromHours(int.MaxValue)` throws `OverflowException` → HTTP 500. `POST /api/secure/freeze` is `[AllowAnonymous]`, so this requires no auth to trigger.
+**Fix:** Validate `DurationHours` is between 1 and 8760 before use.
+**Location:** `SecureActionController.cs:23`
+
+### MEDIUM — No Security Response Headers
+`Program.cs` configures no security headers. Every response is missing HSTS, CSP, X-Frame-Options, X-Content-Type-Options, and Referrer-Policy.
+**Fix:** Add middleware to `Program.cs` before `UseAuthentication()`:
+```csharp
+app.Use(async (ctx, next) => {
+    ctx.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    ctx.Response.Headers["X-Frame-Options"] = "DENY";
+    ctx.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    ctx.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+    await next();
+});
+```
+Or install `NWebsec.AspNetCore.Middleware` for a cleaner API.
+
+### LOW — MediaController Serves Files Without `Content-Disposition: attachment`
+`PhysicalFile(resolved, contentType)` lets the browser render the file inline. Once a file-upload endpoint exists (Plan 3/5), an attacker who uploads an HTML or SVG file to `secure_uploads` could achieve stored XSS — the file renders in the owner's authenticated browser session.
+**Fix:** Always force download:
+```csharp
+return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
+// or explicitly:
+Response.Headers["Content-Disposition"] = "attachment";
+```
+**Location:** `MediaController.cs:37`
+
+### INFO — File Upload (Plan 3/5): Must Validate Magic Bytes + Use UUID Filenames
+When adding file upload, the original filename must be discarded (use UUID + preserved extension). Validate both file extension (allowlist: jpg/png/gif/webp) AND magic bytes (first 4–8 bytes). Never rely on extension alone — rename + validate at the content level.
+
+### INFO — JWT Must Go in httpOnly Cookies When Frontend is Added (Plan 5)
+The current API returns JWT as a response body value. When the React PWA is built, do NOT store the JWT in `localStorage` (vulnerable to any XSS). Use `httpOnly + Secure + SameSite=Strict` cookies. If cookies are used, add CSRF protection (double-submit cookie pattern or synchronizer token) to all state-changing owner endpoints.
+
+### INFO — Board Post Content Not Sanitized for HTML
+`AuthorName` and `Content` are stored as-is (trimmed, length-bounded). Safe for the current JSON-only API. When the frontend (Plan 5) renders board messages, HTML-escape both fields to prevent stored XSS.
+
+### INFO — `POST /share/{token}/board/{memberId}` Leaks Member Existence
+Returns 403 when a member exists but is above the token's permission tier. Token holders can confirm whether any GUID corresponds to a real (non-deleted) member, even if they can't see it. Intentional per spec design — acceptable for this threat model.
+
+# context-mode — MANDATORY routing rules
+
+You have context-mode MCP tools available. These rules are NOT optional — they protect your context window from flooding. A single unrouted command can dump 56 KB into context and waste the entire session.
+
+## BLOCKED commands — do NOT attempt these
+
+### curl / wget — BLOCKED
+Any Bash command containing `curl` or `wget` is intercepted and replaced with an error message. Do NOT retry.
+Instead use:
+- `ctx_fetch_and_index(url, source)` to fetch and index web pages
+- `ctx_execute(language: "javascript", code: "const r = await fetch(...)")` to run HTTP calls in sandbox
+
+### Inline HTTP — BLOCKED
+Any Bash command containing `fetch('http`, `requests.get(`, `requests.post(`, `http.get(`, or `http.request(` is intercepted and replaced with an error message. Do NOT retry with Bash.
+Instead use:
+- `ctx_execute(language, code)` to run HTTP calls in sandbox — only stdout enters context
+
+### WebFetch — BLOCKED
+WebFetch calls are denied entirely. The URL is extracted and you are told to use `ctx_fetch_and_index` instead.
+Instead use:
+- `ctx_fetch_and_index(url, source)` then `ctx_search(queries)` to query the indexed content
+
+## REDIRECTED tools — use sandbox equivalents
+
+### Bash (>20 lines output)
+Bash is ONLY for: `git`, `mkdir`, `rm`, `mv`, `cd`, `ls`, `npm install`, `pip install`, and other short-output commands.
+For everything else, use:
+- `ctx_batch_execute(commands, queries)` — run multiple commands + search in ONE call
+- `ctx_execute(language: "shell", code: "...")` — run in sandbox, only stdout enters context
+
+### Read (for analysis)
+If you are reading a file to **Edit** it → Read is correct (Edit needs content in context).
+If you are reading to **analyze, explore, or summarize** → use `ctx_execute_file(path, language, code)` instead. Only your printed summary enters context. The raw file content stays in the sandbox.
+
+### Grep (large results)
+Grep results can flood context. Use `ctx_execute(language: "shell", code: "grep ...")` to run searches in sandbox. Only your printed summary enters context.
+
+## Tool selection hierarchy
+
+1. **GATHER**: `ctx_batch_execute(commands, queries)` — Primary tool. Runs all commands, auto-indexes output, returns search results. ONE call replaces 30+ individual calls.
+2. **FOLLOW-UP**: `ctx_search(queries: ["q1", "q2", ...])` — Query indexed content. Pass ALL questions as array in ONE call.
+3. **PROCESSING**: `ctx_execute(language, code)` | `ctx_execute_file(path, language, code)` — Sandbox execution. Only stdout enters context.
+4. **WEB**: `ctx_fetch_and_index(url, source)` then `ctx_search(queries)` — Fetch, chunk, index, query. Raw HTML never enters context.
+5. **INDEX**: `ctx_index(content, source)` — Store content in FTS5 knowledge base for later search.
+
+## Subagent routing
+
+When spawning subagents (Agent/Task tool), the routing block is automatically injected into their prompt. Bash-type subagents are upgraded to general-purpose so they have access to MCP tools. You do NOT need to manually instruct subagents about context-mode.
+
+## Output constraints
+
+- Keep responses under 500 words.
+- Write artifacts (code, configs, PRDs) to FILES — never return them as inline text. Return only: file path + 1-line description.
+- When indexing content, use descriptive source labels so others can `ctx_search(source: "label")` later.
+
+## ctx commands
+
+| Command | Action |
+|---------|--------|
+| `ctx stats` | Call the `ctx_stats` MCP tool and display the full output verbatim |
+| `ctx doctor` | Call the `ctx_doctor` MCP tool, run the returned shell command, display as checklist |
+| `ctx upgrade` | Call the `ctx_upgrade` MCP tool, run the returned shell command, display as checklist |
