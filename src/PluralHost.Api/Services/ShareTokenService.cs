@@ -9,6 +9,7 @@ public class ShareTokenService(PluralHostContext context) : IShareTokenService
     public async Task<AccessToken> CreateTokenAsync(
         string? label,
         TokenPermission permission,
+        bool allowsBoardPosting,
         DateTime? expiresAt)
     {
         var token = new AccessToken
@@ -16,6 +17,7 @@ public class ShareTokenService(PluralHostContext context) : IShareTokenService
             TokenValue = GenerateToken(),
             Label = label,
             Permission = permission,
+            AllowsBoardPosting = allowsBoardPosting,
             ExpiresAt = expiresAt
         };
         context.AccessTokens.Add(token);
@@ -23,23 +25,35 @@ public class ShareTokenService(PluralHostContext context) : IShareTokenService
         return token;
     }
 
-    public async Task RevokeTokenAsync(string tokenValue)
+    public async Task<bool> RevokeTokenAsync(string tokenValue)
     {
         var token = await context.AccessTokens
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(t => t.TokenValue == tokenValue)
-            ?? throw new KeyNotFoundException($"Token '{tokenValue}' not found.");
+            .FirstOrDefaultAsync(t => t.TokenValue == tokenValue && t.RevokedAt == null);
+
+        if (token is null) return false;
 
         token.RevokedAt = DateTime.UtcNow;
         await context.SaveChangesAsync();
+        return true;
     }
 
-    public async Task<AccessToken?> ResolveTokenAsync(string tokenValue)
+    public async Task<TokenResolveResult> ResolveTokenAsync(string tokenValue)
     {
         var token = await context.AccessTokens
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.TokenValue == tokenValue);
 
-        return token?.IsValid() == true ? token : null;
+        if (token is null)
+            return new TokenResolveResult(null, TokenResolveStatus.NotFound);
+
+        if (token.RevokedAt is not null)
+            return new TokenResolveResult(null, TokenResolveStatus.Revoked);
+
+        if (token.ExpiresAt.HasValue && token.ExpiresAt.Value <= DateTime.UtcNow)
+            return new TokenResolveResult(null, TokenResolveStatus.Expired);
+
+        return new TokenResolveResult(token, TokenResolveStatus.Valid);
     }
 
     private static string GenerateToken() =>

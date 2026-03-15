@@ -19,8 +19,8 @@ public class ShareController(
     [HttpGet("{token}")]
     public async Task<IActionResult> GetSharedViewAsync(string token)
     {
-        var accessToken = await tokenService.ResolveTokenAsync(token);
-        if (accessToken == null)
+        var result = await tokenService.ResolveTokenAsync(token);
+        if (result.Status != TokenResolveStatus.Valid)
             return Unauthorized(new { error = "Invalid or expired share token." });
 
         // Ghost Mode: even valid tokens return empty during a freeze
@@ -28,7 +28,7 @@ public class ShareController(
             return Ok(new { members = Array.Empty<object>(), currentFront = Array.Empty<object>() });
 
         // ReadFrontOnly: only return current fronters (no member details)
-        if (accessToken.Permission == TokenPermission.ReadFrontOnly)
+        if (result.Token!.Permission == TokenPermission.ReadFrontOnly)
         {
             var front = await context.FrontHistory
                 .Include(f => f.Member)
