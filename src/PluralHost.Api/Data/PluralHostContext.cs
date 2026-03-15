@@ -100,6 +100,13 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
                 b.DeletedAt == null &&
                 !Set<SystemSettings>().Where(s => s.Id == 1).Select(s => s.IsFrozen).FirstOrDefault());
 
+        // BoardMessage.TokenId → AccessToken.TokenValue (nullable FK, no cascade delete)
+        modelBuilder.Entity<BoardMessage>()
+            .HasOne(b => b.Token)
+            .WithMany()
+            .HasForeignKey(b => b.TokenId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         modelBuilder.Entity<MemberNote>()
             .HasQueryFilter(n =>
                 n.DeletedAt == null &&
