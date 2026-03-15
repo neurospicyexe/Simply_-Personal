@@ -13,10 +13,10 @@ public class MemberTests
     }
 
     [Fact]
-    public void NewMember_IsNotPrivateByDefault()
+    public void NewMember_DefaultPrivacyTier_IsNotPrivate()
     {
-        var member = new Member { Name = "Ash" };
-        Assert.False(member.IsPrivate);
+        var member = new Member { Name = "Test" };
+        Assert.NotEqual(MemberPrivacy.Private, member.PrivacyTier);
     }
 
     [Fact]
