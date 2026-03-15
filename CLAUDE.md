@@ -27,21 +27,26 @@ Built as a Simply Plural replacement with "Privacy by Design" and "Crisis Manage
 PluralHost.sln
 src/
   PluralHost.Api/
-    Domain/             # ISoftDeletable, BaseEntity, Member, SystemSettings, AccessToken, FrontHistory, Group
+    Domain/             # ISoftDeletable, BaseEntity, Member (PrivacyTier), SystemSettings, AccessToken, FrontHistory, Group, BoardMessage, MemberNote, FrontStatus
     Data/               # PluralHostContext (EF Core DbContext with global filters)
       Migrations/       # EF Core migration files (committed to repo)
-    Services/           # IGhostModeService, IGatekeeperService, IShareTokenService
-    Controllers/        # SecureActionController, ShareController
+    Services/           # IGhostModeService, IGatekeeperService, IShareTokenService, ITokenVisibilityService, IAuthService, IMemberService
+    Controllers/        # SecureActionController, ShareController, TokensController, MembersController, BoardController, MemberNotesController, FrontStatusController, SpMembersController, SpFrontController, SpGroupsController, MediaController
     BackgroundServices/ # AutoUnfreezeService
+    Dto/                # NativeDtos.cs, SpDtos.cs
 tests/
   PluralHost.Tests/
     Domain/             # BaseEntityTests, MemberTests, SystemSettingsTests, AccessTokenTests
     Data/               # SoftDeleteFilterTests, GhostModeFilterTests
-    Services/           # GhostModeServiceTests, GatekeeperServiceTests, ShareTokenServiceTests
-    Controllers/        # SecureActionControllerTests
+    Services/           # GhostModeServiceTests, GatekeeperServiceTests, ShareTokenServiceTests, TokenVisibilityServiceTests
+    Controllers/        # SecureActionControllerTests, MembersControllerTests, SpMembersControllerTests, BoardControllerTests, TokensControllerTests, ShareControllerTests
 docs/
-  superpowers/plans/
-    2026-03-11-plural-host-database-schema-crisis-shield.md  ← COMPLETED
+  superpowers/
+    plans/
+      2026-03-11-plural-host-database-schema-crisis-shield.md  ← COMPLETED
+      2026-03-14-plan2-privacy-tiers-share-tokens.md           ← COMPLETED
+    specs/
+      2026-03-14-plan2-share-tokens-privacy-tiers-design.md
 ```
 
 ## Build & Run Commands
@@ -50,7 +55,7 @@ docs/
 # Build
 dotnet build
 
-# Run tests (42 tests, all passing)
+# Run tests (183 passing, 3 pre-existing JWT stubs failing)
 dotnet test
 dotnet test --filter "ClassName" -v minimal
 
@@ -70,24 +75,36 @@ docker compose down
 
 ## Current Status
 
-**Plan `2026-03-11-plural-host-database-schema-crisis-shield.md` — COMPLETE (all 14 tasks done)**
+**Plan 1 `2026-03-11-plural-host-database-schema-crisis-shield.md` — COMPLETE**
+
+- All 5 domain models, Ghost Mode, Gatekeeper PIN, share tokens, AutoUnfreezeService, Docker
+
+**Auth layer (between Plan 1 and 2, no separate plan doc) — COMPLETE**
+
+- JWT login (`POST /api/auth/login`, `POST /api/auth/change-password`)
+- `[Authorize]` on all owner-side endpoints
+- `MediaController` (`GET /api/media/{id}`) serving secure uploads behind auth
+- SP v1 API mirror: members, front history, groups, system endpoints
+
+**Plan 2 `2026-03-14-plan2-privacy-tiers-share-tokens.md` — COMPLETE (all 11 tasks done)**
 
 What's built:
-- All 5 domain models with soft-delete (Member, SystemSettings, AccessToken, FrontHistory, Group)
-- PluralHostContext with double global filter (soft-delete + Ghost Mode) on Member/FrontHistory/Group
-- SQLite schema via EF Core migrations — auto-applied on startup
-- GhostModeService (freeze/unfreeze/timer), GatekeeperService (BCrypt PIN)
-- SecureActionController: `POST /api/secure/freeze|unfreeze|request-deletion`, `DELETE /api/secure/cancel-deletion`
-- ShareTokenService + ShareController: `GET /share/{token}`
-- AutoUnfreezeService background poll (every 5 min)
-- Docker image builds and runs clean (`simply-personal-pluralhost:latest`)
-- 42/42 tests passing
+- `MemberPrivacy` enum (Public=0 / Friend=1 / Trusted=2 / Private=3) replacing `IsPrivate` bool
+- `TokenPermission` upgraded: ReadFrontOnly=0 / Public=1 / Friend=2 / Trusted=3 (with data migration)
+- `ITokenVisibilityService` — `FilterByPermission` (strict `<`) and `CanPostToBoard`
+- `IShareTokenService` updated: discriminated `TokenResolveResult`, `bool`-returning revoke
+- `GET/POST/DELETE /api/tokens` — owner token management (label, expiry, allowsBoardPosting)
+- `POST /share/{token}/board/{memberId}` — token-holder board posting (Ghost Mode safe)
+- Ghost Mode guard added to `BoardController.PostAsync`
+- Ghost Mode ordering bug fixed in `ShareController` (now checks BEFORE token DB lookup)
+- SP three-way `Private` write mapping (prevents silent Friend/Trusted tier downgrades)
+- `BoardMessage.TokenId` nullable FK — traces which token posted each message
+- 183/186 tests passing (3 pre-existing JWT stubs pending Plan 3)
 
-**Next plans to write (separate plans, in suggested order):**
-1. Auth layer — JWT login, session management, `GET /media/{id}` secure file endpoint
-2. Simply Plural API mirror — replicate SP v1 routes, JSON parity for MCP tools
-3. Members & Fronting CRUD API — full REST for members, front history, groups
-4. Visualization — React Flow mind map, 24h heatmaps, PWA shell
+**Next plans (spec: Plan 3 of 5 onwards):**
+- Plan 3: Custom fields (programmable "Additional Info" tab) + Global journals
+- Plan 4: Simply Plural / PluralKit import pipeline
+- Plan 5: React Flow mind map, 24h heatmaps, PWA shell
 
 **Branch:** `claude/init-project-setup-sO5k5`
 **Remote:** https://github.com/neurospicyexe/Simply_-Personal
@@ -104,7 +121,10 @@ EF Core `HasQueryFilter` applies TWO filters to Member, FrontHistory, Group — 
 ```
 
 This means Ghost Mode works automatically on every LINQ query without touching controller code.
-**Never use `.IgnoreQueryFilters()` in production code paths.** Only acceptable in admin-level revoke operations (e.g., `RevokeTokenAsync`) and tests.
+**Never use `.IgnoreQueryFilters()` in production code paths.** Acceptable in:
+- Admin-level revoke operations (e.g., `RevokeTokenAsync`) — needs to see revoked tokens
+- `ShareController.PostToBoardAsync` member lookup — intentionally bypasses to distinguish 404 (deleted) from 403 (tier too high), Ghost Mode already checked at step 1
+- Tests
 
 ### Soft Delete
 All entities inheriting `BaseEntity` have `SoftDelete()` / `Restore()` methods. Both update `UpdatedAt`. The global filter enforces `deleted_at IS NULL` on every query automatically.
@@ -120,10 +140,23 @@ BCrypt work factor 12. Stored in `SystemSettings.GatekeeperPinHash`. Completely 
 
 ### AccessTokens (Share Links)
 Generated with `RandomNumberGenerator.GetBytes(32)` — cryptographically secure, URL-safe Base64.
-- `TokenPermission.ReadFrontOnly` — only current fronter name/color, no member list
-- `TokenPermission.ReadOnly` — public members (non-private) + current front
-- Both return empty `[]` when system is frozen, regardless of token validity
-- Ghost Mode check happens **before** permission check in ShareController
+- `TokenPermission.ReadFrontOnly` — only current Public-tier fronters, no member list
+- `TokenPermission.Public` — Public-tier members + current Public-tier front
+- `TokenPermission.Friend` — Public + Friend-tier members
+- `TokenPermission.Trusted` — Public + Friend + Trusted-tier members
+- All return empty `[]` / 204 when system is frozen, before any token DB lookup
+- Ghost Mode check happens **before** `ResolveTokenAsync` in `ShareController` (both GET and POST)
+- `TokenResolveResult` discriminated type: `Valid` / `NotFound` / `Revoked` / `Expired`
+- `RevokeTokenAsync` returns `bool` (false = not found or already revoked, no throw)
+
+### Privacy Tiers
+`MemberPrivacy` enum: Public=0, Friend=1, Trusted=2, Private=3.
+`TokenPermission` is offset +1 from `MemberPrivacy`. Visibility uses **strict less-than**:
+`(int)member.PrivacyTier < (int)tokenPermission` — so Public(1) sees only Public(0), etc.
+SP protocol maps `Private: true/false` using three-way logic in `SpMembersController`:
+- `true` → always set `PrivacyTier = Private`
+- `false` + currently Private → set `PrivacyTier = Public`
+- `false` + currently Friend/Trusted → leave unchanged (SP has no intermediate tiers)
 
 ### Member.ParentIds
 Stored as comma-separated GUIDs in SQLite. Has a `ValueComparer<List<Guid>>` configured in `PluralHostContext` to prevent spurious EF Core change-tracking warnings and unnecessary UPDATE statements.
