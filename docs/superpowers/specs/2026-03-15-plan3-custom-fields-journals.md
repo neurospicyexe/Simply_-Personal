@@ -102,7 +102,7 @@ DELETE /api/fields/{id}             → soft-delete field + cascade soft-delete 
 ```
 `label` required. `fieldType` required. `sortOrder` defaults to 0 if omitted.
 
-**`GET /api/fields` response:** All definitions ordered by `SortOrder ASC`, then `CreatedAt ASC`. Includes soft-deleted entries (owner needs them for management). Each entry includes `id`, `label`, `fieldType`, `sortOrder`, `createdAt`, `updatedAt`, `deletedAt`.
+**`GET /api/fields` response:** All definitions ordered by `SortOrder ASC`, then `CreatedAt ASC`. The controller must call `.IgnoreQueryFilters()` on this query to bypass the soft-delete filter — soft-deleted entries are included so the owner can see what has been deleted. Each entry includes `id`, `label`, `fieldType`, `sortOrder`, `createdAt`, `updatedAt`, `deletedAt` (null if active).
 
 **`PATCH /api/fields/{id}` request:** Partial — only `label` and `sortOrder` are patchable. `fieldType` is immutable after creation; if `fieldType` is included in the request body, return 400 — "FieldType cannot be changed after creation". Returns 404 if the field is not found or is soft-deleted (soft-deleted fields cannot be patched — delete and recreate instead).
 
@@ -124,14 +124,18 @@ DELETE /api/members/{memberId}/fields/{fieldId}     → soft-delete value (clear
 ```
 Returns 404 if `memberId` is not found, or if `fieldId` is not found. Returns 400 if `CustomField.DeletedAt != null` (cannot write a value to a soft-deleted field definition) — error: "Field has been deleted".
 
-Upsert logic: the implementation must use `IgnoreQueryFilters()` to find an existing `CustomFieldValue` row (including soft-deleted rows) for the `(FieldId, MemberId)` pair, because the unique constraint covers soft-deleted rows. If found (even if soft-deleted): call `.Restore()` to clear `DeletedAt`, then update `Value` and `PrivacyTier`, then `SaveChangesAsync()`. If not found: insert a new row.
+Upsert logic: the implementation must use `IgnoreQueryFilters()` to find an existing `CustomFieldValue` row (including soft-deleted rows) for the `(FieldId, MemberId)` pair, because the unique constraint covers soft-deleted rows. If found (even if soft-deleted): call `.Restore()` to clear `DeletedAt`, then update `Value` and `PrivacyTier`, then `SaveChangesAsync()`. Silent restoration is intentional — if the owner previously cleared a field value and later sets it again, the value is restored without error. If not found: insert a new row.
 
 Returns the saved value row:
 ```json
 { "id": "...", "fieldId": "...", "memberId": "...", "value": "25", "privacyTier": "Trusted", "createdAt": "...", "updatedAt": "..." }
 ```
 
-**Validation:** Server validates that `value` is consistent with the field's `FieldType` before saving (e.g., `Number` type rejects `"banana"`). Returns 400 on type mismatch.
+**Validation:** Server validates that `value` is consistent with the field's `FieldType` before saving. Returns 400 on type mismatch. Empty string semantics by type:
+- `Text` / `Multiline` — empty string is valid (stored as-is)
+- `Number` — empty string is rejected (not a valid decimal)
+- `Date` — empty string is rejected (not a valid ISO 8601 date)
+- `Boolean` — empty string is rejected (must be `"true"` or `"false"`)
 
 ---
 
@@ -150,7 +154,7 @@ DELETE /api/journals/{id}       → soft-delete
 ```
 `content` required. `title` optional (null if omitted). `isPrivate` defaults to `true` if omitted.
 
-**`GET /api/journals` response:** Ordered `CreatedAt DESC`. Each entry includes `id`, `title`, `content`, `isPrivate`, `createdAt`, `updatedAt`. Returns at most the 500 most recent entries (`.Take(500)`) as a safety limit — full pagination is a known deferral.
+**`GET /api/journals` response:** Ordered `CreatedAt DESC`. Each entry includes `id`, `title`, `content`, `isPrivate`, `createdAt`, `updatedAt`. Returns at most the 500 most recent entries (`.Take(500)`) as a safety limit — full pagination is a known deferral. The response does not signal truncation; clients that receive exactly 500 entries should assume more may exist.
 
 ---
 
@@ -170,11 +174,13 @@ Each member in the response gains a `customFields` array:
 }
 ```
 
-Only values where `(int)value.PrivacyTier < (int)token.Permission` are included. This is an inline expression in the controller query — **not** a call to `ITokenVisibilityService.FilterByPermission` (which takes `IQueryable<Member>` and cannot be applied to `CustomFieldValue.PrivacyTier`). The expression is intentionally identical to the logic inside `FilterByPermission` — any future change to the visibility rule must be applied to both places. Values above the token's tier are silently omitted — no 403, no indication they exist.
+Only values where `(int)value.PrivacyTier < (int)token.Permission` are included. This is an inline expression in the controller query — **not** a call to `ITokenVisibilityService.FilterByPermission` (which takes `IQueryable<Member>` and cannot be applied to `CustomFieldValue.PrivacyTier`). The expression is intentionally identical to the logic inside `FilterByPermission`. The implementer must add the comment `// Must match ITokenVisibilityService.FilterByPermission tier logic` at this expression so future maintainers know to update both places if the visibility rule changes. Values above the token's tier are silently omitted — no 403, no indication they exist.
 
 `ReadFrontOnly` tokens never reach the member list path — they return early with only `currentFront`. The `currentFront` response shape (`{ name, displayName, color }`) does **not** gain a `customFields` array. This is intentional: ReadFrontOnly tokens expose only current fronter names and colors, not member details. The existing code already restricts `currentFront` to `PrivacyTier == MemberPrivacy.Public` fronters only.
 
 The `CustomField.DeletedAt` filter applies — soft-deleted fields are excluded from the share response even if a value row exists.
+
+When Ghost Mode is active, the existing Ghost Mode `HasQueryFilter` on `Member` causes the member list query to return `[]`. No member objects appear in the response at all, so no `customFields` arrays appear either. The `customFields` key is not present on absent member objects — this is a non-issue, not a special case to handle.
 
 #### `GET /share/{token}/journals` — new endpoint
 
@@ -200,7 +206,7 @@ Response per entry: `{ id, title, content, createdAt }`. `isPrivate` is omitted 
 | `POST /api/fields` — missing fieldType | 400 — "FieldType is required" |
 | `PATCH /api/fields/{id}` — not found or soft-deleted | 404 |
 | `PATCH /api/fields/{id}` — `fieldType` in body | 400 — "FieldType cannot be changed after creation" |
-| `PUT /api/members/{memberId}/fields/{fieldId}` — type mismatch | 400 — "Value is not valid for field type {type}" |
+| `PUT /api/members/{memberId}/fields/{fieldId}` — type mismatch or empty string for Number/Date/Boolean | 400 — "Value is not valid for field type {type}" |
 | `PUT` — field not found or member not found | 404 |
 | `PUT` — field is soft-deleted | 400 — "Field has been deleted" |
 | `GET /api/members/{memberId}/fields` — member not found | 404 |
