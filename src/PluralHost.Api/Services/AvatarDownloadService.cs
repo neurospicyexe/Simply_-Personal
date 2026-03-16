@@ -97,7 +97,7 @@ public class AvatarDownloadService(HttpClient http, IConfiguration config) : IAv
         }
 
         var bytes = ip.GetAddressBytes();
-        if (bytes.Length != 4) return false; // IPv6 not supported for avatars
+        if (bytes.Length != 4) return true; // IPv6 not supported — block, fail closed
 
         return (bytes[0] == 10) ||                                               // 10.x.x.x
                (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) ||         // 172.16-31.x.x

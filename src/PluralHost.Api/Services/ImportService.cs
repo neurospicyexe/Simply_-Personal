@@ -184,9 +184,9 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 if (path != null) { member.AvatarPath = path; avatarsOk++; }
                 else avatarsFail++;
             }
-
-            await context.SaveChangesAsync(ct);
         }
+
+        await context.SaveChangesAsync(ct);
         return new ImportResult(created, updated, skipped, avatarsOk, avatarsFail, errors);
     }
 
