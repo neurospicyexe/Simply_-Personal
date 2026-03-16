@@ -135,7 +135,7 @@ public enum ImportConflictStrategy
 }
 
 // SP import
-public record SpMemberContent(
+public record SpImportMemberContent(
     string? Name, string? Desc, string? Pronouns, string? PkId,
     string? Color,
     [property: JsonPropertyName("avatarUrl")] string? AvatarUrl,
@@ -144,7 +144,7 @@ public record SpMemberContent(
     [property: JsonPropertyName("receiveMessageBoardNotifs")] bool ReceiveMessageBoardNotifs,
     bool Archived, Dictionary<string, string>? Info);
 
-public record SpMemberEntry(string Id, SpMemberContent? Content);
+public record SpMemberEntry(string Id, SpImportMemberContent? Content);
 
 public record SpCustomFieldContent(string? Name, int Order, bool Private);
 public record SpCustomFieldEntry(string Id, SpCustomFieldContent? Content);

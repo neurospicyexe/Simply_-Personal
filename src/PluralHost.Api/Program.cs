@@ -43,6 +43,7 @@ builder.Services.AddScoped<IShareTokenService, ShareTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<ITokenVisibilityService, TokenVisibilityService>();
+builder.Services.AddHttpClient<IAvatarDownloadService, AvatarDownloadService>();
 builder.Services.AddHostedService<AutoUnfreezeService>();
 
 var app = builder.Build();
