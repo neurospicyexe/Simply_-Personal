@@ -385,11 +385,11 @@ public class ImportServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ImportPk_BlankName_AddsError()
+    public async Task ImportPk_BlankUuid_AddsError()
     {
         var req = new PkImportRequest(
             Members: [new PkMemberEntry(
-                Uuid: "pk-uuid-001", Name: "",
+                Uuid: null, Name: "ValidName",
                 DisplayName: null, Pronouns: null,
                 Color: null, AvatarUrl: null, Description: null,
                 Birthday: null, Privacy: null)],
@@ -399,7 +399,29 @@ public class ImportServiceTests : IDisposable
 
         Assert.Equal(0, result.Created);
         Assert.Single(result.Errors);
-        Assert.Equal("pk-uuid-001", result.Errors[0].SourceId);
+        Assert.Equal("(no uuid)", result.Errors[0].SourceId);
+    }
+
+    [Fact]
+    public async Task ImportPk_ExistingMember_MergePreferExisting_FillsBlanks()
+    {
+        _context.Members.Add(new Member { Name = "Ember", PkId = "pk-uuid-001", Pronouns = null });
+        await _context.SaveChangesAsync();
+
+        var req = new PkImportRequest(
+            Members: [new PkMemberEntry(
+                Uuid: "pk-uuid-001", Name: "Ember",
+                DisplayName: null, Pronouns: "they/them",
+                Color: null, AvatarUrl: null, Description: null,
+                Birthday: null, Privacy: null)],
+            ConflictStrategy: ImportConflictStrategy.MergePreferExisting,
+            IncludeAvatars: false);
+
+        var result = await _svc.ImportPkAsync(req);
+
+        Assert.Equal(1, result.Updated);
+        var member = await _context.Members.FirstAsync();
+        Assert.Equal("they/them", member.Pronouns); // was null, now filled
     }
 
     public void Dispose() => _context.Dispose();

@@ -138,9 +138,15 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
 
         foreach (var pkMember in request.Members)
         {
+            if (string.IsNullOrWhiteSpace(pkMember.Uuid))
+            {
+                errors.Add(new ImportMemberError("(no uuid)", pkMember.Name, "UUID is blank."));
+                continue;
+            }
+
             if (string.IsNullOrWhiteSpace(pkMember.Name))
             {
-                errors.Add(new ImportMemberError(pkMember.Uuid ?? "(no uuid)", pkMember.Name, "Name is blank."));
+                errors.Add(new ImportMemberError(pkMember.Uuid, pkMember.Name, "Name is blank."));
                 continue;
             }
 
@@ -178,9 +184,9 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 if (path != null) { member.AvatarPath = path; avatarsOk++; }
                 else avatarsFail++;
             }
-        }
 
-        await context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
+        }
         return new ImportResult(created, updated, skipped, avatarsOk, avatarsFail, errors);
     }
 
