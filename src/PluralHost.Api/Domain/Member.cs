@@ -31,5 +31,7 @@ public class Member : BaseEntity
     public bool PreventFrontNotification { get; set; } = false;
     public bool ReceiveBoardNotifications { get; set; } = true;
     public string? SpMemberId { get; set; }
+    public string? PkId { get; set; }
+    public string? Birthday { get; set; }   // "YYYY-MM-DD" or null
     public ICollection<CustomFieldValue> CustomFieldValues { get; set; } = new List<CustomFieldValue>();
 }

@@ -68,4 +68,12 @@ public class MemberTests
         var m = new Member { Name = "Ash" };
         Assert.True(m.AllowsBoardPosting);
     }
+
+    [Fact]
+    public void Member_NewFields_DefaultNull()
+    {
+        var m = new Member { Name = "Test" };
+        Assert.Null(m.PkId);
+        Assert.Null(m.Birthday);
+    }
 }
