@@ -16,10 +16,10 @@ public class ImportControllerTests
     {
         _importService = new Mock<IImportService>();
         _importService
-            .Setup(s => s.ImportSpAsync(It.IsAny<SpImportRequest>(), default))
+            .Setup(s => s.ImportSpAsync(It.IsAny<SpImportRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ImportResult(1, 0, 0, 0, 0, []));
         _importService
-            .Setup(s => s.ImportPkAsync(It.IsAny<PkImportRequest>(), default))
+            .Setup(s => s.ImportPkAsync(It.IsAny<PkImportRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ImportResult(1, 0, 0, 0, 0, []));
         _controller = new ImportController(_importService.Object);
     }
@@ -36,10 +36,11 @@ public class ImportControllerTests
                 Archived: false, Info: null))],
             IncludeAvatars: false);
 
-        var result = await _controller.ImportSpAsync(req) as OkObjectResult;
+        var result = await _controller.ImportSpAsync(req, CancellationToken.None) as OkObjectResult;
 
         Assert.NotNull(result);
         Assert.Equal(200, result!.StatusCode);
+        Assert.IsType<ImportResult>(result!.Value);
     }
 
     [Fact]
@@ -53,10 +54,11 @@ public class ImportControllerTests
                 Birthday: null, Privacy: null)],
             IncludeAvatars: false);
 
-        var result = await _controller.ImportPkAsync(req) as OkObjectResult;
+        var result = await _controller.ImportPkAsync(req, CancellationToken.None) as OkObjectResult;
 
         Assert.NotNull(result);
         Assert.Equal(200, result!.StatusCode);
+        Assert.IsType<ImportResult>(result!.Value);
     }
 
     [Fact]
@@ -64,8 +66,9 @@ public class ImportControllerTests
     {
         var req = new SpImportRequest(Members: [], IncludeAvatars: false);
 
-        var result = await _controller.ImportSpAsync(req) as OkObjectResult;
+        var result = await _controller.ImportSpAsync(req, CancellationToken.None) as OkObjectResult;
 
         Assert.NotNull(result);
+        Assert.IsType<ImportResult>(result!.Value);
     }
 }
