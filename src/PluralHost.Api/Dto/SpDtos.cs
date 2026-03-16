@@ -26,7 +26,8 @@ public record SpMemberContent(
     string? Color,
     string? AvatarUrl,
     bool Private,
-    bool Archived          // maps to Member.IsArchived
+    bool Archived,         // maps to Member.IsArchived
+    string? PkId           // maps to Member.PkId
 );
 
 public record SpMemberCreateRequest(

@@ -22,7 +22,7 @@ public class MembersController(
         m.PreventFrontNotification, m.ReceiveBoardNotifications,
         m.ExtraImages, m.SpMemberId, m.Status, m.ParentIds,
         m.Groups.Select(g => g.Id).ToList(),
-        m.CreatedAt, m.UpdatedAt);
+        m.CreatedAt, m.UpdatedAt, m.PkId, m.Birthday);
 
     [HttpGet]
     public async Task<IActionResult> ListAsync([FromQuery] bool includeArchived = false)

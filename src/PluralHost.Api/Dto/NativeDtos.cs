@@ -23,7 +23,7 @@ public record MemberResponse(
     bool PreventFrontNotification, bool ReceiveBoardNotifications,
     List<string> ExtraImages, string? SpMemberId,
     MemberStatus Status, List<Guid> ParentIds, List<Guid> GroupIds,
-    DateTime CreatedAt, DateTime UpdatedAt);
+    DateTime CreatedAt, DateTime UpdatedAt, string? PkId, string? Birthday);
 
 public record MemberCreateRequest(
     string Name, string? DisplayName = null, string? Pronouns = null,

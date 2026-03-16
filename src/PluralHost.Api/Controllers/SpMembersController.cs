@@ -22,7 +22,8 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
                 Color: m.Color,
                 AvatarUrl: null,      // avatars served via /api/media/ — no direct URL
                 Private: m.PrivacyTier == MemberPrivacy.Private,
-                Archived: m.IsArchived
+                Archived: m.IsArchived,
+                PkId: m.PkId
             ));
 
     // GET /v1/members/:system — Ghost Mode + soft-delete via global filter
