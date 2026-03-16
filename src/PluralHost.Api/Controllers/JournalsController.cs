@@ -41,7 +41,7 @@ public class JournalsController(PluralHostContext context) : ControllerBase
         };
         context.JournalEntries.Add(entry);
         await context.SaveChangesAsync();
-        return CreatedAtAction(nameof(PatchAsync), new { id = entry.Id }, ToResponse(entry));
+        return StatusCode(201, ToResponse(entry));
     }
 
     [HttpPatch("{id:guid}")]

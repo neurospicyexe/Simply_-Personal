@@ -27,7 +27,7 @@ public class JournalsControllerTests : IDisposable
     public async Task Create_DefaultsIsPrivateToTrue()
     {
         var result = await _controller.CreateAsync(
-            new JournalCreateRequest("Today was okay.")) as CreatedAtActionResult;
+            new JournalCreateRequest("Today was okay.")) as ObjectResult;
         var response = result!.Value as JournalEntryResponse;
 
         Assert.True(response!.IsPrivate);
@@ -45,7 +45,7 @@ public class JournalsControllerTests : IDisposable
     public async Task Create_WithTitle_StoresTitle()
     {
         var result = await _controller.CreateAsync(
-            new JournalCreateRequest("Body", "My Title")) as CreatedAtActionResult;
+            new JournalCreateRequest("Body", "My Title")) as ObjectResult;
         var response = result!.Value as JournalEntryResponse;
 
         Assert.Equal("My Title", response!.Title);
