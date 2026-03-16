@@ -6,6 +6,57 @@ Build a mobile-first React PWA that provides a usable owner-facing frontend for 
 
 ---
 
+## Backend Changes (also Plan 5 scope)
+
+### 1. httpOnly Cookie Auth (two required changes)
+
+**a) `AuthController.LoginAsync`** — currently returns `Ok(new { token })`. Must be updated to set `Set-Cookie: token=...; HttpOnly; Secure; SameSite=Strict` and return `200 OK` with no body. JWT generation logic unchanged.
+
+**b) `Program.cs` JWT middleware** — currently reads tokens from `Authorization: Bearer` header only. Must add `Events.OnMessageReceived` to extract the token from the cookie:
+```csharp
+options.Events = new JwtBearerEvents
+{
+    OnMessageReceived = ctx =>
+    {
+        ctx.Token = ctx.Request.Cookies["token"];
+        return Task.CompletedTask;
+    }
+};
+```
+Both changes are required. Without (b), every authenticated request returns 401 even after the cookie is set.
+
+### 2. CORS Policy
+
+`Program.cs` has no CORS configuration. The Vite dev server (`localhost:5173`) calling the API (`localhost:8080`) with `credentials: "include"` will be blocked by the browser without `Access-Control-Allow-Origin` + `Access-Control-Allow-Credentials: true`.
+
+Add to `Program.cs`:
+```csharp
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+    p.WithOrigins("http://localhost:5173")   // dev only
+     .AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
+// ...
+app.UseCors(); // before UseAuthentication
+```
+In production (same-origin via reverse proxy), CORS is not needed and the dev-only origin should be excluded.
+
+### 3. Logout Endpoint
+
+With httpOnly cookies the frontend cannot clear the token via JavaScript. Add:
+```
+POST /api/auth/logout
+```
+Responds with `Set-Cookie: token=; Max-Age=0; HttpOnly; Secure; SameSite=Strict` and `200 OK`. Settings page calls this on tap of "Log out".
+
+### 4. Front Entry Edit (start time + member correction)
+
+`PATCH /v1/frontHistory/:id` currently supports only `endTime` and `customStatus`. The front card Edit form requires correcting `memberId` and `startTime`. Add support for these two fields to the existing PATCH handler:
+```csharp
+if (body.MemberId is not null) entry.MemberId = body.MemberId.Value;
+if (body.StartTime.HasValue) entry.FrontStart = Epoch.FromMs(body.StartTime.Value);
+```
+
+---
+
 ## Out of Scope (Plan 5)
 
 - Member detail tabs: History, Notes, Message Board, Custom Fields — deferred to Plan 6
@@ -14,6 +65,7 @@ Build a mobile-first React PWA that provides a usable owner-facing frontend for 
 - Multi-user / SaaS — backend concern, not frontend
 - Friends / Privacy Buckets management UI
 - Journal UI
+- Avatar upload — display existing avatar only; upload endpoint deferred to Plan 6
 
 ---
 
@@ -35,9 +87,9 @@ The app lives at `src/PluralHost.Web/` alongside the existing `src/PluralHost.Ap
 
 ## Auth
 
-- JWT returned from `POST /api/auth/login`
-- Stored in an **httpOnly cookie** (not localStorage — per security requirements in CLAUDE.md)
-- All API calls include cookie automatically via `credentials: "include"`
+- JWT set by server via `Set-Cookie: token=...; HttpOnly; Secure; SameSite=Strict` on successful `POST /api/auth/login` (backend change included in Plan 5 scope — see Backend Prerequisite above)
+- Cookie sent automatically by browser on all same-origin requests via `credentials: "include"`
+- Never stored in localStorage or sessionStorage
 - `/login` is the only public route; all others redirect to `/login` if unauthenticated
 
 ---
@@ -51,6 +103,7 @@ The app lives at `src/PluralHost.Web/` alongside the existing `src/PluralHost.Ap
 | `/front` | Current Front |
 | `/members` | Member List |
 | `/members/:id` | Member Detail |
+| `/history` | History (stub — "coming soon") |
 | `/settings` | Settings (stub) |
 
 ---
@@ -63,8 +116,8 @@ The app lives at `src/PluralHost.Web/` alongside the existing `src/PluralHost.Ap
 |---|---|
 | Front | `/front` |
 | Members | `/members` |
+| History | `/history` (stub for Plan 6) |
 | Settings | `/settings` |
-| Home | `/` |
 
 ---
 
@@ -103,10 +156,10 @@ Used everywhere a member appears. Always shows the member's color:
 
 - Centered card on `#121212` background
 - Logo / wordmark
-- Email + password fields
+- Password field only (single-owner system, no email identity)
 - Sign In button (`#b6ff00` fill, `#121212` text)
 - No register flow — single owner, self-hosted
-- On success: store JWT in httpOnly cookie, redirect to `/front`
+- On success: server sets httpOnly cookie, frontend redirects to `/front`
 
 ---
 
@@ -120,11 +173,10 @@ Each card (expanded):
 - Avatar (color ring, initial or photo)
 - Name + pronouns
 - Live timer (`#b6ff00`, updates every second via `setInterval`)
-- Custom status (editable inline)
-- Start date + time
-- Per-front comment field
-- **Edit** button: inline form to correct alter, start date/time
-- **Remove** button (`#ff4db8`)
+- Start date + time (e.g. "Started 10:22 AM · Mar 16")
+- Status/note field — free-text, maps to `customStatus` in `PATCH /v1/frontHistory/:id` which stores to `FrontHistory.Comment`. Editable inline; tap to edit, enter to save.
+- **Edit** button: inline form to correct alter (`memberId`) and start time (`startTime`) — requires backend change #4 above
+- **Remove** button (`#ff4db8`) — calls `DELETE /v1/frontHistory/:id`
 
 Cards default to expanded. Tap header area to collapse to compact view (avatar + name + timer only).
 
@@ -150,6 +202,8 @@ Cards default to expanded. Tap header area to collapse to compact view (avatar +
 - Same density toggle applies within folders
 - Search filters within the active mode
 
+Archived members are excluded from list by default (`GET /api/members` returns non-archived only). To reach an archived member's detail page, a future "show archived" toggle will be needed — deferred to Plan 6. In Plan 5, archived members are simply not visible in the list.
+
 Tap a member → navigate to `/members/:id`.
 
 ---
@@ -166,12 +220,12 @@ Tap a member → navigate to `/members/:id`.
 #### Profile tab
 
 Inline-editable fields (tap to edit, save button appears):
-- Avatar (tap to upload or clear)
+- Avatar (display only in Plan 5 — upload deferred to Plan 6)
 - Name
 - Pronouns
 - Description (multiline)
 - Color (color picker)
-- Groups (tag chips, tap to add/remove)
+- Groups (tag chips, tap to add/remove via `PATCH /v1/group/members`)
 
 #### Options tab
 
@@ -181,6 +235,16 @@ Inline-editable fields (tap to edit, save button appears):
 - Receive board notifications toggle
 
 > **Note:** History, Notes, Message Board, and Custom Fields tabs are deferred to Plan 6.
+
+---
+
+### Settings (`/settings`)
+
+Minimal stub page with one functional item:
+
+- **Log out** button — calls `POST /api/auth/logout` (backend change #3), then redirects to `/login`
+
+All other settings content deferred to Plan 6.
 
 ---
 
@@ -200,10 +264,15 @@ All calls go to the existing `.NET` API. Base URL configurable via Vite env var 
 | Screen | Endpoints used |
 |---|---|
 | Login | `POST /api/auth/login` |
-| Front | `GET /api/front-status`, `POST /api/front-status`, `PATCH /api/front-status/:id`, `DELETE /api/front-status/:id` |
+| Logout | `POST /api/auth/logout` (backend change #3) |
+| Front (read current fronters) | `GET /v1/fronters` |
+| Front (add fronter) | `POST /v1/frontHistory` — body: `{ member: string, startTime: number (epoch ms), endTime?: number, customStatus?: string }` |
+| Front (end fronting / status note) | `PATCH /v1/frontHistory/:id` — body: `{ live?: boolean, endTime?: number (epoch ms), customStatus?: string, memberId?: string, startTime?: number }` (last two require backend change #4) |
+| Front (remove fronter) | `DELETE /v1/frontHistory/:id` |
 | Member list | `GET /api/members` |
-| Member detail | `GET /api/members/:id`, `PATCH /api/members/:id` |
-| Groups (folder mode) | `GET /api/groups` |
+| Member detail (read/edit) | `GET /api/members/:id`, `PATCH /api/members/:id` |
+| Groups (folder mode) | `GET /v1/groups/owner` |
+| Group membership changes | `PATCH /v1/group/members` |
 
 TanStack Query handles caching and refetch. Front screen polls every 30s via `refetchInterval`.
 
@@ -256,4 +325,5 @@ src/PluralHost.Web/
 - JWT in httpOnly cookie only — never in localStorage or sessionStorage
 - `credentials: "include"` on all fetch calls
 - No sensitive data logged to console
-- Avatar uploads go through existing `MediaController` (already auth-gated)
+- Avatar display uses existing `MediaController` (`GET /api/media/:id`) — auth-gated, no public URLs
+- Avatar upload deferred to Plan 6
