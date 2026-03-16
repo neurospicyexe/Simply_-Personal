@@ -43,6 +43,7 @@ builder.Services.AddScoped<IShareTokenService, ShareTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<ITokenVisibilityService, TokenVisibilityService>();
+builder.Services.AddScoped<IImportService, ImportService>();
 builder.Services.AddHttpClient<IAvatarDownloadService, AvatarDownloadService>();
 builder.Services.AddHostedService<AutoUnfreezeService>();
 
