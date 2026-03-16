@@ -321,5 +321,86 @@ public class ImportServiceTests : IDisposable
         Assert.Equal("OldRole", updated.Value);
     }
 
+    // --- PK import tests ---
+
+    [Fact]
+    public async Task ImportPk_NewMember_CreatesRow()
+    {
+        var req = new PkImportRequest(
+            Members: [new PkMemberEntry(
+                Uuid: "pk-uuid-001", Name: "Ember",
+                DisplayName: "Ember the Fire", Pronouns: "she/her",
+                Color: "ff0000", AvatarUrl: null, Description: "Fire alter",
+                Birthday: "1995-04-20", Privacy: null)],
+            IncludeAvatars: false);
+
+        var result = await _svc.ImportPkAsync(req);
+
+        Assert.Equal(1, result.Created);
+        var member = await _context.Members.FirstAsync();
+        Assert.Equal("Ember", member.Name);
+        Assert.Equal("pk-uuid-001", member.PkId);
+        Assert.Equal("#ff0000", member.Color); // # prepended
+        Assert.Equal("1995-04-20", member.Birthday);
+        Assert.Equal("Ember the Fire", member.DisplayName);
+    }
+
+    [Fact]
+    public async Task ImportPk_ExistingMember_Skip()
+    {
+        _context.Members.Add(new Member { Name = "Ember", PkId = "pk-uuid-001" });
+        await _context.SaveChangesAsync();
+
+        var req = new PkImportRequest(
+            Members: [new PkMemberEntry(
+                Uuid: "pk-uuid-001", Name: "Ember Updated",
+                DisplayName: null, Pronouns: null,
+                Color: null, AvatarUrl: null, Description: null,
+                Birthday: null, Privacy: null)],
+            ConflictStrategy: ImportConflictStrategy.Skip,
+            IncludeAvatars: false);
+
+        var result = await _svc.ImportPkAsync(req);
+
+        Assert.Equal(1, result.Skipped);
+        var member = await _context.Members.FirstAsync();
+        Assert.Equal("Ember", member.Name); // unchanged
+    }
+
+    [Fact]
+    public async Task ImportPk_PrivateVisibility_SetsPrivacyTierPrivate()
+    {
+        var req = new PkImportRequest(
+            Members: [new PkMemberEntry(
+                Uuid: "pk-uuid-001", Name: "Shadow",
+                DisplayName: null, Pronouns: null,
+                Color: null, AvatarUrl: null, Description: null,
+                Birthday: null, Privacy: new PkMemberPrivacy("private"))],
+            IncludeAvatars: false);
+
+        await _svc.ImportPkAsync(req);
+
+        var member = await _context.Members.FirstAsync();
+        Assert.Equal(MemberPrivacy.Private, member.PrivacyTier);
+    }
+
+    [Fact]
+    public async Task ImportPk_BlankName_AddsError()
+    {
+        var req = new PkImportRequest(
+            Members: [new PkMemberEntry(
+                Uuid: "pk-uuid-001", Name: "",
+                DisplayName: null, Pronouns: null,
+                Color: null, AvatarUrl: null, Description: null,
+                Birthday: null, Privacy: null)],
+            IncludeAvatars: false);
+
+        var result = await _svc.ImportPkAsync(req);
+
+        Assert.Equal(0, result.Created);
+        Assert.Single(result.Errors);
+        Assert.Equal("pk-uuid-001", result.Errors[0].SourceId);
+    }
+
     public void Dispose() => _context.Dispose();
 }
