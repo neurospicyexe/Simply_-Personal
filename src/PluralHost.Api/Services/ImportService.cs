@@ -119,7 +119,8 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                     else
                     {
                         if (cfv.DeletedAt != null) cfv.Restore();
-                        cfv.Value = value;
+                        if (ShouldApply(cfv.Value, value, request.ConflictStrategy, false))
+                            cfv.Value = value;
                     }
                 }
             }

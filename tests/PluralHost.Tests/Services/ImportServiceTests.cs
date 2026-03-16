@@ -240,5 +240,49 @@ public class ImportServiceTests : IDisposable
         Assert.Equal("pk-uuid-abc", member.PkId);
     }
 
+    [Fact]
+    public async Task ImportSp_WithCustomFields_CreatesFieldValues()
+    {
+        var req = new SpImportRequest(
+            Members: [new SpMemberEntry("sp-001", new SpImportMemberContent(
+                Name: "Ember", Desc: null, Pronouns: null,
+                PkId: null, Color: null, AvatarUrl: null,
+                Private: false,
+                PreventsFrontNotifs: false, ReceiveMessageBoardNotifs: true,
+                Archived: false, Info: new Dictionary<string, string> { ["field-id-001"] = "Pyromancer" }))],
+            CustomFields: [new SpCustomFieldEntry("field-id-001", new SpCustomFieldContent("Role", 0, false))],
+            IncludeCustomFields: true,
+            IncludeAvatars: false);
+
+        await _svc.ImportSpAsync(req);
+
+        var cfvs = await _context.CustomFieldValues.ToListAsync();
+        Assert.Single(cfvs);
+        Assert.Equal("Pyromancer", cfvs[0].Value);
+        Assert.Equal(MemberPrivacy.Private, cfvs[0].PrivacyTier); // always private on import
+    }
+
+    [Fact]
+    public async Task ImportSp_SpPrivateFalse_WhenCurrentlyPrivate_SetsPublic()
+    {
+        _context.Members.Add(new Member { Name = "Ember", SpMemberId = "sp-001", PrivacyTier = MemberPrivacy.Private });
+        await _context.SaveChangesAsync();
+
+        var req = new SpImportRequest(
+            Members: [new SpMemberEntry("sp-001", new SpImportMemberContent(
+                Name: "Ember", Desc: null, Pronouns: null,
+                PkId: null, Color: null, AvatarUrl: null,
+                Private: false,
+                PreventsFrontNotifs: false, ReceiveMessageBoardNotifs: true,
+                Archived: false, Info: null))],
+            ConflictStrategy: ImportConflictStrategy.MergePreferExisting,
+            IncludeAvatars: false);
+
+        await _svc.ImportSpAsync(req);
+
+        var member = await _context.Members.FirstAsync();
+        Assert.Equal(MemberPrivacy.Public, member.PrivacyTier); // false + currently Private → Public
+    }
+
     public void Dispose() => _context.Dispose();
 }
