@@ -67,12 +67,13 @@ public class ShareController(
                 .ToList()
         }).ToList();
 
+        var frontPermInt = (int)accessToken.Permission;
         var currentFront = await context.FrontHistory
             .Include(f => f.Member)
             .Where(f => f.FrontEnd == null &&
                         f.Member != null &&
                         f.Member.DeletedAt == null &&
-                        (int)f.Member.PrivacyTier < (int)accessToken.Permission)
+                        (int)f.Member.PrivacyTier < frontPermInt)
             .ToListAsync();
 
         var visibleFront = currentFront
