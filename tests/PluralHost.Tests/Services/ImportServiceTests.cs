@@ -284,5 +284,42 @@ public class ImportServiceTests : IDisposable
         Assert.Equal(MemberPrivacy.Public, member.PrivacyTier); // false + currently Private → Public
     }
 
+    [Fact]
+    public async Task ImportSp_WithCustomFields_RespectsConflictStrategy_MergePreferExisting()
+    {
+        // Arrange: pre-seed custom field definition and a value
+        var field = new PluralHost.Api.Domain.CustomField { Label = "Role", SpFieldId = "field-id-001" };
+        _context.CustomFields.Add(field);
+        var member = new Member { Name = "Ember", SpMemberId = "sp-001" };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+        var cfv = new PluralHost.Api.Domain.CustomFieldValue
+        {
+            FieldId = field.Id, MemberId = member.Id, Value = "OldRole",
+            PrivacyTier = MemberPrivacy.Private
+        };
+        _context.CustomFieldValues.Add(cfv);
+        await _context.SaveChangesAsync();
+
+        // Act: import with MergePreferExisting — existing value should NOT be overwritten
+        var req = new SpImportRequest(
+            Members: [new SpMemberEntry("sp-001", new SpImportMemberContent(
+                Name: "Ember", Desc: null, Pronouns: null,
+                PkId: null, Color: null, AvatarUrl: null,
+                Private: false,
+                PreventsFrontNotifs: false, ReceiveMessageBoardNotifs: true,
+                Archived: false, Info: new Dictionary<string, string> { ["field-id-001"] = "NewRole" }))],
+            CustomFields: [new SpCustomFieldEntry("field-id-001", new SpCustomFieldContent("Role", 0, false))],
+            ConflictStrategy: ImportConflictStrategy.MergePreferExisting,
+            IncludeCustomFields: true,
+            IncludeAvatars: false);
+
+        await _svc.ImportSpAsync(req);
+
+        // Assert: OldRole kept (existing non-null wins with MergePreferExisting)
+        var updated = await _context.CustomFieldValues.FirstAsync();
+        Assert.Equal("OldRole", updated.Value);
+    }
+
     public void Dispose() => _context.Dispose();
 }
