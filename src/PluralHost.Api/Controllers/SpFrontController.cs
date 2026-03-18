@@ -90,6 +90,10 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
         if (body.Live is false && body.EndTime.HasValue)
             entry.FrontEnd = Epoch.FromMs(body.EndTime.Value);
         if (body.CustomStatus is not null) entry.Comment = body.CustomStatus;
+        if (body.MemberId is not null && Guid.TryParse(body.MemberId, out var newMemberId))
+            entry.MemberId = newMemberId;
+        if (body.StartTime.HasValue)
+            entry.FrontStart = Epoch.FromMs(body.StartTime.Value);
 
         await context.SaveChangesAsync();
         return Ok();

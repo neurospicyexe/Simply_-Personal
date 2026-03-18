@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PluralHost.Api.Controllers;
@@ -8,7 +9,16 @@ namespace PluralHost.Tests.Controllers;
 public class AuthControllerTests
 {
     private readonly Mock<IAuthService> _authMock = new();
-    private AuthController CreateController() => new(_authMock.Object);
+
+    private AuthController CreateController()
+    {
+        var controller = new AuthController(_authMock.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+        return controller;
+    }
 
     [Fact]
     public async Task Setup_WhenNotYetConfigured_Returns200()
@@ -42,12 +52,30 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task Login_WithCorrectPassword_Returns200WithToken()
+    public async Task Login_WithCorrectPassword_Returns200_TokenInCookie()
     {
         _authMock.Setup(a => a.LoginAsync("correct")).ReturnsAsync("jwt-token-here");
         var result = await CreateController().LoginAsync(new LoginRequest("correct"));
-        var ok = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(ok.Value);
+        Assert.IsType<OkResult>(result);
+    }
+
+    [Fact]
+    public async Task Login_WithCorrectPassword_Returns200AndSetsCookie()
+    {
+        _authMock.Setup(a => a.LoginAsync("correct")).ReturnsAsync("jwt-token-here");
+        var controller = CreateController();
+        var result = await controller.LoginAsync(new LoginRequest("correct"));
+        Assert.IsType<OkResult>(result);
+        Assert.True(controller.HttpContext.Response.Headers.ContainsKey("Set-Cookie"));
+    }
+
+    [Fact]
+    public async Task Logout_Returns200AndClearsCookie()
+    {
+        var controller = CreateController();
+        var result = controller.Logout();
+        Assert.IsType<OkResult>(result);
+        Assert.True(controller.HttpContext.Response.Headers.ContainsKey("Set-Cookie"));
     }
 
     [Fact]

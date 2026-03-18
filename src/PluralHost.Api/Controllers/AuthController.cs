@@ -26,7 +26,7 @@ public class AuthController(IAuthService auth) : ControllerBase
         return Ok(new { message = "Login password set. You can now log in." });
     }
 
-    // POST /api/auth/login — Returns JWT (open, credentials are the auth)
+    // POST /api/auth/login — sets httpOnly cookie, returns 200 no body
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
     {
@@ -34,7 +34,28 @@ public class AuthController(IAuthService auth) : ControllerBase
         if (token == null)
             return Unauthorized(new { error = "Invalid credentials." });
 
-        return Ok(new { token });
+        Response.Cookies.Append("token", token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddDays(30)
+        });
+        return Ok();
+    }
+
+    // POST /api/auth/logout — clears the httpOnly cookie
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("token", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict
+        });
+        return Ok();
     }
 
     // POST /api/auth/change-password — Requires JWT + Gatekeeper PIN

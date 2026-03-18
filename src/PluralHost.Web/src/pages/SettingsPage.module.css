@@ -1,0 +1,60 @@
+.page {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 24px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 12px;
+}
+
+.logoutBtn {
+  background: var(--color-pink);
+  color: var(--color-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  transition: opacity 150ms ease;
+}
+
+.logoutBtn:hover {
+  opacity: 0.85;
+}
+
+.logoutBtn:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 2px;
+}
+
+.stub {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logoutBtn {
+    transition: none;
+  }
+}

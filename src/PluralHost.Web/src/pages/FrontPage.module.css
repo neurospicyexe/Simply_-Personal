@@ -1,0 +1,94 @@
+.page {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.addBtn {
+  background: var(--color-primary);
+  color: var(--color-bg);
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: var(--touch-min);
+}
+
+.picker {
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.pickerSearch {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-muted);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  min-height: var(--touch-min);
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+.pickerList {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.pickerItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 6px;
+  min-height: var(--touch-min);
+}
+
+.pickerItem:hover { background: var(--color-bg); }
+
+.pickerPronouns {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.pickerEmpty {
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  padding: 12px;
+}
+
+.cards { display: flex; flex-direction: column; }
+
+.empty {
+  color: var(--color-muted);
+  text-align: center;
+  padding: 40px 0;
+  font-size: 0.9rem;
+}

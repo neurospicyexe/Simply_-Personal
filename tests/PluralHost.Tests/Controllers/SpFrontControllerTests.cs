@@ -143,5 +143,42 @@ public class SpFrontControllerTests : IDisposable
         Assert.NotNull(raw.DeletedAt);
     }
 
+    [Fact]
+    public async Task Update_WithMemberId_UpdatesMember()
+    {
+        var memberId = Guid.NewGuid();
+        var newMemberId = Guid.NewGuid();
+        var entry = new FrontHistory { Id = Guid.NewGuid(), MemberId = memberId, FrontStart = DateTime.UtcNow };
+        _context.FrontHistory.Add(entry);
+        await _context.SaveChangesAsync();
+
+        var controller = new SpFrontController(_context);
+        var result = await controller.UpdateAsync(
+            entry.Id.ToString(),
+            new SpFrontUpdateRequest(MemberId: newMemberId.ToString()));
+
+        Assert.IsType<OkResult>(result);
+        var updated = await _context.FrontHistory.FindAsync(entry.Id);
+        Assert.Equal(newMemberId, updated!.MemberId);
+    }
+
+    [Fact]
+    public async Task Update_WithStartTime_UpdatesFrontStart()
+    {
+        var entry = new FrontHistory { Id = Guid.NewGuid(), MemberId = Guid.NewGuid(), FrontStart = DateTime.UtcNow };
+        _context.FrontHistory.Add(entry);
+        await _context.SaveChangesAsync();
+
+        var newStart = DateTimeOffset.UtcNow.AddHours(-2).ToUnixTimeMilliseconds();
+        var controller = new SpFrontController(_context);
+        var result = await controller.UpdateAsync(
+            entry.Id.ToString(),
+            new SpFrontUpdateRequest(StartTime: newStart));
+
+        Assert.IsType<OkResult>(result);
+        var updated = await _context.FrontHistory.FindAsync(entry.Id);
+        Assert.Equal(Epoch.FromMs(newStart), updated!.FrontStart);
+    }
+
     public void Dispose() => _context.Dispose();
 }

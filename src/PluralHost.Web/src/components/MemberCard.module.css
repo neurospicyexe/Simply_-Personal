@@ -1,0 +1,63 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: var(--color-text);
+  min-height: var(--touch-min);
+  border-radius: 8px;
+  transition: background 150ms ease;
+}
+
+.card:hover, .card:focus-visible {
+  background: var(--color-surface);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.pronouns {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.compactItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: var(--color-text);
+  min-height: var(--touch-min);
+  border-radius: 8px;
+  transition: background 150ms ease;
+}
+
+.compactItem:hover, .compactItem:focus-visible {
+  background: var(--color-surface);
+}
+
+.compactName {
+  font-size: 0.9rem;
+}
+
+.frontDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .compactItem { transition: none; }
+}

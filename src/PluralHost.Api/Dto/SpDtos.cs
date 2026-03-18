@@ -70,7 +70,9 @@ public record SpFrontCreateRequest(
 public record SpFrontUpdateRequest(
     bool? Live = null,
     long? EndTime = null,
-    string? CustomStatus = null
+    string? CustomStatus = null,
+    string? MemberId = null,
+    long? StartTime = null
 );
 
 // ── Group ─────────────────────────────────────────────────────────────
