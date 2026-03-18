@@ -52,7 +52,7 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task Login_WithCorrectPassword_Returns200WithToken()
+    public async Task Login_WithCorrectPassword_Returns200_TokenInCookie()
     {
         _authMock.Setup(a => a.LoginAsync("correct")).ReturnsAsync("jwt-token-here");
         var result = await CreateController().LoginAsync(new LoginRequest("correct"));
