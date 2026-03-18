@@ -127,7 +127,7 @@
   font-weight: 500;
 }
 
-.saveBtn { background: var(--color-primary); color: #121212; }
+.saveBtn { background: var(--color-primary); color: var(--color-bg); }
 .cancelBtn { background: var(--color-surface); color: var(--color-muted); border: 1px solid var(--color-muted); }
 
 .actions {
@@ -153,7 +153,7 @@
   border-radius: 8px;
   border: none;
   background: var(--color-pink);
-  color: #fff;
+  color: var(--color-text);
   font-size: 0.9rem;
   cursor: pointer;
   font-weight: 500;

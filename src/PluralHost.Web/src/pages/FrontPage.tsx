@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { frontApi } from '../api/front'
 import { membersApi } from '../api/members'
@@ -23,7 +23,7 @@ export default function FrontPage() {
   })
 
   // Build member lookup map
-  const memberMap = Object.fromEntries(members.map((m: Member) => [m.id, m]))
+  const memberMap = useMemo(() => Object.fromEntries(members.map((m: Member) => [m.id, m])), [members])
 
   const removeMutation = useMutation({
     mutationFn: (uid: string) => frontApi.delete(uid),

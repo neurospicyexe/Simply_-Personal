@@ -34,6 +34,12 @@ export default function FrontCard({ entry, member, onRemove, onUpdateStatus, onE
   )
 
   useEffect(() => {
+    setStatus(entry.customStatus ?? '')
+    setEditMemberId(entry.member)
+    setEditStartTime(new Date(entry.startTime).toISOString().slice(0, 16))
+  }, [entry.uid, entry.customStatus, entry.member, entry.startTime])
+
+  useEffect(() => {
     if (reduced) return
     const id = setInterval(() => setElapsed(Date.now() - entry.startTime), 1000)
     return () => clearInterval(id)

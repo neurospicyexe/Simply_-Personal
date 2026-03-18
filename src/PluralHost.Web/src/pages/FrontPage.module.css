@@ -20,7 +20,7 @@
 
 .addBtn {
   background: var(--color-primary);
-  color: #121212;
+  color: var(--color-bg);
   border: none;
   border-radius: 8px;
   padding: 0 16px;
