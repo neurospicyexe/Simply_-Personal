@@ -1,0 +1,165 @@
+.card {
+  background: var(--color-surface);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  min-height: var(--touch-min);
+}
+
+.headerInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.pronouns {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.timer {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.body {
+  padding: 0 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.startTime {
+  font-size: 0.78rem;
+  color: var(--color-cyan);
+}
+
+.statusRow {
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+}
+
+.statusTap {
+  background: none;
+  border: none;
+  padding: 10px 0;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  min-height: var(--touch-min);
+  width: 100%;
+}
+
+.statusInput {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  min-height: var(--touch-min);
+}
+
+.placeholder { color: var(--color-muted); }
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--color-bg);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.editLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.editInput {
+  background: var(--color-surface);
+  border: 1px solid var(--color-muted);
+  border-radius: 6px;
+  padding: 8px;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  min-height: var(--touch-min);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.editActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.saveBtn, .cancelBtn {
+  min-height: var(--touch-min);
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.saveBtn { background: var(--color-primary); color: #121212; }
+.cancelBtn { background: var(--color-surface); color: var(--color-muted); border: 1px solid var(--color-muted); }
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.editBtn {
+  min-height: var(--touch-min);
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-muted);
+  background: none;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.removeBtn {
+  min-height: var(--touch-min);
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-pink);
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer { display: none; }
+  * { transition: none !important; }
+}
