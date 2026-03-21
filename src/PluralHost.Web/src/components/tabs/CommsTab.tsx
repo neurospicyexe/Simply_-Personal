@@ -69,7 +69,7 @@ export default function CommsTab({ member }: Props) {
         <div key={msg.id} className={styles.card}>
           <div className={styles.cardHeader}>
             <span className={styles.author}>{msg.authorName}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className={styles.timeMeta}>
               <span className={styles.meta}>{relativeTime(msg.createdAt)}</span>
               <button className={styles.deleteIcon} onClick={() => deleteMutation.mutate(msg.id)} aria-label="Delete message">🗑</button>
             </div>
