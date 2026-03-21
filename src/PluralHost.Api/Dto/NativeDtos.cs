@@ -124,6 +124,9 @@ public record JournalUpdateRequest(
 // Slim DTO for GET /share/{token}/journals
 public record SharedJournalDto(Guid Id, string? Title, string Content, DateTime CreatedAt);
 
+// ── Media upload ───────────────────────────────────────────────────────
+public record UploadResponse(string Id);
+
 // ── Import pipeline DTOs ──────────────────────────────────────────────────
 public enum ImportConflictStrategy
 {

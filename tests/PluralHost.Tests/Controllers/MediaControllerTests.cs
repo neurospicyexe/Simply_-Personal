@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using PluralHost.Api.Controllers;
+using PluralHost.Api.Dto;
+using Xunit;
 
 namespace PluralHost.Tests.Controllers;
 
@@ -11,9 +14,9 @@ public class MediaControllerTests : IDisposable
     private readonly string _tempRoot;
     private readonly MediaController _controller;
 
+    // GET tests use the DI constructor (IConfiguration + IWebHostEnvironment)
     public MediaControllerTests()
     {
-        // Create a real temp directory so path traversal tests have a concrete root
         _tempRoot = Path.Combine(Path.GetTempPath(), "pluralhost-media-tests-" + Guid.NewGuid());
         Directory.CreateDirectory(_tempRoot);
 
@@ -29,6 +32,14 @@ public class MediaControllerTests : IDisposable
 
         _controller = new MediaController(config, envMock.Object);
     }
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_tempRoot))
+            Directory.Delete(_tempRoot, recursive: true);
+    }
+
+    // ── GET tests ─────────────────────────────────────────────────────────
 
     [Fact]
     public void Get_ValidExistingFile_ReturnsPhysicalFileResult()
@@ -84,9 +95,99 @@ public class MediaControllerTests : IDisposable
         Assert.IsType<PhysicalFileResult>(result);
     }
 
-    public void Dispose()
+    // ── Upload tests ──────────────────────────────────────────────────────
+
+    private static IFormFile MakeFile(byte[] content, string filename, string contentType)
     {
-        if (Directory.Exists(_tempRoot))
-            Directory.Delete(_tempRoot, recursive: true);
+        var stream = new MemoryStream(content);
+        return new FormFile(stream, 0, content.Length, "file", filename)
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = contentType,
+        };
+    }
+
+    [Fact]
+    public async Task Upload_ValidJpeg_Returns200WithId()
+    {
+        var uploadDir = Path.Combine(Path.GetTempPath(), "ph-upload-test-" + Guid.NewGuid());
+        Directory.CreateDirectory(uploadDir);
+        try
+        {
+            var ctrl = new MediaController(uploadDir);
+            var bytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+            var file = MakeFile(bytes, "photo.jpg", "image/jpeg");
+
+            var result = await ctrl.UploadAsync(file) as OkObjectResult;
+            var response = result!.Value as UploadResponse;
+            Assert.NotNull(response);
+            Assert.EndsWith(".jpg", response!.Id);
+            Assert.True(File.Exists(Path.Combine(uploadDir, response.Id)));
+        }
+        finally
+        {
+            Directory.Delete(uploadDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Upload_FileTooLarge_Returns413()
+    {
+        var uploadDir = Path.Combine(Path.GetTempPath(), "ph-upload-test-" + Guid.NewGuid());
+        Directory.CreateDirectory(uploadDir);
+        try
+        {
+            var ctrl = new MediaController(uploadDir);
+            var bytes = new byte[6 * 1024 * 1024];
+            var file = MakeFile(bytes, "big.jpg", "image/jpeg");
+
+            var result = await ctrl.UploadAsync(file);
+            Assert.IsType<ObjectResult>(result);
+            Assert.Equal(413, ((ObjectResult)result).StatusCode);
+        }
+        finally
+        {
+            Directory.Delete(uploadDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Upload_DisallowedExtension_Returns400()
+    {
+        var uploadDir = Path.Combine(Path.GetTempPath(), "ph-upload-test-" + Guid.NewGuid());
+        Directory.CreateDirectory(uploadDir);
+        try
+        {
+            var ctrl = new MediaController(uploadDir);
+            var bytes = new byte[] { 0xFF, 0xD8, 0xFF };
+            var file = MakeFile(bytes, "script.exe", "application/octet-stream");
+
+            var result = await ctrl.UploadAsync(file);
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+        finally
+        {
+            Directory.Delete(uploadDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Upload_MagicBytesMismatch_Returns400()
+    {
+        var uploadDir = Path.Combine(Path.GetTempPath(), "ph-upload-test-" + Guid.NewGuid());
+        Directory.CreateDirectory(uploadDir);
+        try
+        {
+            var ctrl = new MediaController(uploadDir);
+            var bytes = new byte[] { 0xFF, 0xD8, 0xFF }; // JPEG bytes
+            var file = MakeFile(bytes, "photo.png", "image/png"); // but .png extension
+
+            var result = await ctrl.UploadAsync(file);
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+        finally
+        {
+            Directory.Delete(uploadDir, recursive: true);
+        }
     }
 }
