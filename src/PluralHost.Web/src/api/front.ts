@@ -5,6 +5,9 @@ export const frontApi = {
   getCurrent: () =>
     apiFetch<SpEnvelope<FrontContent>[]>('/v1/fronters'),
 
+  history: () =>
+    apiFetch<SpEnvelope<FrontContent>[]>('/v1/frontHistory'),
+
   create: (payload: FrontCreatePayload) =>
     apiFetch<string>('/v1/frontHistory', {
       method: 'POST',
