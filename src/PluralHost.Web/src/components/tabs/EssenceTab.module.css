@@ -1,0 +1,117 @@
+.tab { display: flex; flex-direction: column; gap: 4px; }
+
+.field {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fieldValue {
+  background: none;
+  border: none;
+  padding: 6px 0;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-align: left;
+  min-height: var(--touch-min);
+  width: 100%;
+}
+
+.fieldEmpty { color: var(--color-muted); font-style: italic; }
+
+.editRow { display: flex; flex-direction: column; gap: 8px; }
+
+.input, .textarea {
+  background: var(--color-bg);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  min-height: var(--touch-min);
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.textarea { min-height: 80px; resize: vertical; }
+
+.editBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.saveBtn, .cancelBtn {
+  min-height: var(--touch-min);
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.saveBtn { background: var(--color-primary); color: var(--color-bg); }
+.cancelBtn { background: var(--color-surface); color: var(--color-muted); border: 1px solid var(--color-muted); }
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.colorSwatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.colorInput {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+
+.groupChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--color-muted);
+  background: none;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-height: var(--touch-min);
+  transition: all 150ms ease;
+}
+
+.chip.chipActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-bg);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip { transition: none; }
+}

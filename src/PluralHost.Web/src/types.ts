@@ -20,6 +20,15 @@ export interface Member {
   updatedAt: string
 }
 
+export interface CreateMemberPayload {
+  name: string
+  displayName?: string
+  pronouns?: string
+  color?: string
+  description?: string
+  privacyTier?: PrivacyTier
+}
+
 export interface MemberUpdatePayload {
   name?: string
   displayName?: string
@@ -72,4 +81,35 @@ export interface Group {
   color?: string
   emoji?: string
   members: string[]
+}
+
+export interface MemberNote {
+  id: string
+  memberId: string
+  title: string
+  content: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface BoardMessage {
+  id: string
+  memberId: string
+  authorName: string
+  content: string
+  createdAt: string
+}
+
+export interface FieldDef {
+  id: string
+  name: string
+  createdAt: string
+  deletedAt: string | null
+}
+
+export interface MemberFieldEntry {
+  fieldId: string
+  memberId: string
+  value: string
+  updatedAt: string
 }

@@ -1,0 +1,46 @@
+.tab { display: flex; flex-direction: column; gap: 4px; }
+
+.field {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.segmented {
+  display: flex;
+  background: var(--color-surface);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.segBtn {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  background: none;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-height: var(--touch-min);
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.segBtn.segActive {
+  background: var(--color-primary);
+  color: var(--color-bg);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segBtn { transition: none; }
+}

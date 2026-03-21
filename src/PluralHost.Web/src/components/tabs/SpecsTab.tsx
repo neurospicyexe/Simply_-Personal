@@ -2,10 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fieldsApi } from '../../api/fields'
 import BottomSheet from '../BottomSheet'
-import type { Member } from '../../types'
+import type { Member, FieldDef } from '../../types'
 import styles from './SpecsTab.module.css'
-
-interface FieldDef { id: string; name: string; createdAt: string; deletedAt: string | null }
 interface Props { member: Member }
 
 const PRESETS = ['Role', 'Age', 'Interests', 'Triggers', 'Likes', 'Dislikes', 'Trauma', 'Strengths']

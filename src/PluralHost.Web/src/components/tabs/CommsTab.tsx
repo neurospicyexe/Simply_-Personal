@@ -2,12 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { boardApi } from '../../api/board'
 import BottomSheet from '../BottomSheet'
-import type { Member } from '../../types'
+import type { Member, BoardMessage } from '../../types'
 import styles from './CommsTab.module.css'
-
-interface BoardMessage {
-  id: string; memberId: string; authorName: string; content: string; createdAt: string
-}
 
 interface Props { member: Member }
 

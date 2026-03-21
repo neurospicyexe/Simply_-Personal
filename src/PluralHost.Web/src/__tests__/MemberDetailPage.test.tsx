@@ -5,15 +5,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 import MemberDetailPage from '../pages/MemberDetailPage'
 
-const MEMBER = {
-  id: 'm1', name: 'Sage', color: '#b6ff00', pronouns: 'they/them',
-  description: 'A test member', privacyTier: 'Public' as const,
-  isArchived: false, groupIds: [], parentIds: [], avatarPath: undefined,
-  isPinned: false, isUntracked: false,
-  preventFrontNotification: false, receiveBoardNotifications: false,
-  createdAt: '', updatedAt: '',
-}
-
 vi.mock('../api/members', () => ({
   membersApi: {
     get: vi.fn().mockResolvedValue({
@@ -41,6 +32,37 @@ vi.mock('../api/groups', () => ({
     setMemberships: vi.fn().mockResolvedValue(undefined),
   },
 }))
+vi.mock('../api/fields', () => ({
+  fieldsApi: {
+    listDefs: vi.fn().mockResolvedValue([]),
+    getMemberFields: vi.fn().mockResolvedValue([]),
+    upsertMemberField: vi.fn(),
+    deleteMemberField: vi.fn(),
+    createDef: vi.fn(),
+  },
+}))
+vi.mock('../api/notes', () => ({
+  notesApi: {
+    list: vi.fn().mockResolvedValue([]),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+}))
+vi.mock('../api/board', () => ({
+  boardApi: {
+    list: vi.fn().mockResolvedValue([]),
+    post: vi.fn(),
+    delete: vi.fn(),
+  },
+}))
+vi.mock('../api/front', () => ({
+  frontApi: {
+    history: vi.fn().mockResolvedValue([]),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+}))
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -61,16 +83,27 @@ test('renders member name and pronouns', async () => {
   expect(screen.getAllByText('they/them').length).toBeGreaterThan(0)
 })
 
-test('Profile tab is active by default', async () => {
+test('Essence tab is active by default', async () => {
   render(<MemberDetailPage />, { wrapper: Wrapper })
   await screen.findByRole('heading', { name: 'Sage' })
-  const profileTab = screen.getByRole('tab', { name: /profile/i })
-  expect(profileTab).toHaveAttribute('aria-selected', 'true')
+  const essenceTab = screen.getByRole('tab', { name: /essence/i })
+  expect(essenceTab).toHaveAttribute('aria-selected', 'true')
 })
 
-test('switching to Options tab shows privacy controls', async () => {
+test('switching to Access tab shows privacy controls', async () => {
   render(<MemberDetailPage />, { wrapper: Wrapper })
   await screen.findByRole('heading', { name: 'Sage' })
-  await userEvent.click(screen.getByRole('tab', { name: /options/i }))
+  await userEvent.click(screen.getByRole('tab', { name: /access/i }))
   expect(screen.getByText(/privacy/i)).toBeInTheDocument()
+})
+
+test('all six tabs are rendered', async () => {
+  render(<MemberDetailPage />, { wrapper: Wrapper })
+  await screen.findByRole('heading', { name: 'Sage' })
+  expect(screen.getByRole('tab', { name: /essence/i })).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: /specs/i })).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: /dossier/i })).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: /comms/i })).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: /logs/i })).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: /access/i })).toBeInTheDocument()
 })

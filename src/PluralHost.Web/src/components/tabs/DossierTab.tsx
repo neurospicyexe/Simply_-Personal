@@ -2,13 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notesApi } from '../../api/notes'
 import BottomSheet from '../BottomSheet'
-import type { Member } from '../../types'
+import type { Member, MemberNote } from '../../types'
 import styles from './DossierTab.module.css'
-
-interface MemberNote {
-  id: string; memberId: string; title: string; content: string
-  createdAt: string; updatedAt: string
-}
 
 interface Props { member: Member }
 
