@@ -98,6 +98,7 @@ public class MembersController(
         if (body.ExtraImages is not null)                 member.ExtraImages = body.ExtraImages;
         if (body.SpMemberId is not null)                  member.SpMemberId = body.SpMemberId;
         if (body.Status is not null)                      member.Status = body.Status.Value;
+        if (body.AvatarPath is not null)                  member.AvatarPath = body.AvatarPath;
 
         await context.SaveChangesAsync();
         return Ok(ToResponse(member));

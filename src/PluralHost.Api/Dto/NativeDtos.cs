@@ -38,7 +38,7 @@ public record MemberUpdateRequest(
     bool? IsUntracked = null, bool? PreventFrontNotification = null,
     bool? ReceiveBoardNotifications = null, List<string>? ExtraImages = null,
     string? SpMemberId = null, MemberStatus? Status = null,
-    List<Guid>? ParentIds = null);
+    List<Guid>? ParentIds = null, string? AvatarPath = null);
 
 // ── BoardMessage ──────────────────────────────────────────────────────
 public record BoardMessageResponse(

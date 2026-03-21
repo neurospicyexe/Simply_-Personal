@@ -142,5 +142,18 @@ public class MembersControllerTests : IDisposable
         Assert.False(updated!.AllowsBoardPosting);
     }
 
+    [Fact]
+    public async Task Update_AvatarPath_PersistsValue()
+    {
+        var m = new Member { Name = "Ash" };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+
+        var result = await _controller.UpdateAsync(m.Id,
+            new MemberUpdateRequest(AvatarPath: "abc123.jpg")) as OkObjectResult;
+        var response = result!.Value as MemberResponse;
+        Assert.Equal("abc123.jpg", response!.AvatarPath);
+    }
+
     public void Dispose() => _context.Dispose();
 }
