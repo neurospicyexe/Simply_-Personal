@@ -1,0 +1,24 @@
+info:
+  name: Token Test
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:5179/api/tokens
+  body:
+    type: json
+    data: |-
+      {
+        "label": "Friends link",
+        "permission": 2,
+        "expiresAt": null,
+        "allowsBoardPosting": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

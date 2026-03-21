@@ -34,6 +34,15 @@ src/
     Controllers/        # SecureActionController, ShareController, TokensController, MembersController, BoardController, MemberNotesController, FrontStatusController, SpMembersController, SpFrontController, SpGroupsController, MediaController, FieldsController, MemberFieldsController, JournalsController
     BackgroundServices/ # AutoUnfreezeService
     Dto/                # NativeDtos.cs, SpDtos.cs
+  PluralHost.Web/       # React PWA (Vite + TypeScript, port 5173 in dev)
+    src/
+      api/              # apiFetch client + per-domain modules (auth, members, front, groups)
+      components/       # Avatar, BottomNav, FrontCard, MemberCard, TabBar, CreateMemberSheet
+      context/          # AuthContext (isAuthenticated, logout)
+      pages/            # LoginPage, FrontPage, MembersPage, MemberDetailPage, HistoryStubPage, SettingsPage
+      styles/           # tokens.css (design system), globals.css
+      types.ts          # Member, Group, FrontContent, SpEnvelope, payload types
+    vite.config.ts      # Proxies /api + /v1 → http://localhost:8080
 tests/
   PluralHost.Tests/
     Domain/             # BaseEntityTests, MemberTests, SystemSettingsTests, AccessTokenTests
@@ -41,35 +50,46 @@ tests/
     Services/           # GhostModeServiceTests, GatekeeperServiceTests, ShareTokenServiceTests, TokenVisibilityServiceTests
     Controllers/        # SecureActionControllerTests, MembersControllerTests, SpMembersControllerTests, BoardControllerTests, TokensControllerTests, ShareControllerTests, FieldsControllerTests, MemberFieldsControllerTests, JournalsControllerTests
 docs/
+  cypher-notes.md       # Running session notes (auth quirks, dev setup, API notes)
+  reference/
+    simply-plural-ui.md # SP UI reference — what to keep, improve, and avoid
   superpowers/
     plans/
       2026-03-11-plural-host-database-schema-crisis-shield.md  ← COMPLETED
       2026-03-14-plan2-privacy-tiers-share-tokens.md           ← COMPLETED
       2026-03-15-plan3-custom-fields-journals.md               ← COMPLETED
+      2026-03-17-plan5-pwa-shell.md                            ← COMPLETED
     specs/
       2026-03-14-plan2-share-tokens-privacy-tiers-design.md
       2026-03-15-plan3-custom-fields-journals.md
+      2026-03-16-plan5-pwa-shell.md
 ```
 
 ## Build & Run Commands
 
 ```bash
-# Build
+# Backend — build + test
 dotnet build
-
-# Run tests (229/229 passing)
 dotnet test
 dotnet test --filter "ClassName" -v minimal
 
-# Run API locally
+# Backend — run API locally (port 8080)
 cd src/PluralHost.Api && dotnet run
+
+# Frontend — dev server (port 5173, proxies /api + /v1 to :8080)
+cd src/PluralHost.Web && npm run dev
+cd src/PluralHost.Web && npx vitest run   # frontend tests
+
+# First-time setup: set the login password (LoginPasswordHash starts null)
+# Run once after first docker compose up or dotnet run:
+# POST http://localhost:8080/api/auth/setup  { "password": "your-password" }
 
 # EF Core migrations
 dotnet tool install --global dotnet-ef   # if not already installed
 dotnet ef migrations add <Name> --project src/PluralHost.Api --output-dir Data/Migrations
 dotnet ef database update --project src/PluralHost.Api
 
-# Docker
+# Docker (API only — frontend runs locally via npm run dev)
 docker compose build
 docker compose up -d   # API available at http://localhost:8080
 docker compose down
@@ -107,9 +127,41 @@ docker compose down
 - `GET /share/{token}/journals` — Ghost Mode → 401 → ReadFrontOnly 403 → public entries only
 - 229/229 tests passing
 
-**Next plans:**
-- Plan 4: Simply Plural / PluralKit import pipeline
-- Plan 5: React Flow mind map, 24h heatmaps, PWA shell
+**Plan 4 — skipped for now** (SP/PluralKit import pipeline — deferred until core UI is solid)
+
+**Plan 5 `2026-03-16-plan5-pwa-shell.md` — COMPLETE (2026-03-17)**
+
+- Vite + React + TypeScript PWA, served separately from the API (port 5173 in dev)
+- Cookie-based auth (`httpOnly + Secure + SameSite=Strict`, 30-day expiry)
+- CORS configured for dev (`localhost:5173`) — `credentials: include` on all fetches
+- TanStack Query for all data fetching; Front screen polls every 30s
+- Pages: Login, Front, Members, MemberDetail, History (stub), Settings
+- Components: Avatar, BottomNav, FrontCard, MemberCard, TabBar
+- Design system: dark theme, `--color-primary: #b6ff00` (lime), CSS Modules throughout
+- Inline editable fields on MemberDetail Profile tab; Options tab privacy/toggle controls
+- PWA manifest + SVG icons + Lucide icons in BottomNav
+
+**Ad-hoc additions (2026-03-18, beyond Plan 5):**
+- `CreateMemberSheet` — bottom sheet for adding members (name, display name, pronouns, color picker)
+  - `POST /api/members` wired up; invalidates `['members']` query on success
+- `docs/cypher-notes.md` — running session notes file
+
+**Next — Plan 6 (not yet specced/planned):**
+- Member detail: History tab, Notes tab, Message Board tab, Custom Fields tab
+- Avatar upload (`POST /api/media/upload` — endpoint not yet built)
+- Journal UI (`/journals` page)
+- Groups management UI (create/edit/delete groups; batch-assign members from the group side)
+- Friends / Privacy Buckets management UI
+- React Flow mind map (system visualization)
+- 24h front heatmaps
+- Per-alter theming (background, accent color)
+- Delete member flow (Gatekeeper PIN gate, soft-delete only)
+
+**SP UI Alignment (reference: `docs/reference/simply-plural-ui.md`):**
+- Goal: all of SP's features, but actually beautiful and desktop-first-responsive
+- Do NOT replicate: mobile-only layout, thin left-edge color bars, alter-by-alter bucket assignment
+- DO improve on: member color usage (let it breathe), bucket-to-alters assignment direction, per-alter theming, desktop sidebar/panel layout alongside mobile-first responsive
+- SP member profile has 6 tabs (Groups / Profile / Board / History / Notes / Options) — we have 2 now (Profile / Options); rest come in Plan 6
 
 **Branch:** `claude/init-project-setup-sO5k5`
 **Remote:** https://github.com/neurospicyexe/Simply_-Personal

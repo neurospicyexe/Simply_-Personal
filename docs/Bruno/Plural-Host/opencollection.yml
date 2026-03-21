@@ -1,0 +1,26 @@
+opencollection: 1.0.0
+
+info:
+  name: Plural-Host
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: bearer
+    token: eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJvd25lciIsImp0aSI6ImMwMjY4YmQyLTVlYWItNGE0MS1iOWNmLTY1ZGI2NjViNDhiNiIsImlhdCI6MTc3MzY2MTczMiwiZXhwIjoxNzczNzQ4MTMyLCJpc3MiOiJwbHVyYWwtaG9zdCIsImF1ZCI6InBsdXJhbC1ob3N0In0.OyESZxXRhPqDn1hZ571BtKrwLzWk_h7AHLGpm-5XPmc
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

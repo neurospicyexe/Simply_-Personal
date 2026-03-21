@@ -1,0 +1,15 @@
+info:
+  name: member list test
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: http://localhost:5179/api/members
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

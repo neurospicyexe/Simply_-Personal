@@ -1,0 +1,25 @@
+info:
+  name: add member test
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: http://localhost:5179/api/members
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Ember",
+        "displayName": null,
+        "pronouns": "she/her",
+        "color": "#ff6b6b",
+        "privacyTier": 0
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -79,6 +79,7 @@ if (body.StartTime.HasValue) entry.FrontStart = Epoch.FromMs(body.StartTime.Valu
 | Server state | TanStack Query v5 |
 | PWA | vite-plugin-pwa (service worker + manifest) |
 | Styling | CSS Modules + CSS custom properties |
+| Typography | Inter (Google Fonts) — functional sans-serif, all weights 300–700 |
 | No component library | Custom components only (full brand control) |
 
 The app lives at `src/PluralHost.Web/` alongside the existing `src/PluralHost.Api/`.
@@ -122,6 +123,20 @@ The app lives at `src/PluralHost.Web/` alongside the existing `src/PluralHost.Ap
 ---
 
 ## Brand Colors
+
+```css
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+```
+
+---
+
+## Touch & Motion Requirements
+
+- **Touch targets** — all interactive elements (buttons, tappable cards, inline edit areas) must be `min 44x44px`
+- **Touch spacing** — adjacent tap targets (e.g. Edit + Remove on FrontCard) must have `min 8px gap`
+- **`prefers-reduced-motion`** — the 1-second `setInterval` timer must pause/hide when `prefers-reduced-motion: reduce` is active; all CSS transitions must be disabled under this media query
+
+---
 
 ```css
 :root {

@@ -4,6 +4,7 @@ import { membersApi } from '../api/members'
 import { groupsApi } from '../api/groups'
 import { frontApi } from '../api/front'
 import MemberCard from '../components/MemberCard'
+import CreateMemberSheet from '../components/CreateMemberSheet'
 import styles from './MembersPage.module.css'
 import type { Member, Group, SpEnvelope } from '../types'
 
@@ -15,6 +16,7 @@ export default function MembersPage() {
   const [mode, setMode] = useState<ViewMode>('list')
   const [density, setDensity] = useState<Density>('card')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+  const [showCreate, setShowCreate] = useState(false)
 
   const { data: members = [] } = useQuery({
     queryKey: ['members'],
@@ -113,6 +115,13 @@ export default function MembersPage() {
             Compact
           </button>
         </div>
+        <button
+          className={styles.addBtn}
+          onClick={() => setShowCreate(true)}
+          aria-label="Add member"
+        >
+          +
+        </button>
       </div>
 
       {/* Content */}
@@ -176,6 +185,8 @@ export default function MembersPage() {
           )}
         </div>
       )}
+
+      {showCreate && <CreateMemberSheet onClose={() => setShowCreate(false)} />}
     </div>
   )
 }

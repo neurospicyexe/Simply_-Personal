@@ -30,6 +30,24 @@
   gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.addBtn {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-bg);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .toggleGroup {
