@@ -123,6 +123,7 @@ public class MediaControllerTests : IDisposable
             Assert.NotNull(response);
             Assert.EndsWith(".jpg", response!.Id);
             Assert.True(File.Exists(Path.Combine(uploadDir, response.Id)));
+            Assert.True(new FileInfo(Path.Combine(uploadDir, response!.Id)).Length > 0);
         }
         finally
         {

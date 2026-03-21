@@ -82,10 +82,10 @@ public class MediaController : ControllerBase
         Directory.CreateDirectory(_uploadDir);
 
         using (var dest = System.IO.File.Create(savePath))
+        using (var src = file.OpenReadStream())
         {
-            var uploadStream = file.OpenReadStream();
-            uploadStream.Seek(0, SeekOrigin.Begin);
-            await file.CopyToAsync(dest);
+            src.Seek(0, SeekOrigin.Begin);
+            await src.CopyToAsync(dest);
         }
 
         return Ok(new UploadResponse(savedName));
