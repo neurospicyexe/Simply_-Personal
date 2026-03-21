@@ -1,0 +1,24 @@
+.container { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.header { display: flex; justify-content: space-between; align-items: center; }
+.addBtn { background: var(--color-primary, #b6ff00); color: #000; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.4rem; cursor: pointer; font-weight: 700; }
+.empty { color: #666; text-align: center; padding: 40px 0; }
+.error { color: #f87171; text-align: center; padding: 20px; }
+.retryBtn { background: none; border: 1px solid #444; color: #aaa; padding: 6px 14px; border-radius: 6px; cursor: pointer; margin-top: 8px; }
+.fieldRow { display: flex; align-items: center; gap: 12px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 14px; }
+.fieldName { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; min-width: 80px; flex-shrink: 0; }
+.fieldValue { flex: 1; color: var(--color-text, #fff); cursor: pointer; min-height: 24px; }
+.fieldInput { flex: 1; background: #222; border: 1px solid var(--color-primary, #b6ff00); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.9rem; }
+.placeholder { color: #555; font-style: italic; }
+.deleteIcon { background: none; border: none; color: #555; cursor: pointer; padding: 2px 6px; }
+.deleteIcon:hover { color: #f87171; }
+
+/* Sheet */
+.presetLabel { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; margin-bottom: 8px; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.chip { background: rgba(182, 255, 0, 0.1); color: var(--color-primary, #b6ff00); border: 1px solid rgba(182, 255, 0, 0.3); padding: 5px 12px; border-radius: 16px; cursor: pointer; font-size: 0.85rem; }
+.chip.dimmed { opacity: 0.45; }
+.customLabel { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; margin-bottom: 6px; }
+.customRow { display: flex; gap: 8px; }
+.customInput { flex: 1; background: #222; border: 1px solid #444; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; }
+.customBtn { background: var(--color-primary, #b6ff00); color: #000; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+.customBtn:disabled { opacity: 0.5; cursor: not-allowed; }
