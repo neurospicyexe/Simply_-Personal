@@ -25,6 +25,8 @@ public record MemberResponse(
     MemberStatus Status, List<Guid> ParentIds, List<Guid> GroupIds,
     DateTime CreatedAt, DateTime UpdatedAt, string? PkId, string? Birthday);
 
+public record DeleteMemberRequest(string Pin);
+
 public record MemberCreateRequest(
     string Name, string? DisplayName = null, string? Pronouns = null,
     string? Color = null, string? Role = null, string? Description = null,

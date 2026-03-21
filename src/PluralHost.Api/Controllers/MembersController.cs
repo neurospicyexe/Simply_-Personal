@@ -13,7 +13,8 @@ namespace PluralHost.Api.Controllers;
 [Route("api/members")]
 public class MembersController(
     PluralHostContext context,
-    IMemberService memberService) : ControllerBase
+    IMemberService memberService,
+    IGatekeeperService gatekeeper) : ControllerBase
 {
     private static MemberResponse ToResponse(Member m) => new(
         m.Id, m.Name, m.DisplayName, m.Pronouns, m.Color, m.Role,
@@ -102,5 +103,26 @@ public class MembersController(
 
         await context.SaveChangesAsync();
         return Ok(ToResponse(member));
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync(Guid id, [FromBody] DeleteMemberRequest body)
+    {
+        var member = await context.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null)
+            return NotFound();
+
+        if (!await gatekeeper.ValidatePinAsync(body.Pin))
+            return StatusCode(403, new { error = "Invalid Gatekeeper PIN." });
+
+        var settings = await context.SystemSettings.FirstAsync();
+        if (settings.DeletionCooldownEnd.HasValue && settings.DeletionCooldownEnd.Value > DateTime.UtcNow)
+            return StatusCode(409, new { cooldownEnd = settings.DeletionCooldownEnd.Value });
+
+        member.SoftDelete();
+        settings.DeletionCooldownEnd = DateTime.UtcNow.AddHours(72);
+        await context.SaveChangesAsync();
+
+        return NoContent();
     }
 }

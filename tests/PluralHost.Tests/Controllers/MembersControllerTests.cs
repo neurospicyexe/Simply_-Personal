@@ -14,6 +14,7 @@ public class MembersControllerTests : IDisposable
 {
     private readonly PluralHostContext _context;
     private readonly Mock<IMemberService> _memberService;
+    private readonly Mock<IGatekeeperService> _gatekeeper;
     private readonly MembersController _controller;
 
     public MembersControllerTests()
@@ -24,7 +25,8 @@ public class MembersControllerTests : IDisposable
         _context = new PluralHostContext(options);
         _context.Database.EnsureCreated();
         _memberService = new Mock<IMemberService>();
-        _controller = new MembersController(_context, _memberService.Object);
+        _gatekeeper = new Mock<IGatekeeperService>();
+        _controller = new MembersController(_context, _memberService.Object, _gatekeeper.Object);
     }
 
     [Fact]
@@ -153,6 +155,58 @@ public class MembersControllerTests : IDisposable
             new MemberUpdateRequest(AvatarPath: "abc123.jpg")) as OkObjectResult;
         var response = result!.Value as MemberResponse;
         Assert.Equal("abc123.jpg", response!.AvatarPath);
+    }
+
+    [Fact]
+    public async Task Delete_ValidPin_SoftDeletesMember()
+    {
+        var m = new Member { Name = "Ash" };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+        _gatekeeper.Setup(g => g.ValidatePinAsync("1234")).ReturnsAsync(true);
+
+        var result = await _controller.DeleteAsync(m.Id, new DeleteMemberRequest("1234"));
+
+        Assert.IsType<NoContentResult>(result);
+        var row = await _context.Members.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == m.Id);
+        Assert.NotNull(row!.DeletedAt);
+    }
+
+    [Fact]
+    public async Task Delete_InvalidPin_Returns403()
+    {
+        var m = new Member { Name = "Ash" };
+        _context.Members.Add(m);
+        await _context.SaveChangesAsync();
+        _gatekeeper.Setup(g => g.ValidatePinAsync(It.IsAny<string>())).ReturnsAsync(false);
+
+        var result = await _controller.DeleteAsync(m.Id, new DeleteMemberRequest("wrong"));
+        var obj = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(403, obj.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_CooldownActive_Returns409()
+    {
+        var m = new Member { Name = "Ash" };
+        _context.Members.Add(m);
+        var settings = await _context.SystemSettings.FirstAsync();
+        settings.DeletionCooldownEnd = DateTime.UtcNow.AddHours(48);
+        await _context.SaveChangesAsync();
+        _gatekeeper.Setup(g => g.ValidatePinAsync("1234")).ReturnsAsync(true);
+
+        var result = await _controller.DeleteAsync(m.Id, new DeleteMemberRequest("1234"));
+        var obj = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(409, obj.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_NotFound_Returns404()
+    {
+        _gatekeeper.Setup(g => g.ValidatePinAsync("1234")).ReturnsAsync(true);
+
+        var result = await _controller.DeleteAsync(Guid.NewGuid(), new DeleteMemberRequest("1234"));
+        Assert.IsType<NotFoundResult>(result);
     }
 
     public void Dispose() => _context.Dispose();
