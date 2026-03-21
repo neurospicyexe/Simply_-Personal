@@ -74,7 +74,7 @@ src/
 
 **`BottomSheet.tsx`** — created by Agent B. A bottom-anchored slide-up sheet with a dark overlay, matching the `CreateMemberSheet` visual style (same background, border-radius, padding, animation). Props: `isOpen: boolean`, `onClose: () => void`, `title: string`, `children: ReactNode`. Agents C and D import this component.
 
-**`Drawer.tsx`** — created by Agent A. A right-side slide-in panel that overlays the content without displacing it (position: fixed, right-anchored). Props: `isOpen: boolean`, `onClose: () => void`, `title: string`, `children: ReactNode`. Used only by `LogsTab`.
+**`Drawer.tsx`** — created by Agent A. A right-side slide-in panel that overlays content without displacing it (`position: fixed`, right-anchored, full height). Animation: slides in from the right (`transform: translateX(100%)` → `translateX(0)`) with a 200ms ease transition, matching `useReducedMotion` (skip animation if reduced motion preferred). Dark semi-transparent overlay behind. Props: `isOpen: boolean`, `onClose: () => void`, `title: string`, `children: ReactNode`. Used only by `LogsTab`.
 
 ### Execution phases
 
@@ -122,7 +122,7 @@ export interface MemberNote {
 }
 
 export interface BoardMessage {
-  id: string
+  id: string             // backend DTO field is `id` (Guid serialized as string); used as `msgId` in DELETE
   memberId: string
   authorName: string
   content: string
@@ -133,6 +133,7 @@ export interface FieldDef {
   id: string
   name: string
   createdAt: string
+  deletedAt: string | null   // null = active; non-null = soft-deleted, exclude from dedup and display
 }
 
 export interface MemberFieldEntry {
