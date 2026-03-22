@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { boardApi } from '../../api/board'
 import BottomSheet from '../BottomSheet'
@@ -56,7 +57,7 @@ export default function CommsTab({ member }: Props) {
     <div className={styles.container}>
       <div className={styles.header}>
         <span />
-        <button className={styles.addBtn} onClick={openSheet} aria-label="Post message">+</button>
+        <button className={styles.addBtn} onClick={openSheet} aria-label="Post message"><Plus size={16} /></button>
       </div>
 
       {messages.length === 0 && <p className={styles.empty}>No messages yet.</p>}

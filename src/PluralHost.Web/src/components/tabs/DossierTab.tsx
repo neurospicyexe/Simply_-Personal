@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notesApi } from '../../api/notes'
 import BottomSheet from '../BottomSheet'
@@ -75,7 +76,7 @@ export default function DossierTab({ member }: Props) {
     <div className={styles.container}>
       <div className={styles.header}>
         <span />
-        <button className={styles.addBtn} onClick={openCreate} aria-label="Add note">+</button>
+        <button className={styles.addBtn} onClick={openCreate} aria-label="Add note"><Plus size={16} /></button>
       </div>
 
       {notes.length === 0 && <p className={styles.empty}>No notes yet. Use + to add the first one.</p>}

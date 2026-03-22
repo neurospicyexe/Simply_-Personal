@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fieldsApi } from '../../api/fields'
 import BottomSheet from '../BottomSheet'
@@ -85,7 +86,7 @@ export default function SpecsTab({ member }: Props) {
     <div className={styles.container}>
       <div className={styles.header}>
         <span />
-        <button className={styles.addBtn} onClick={() => setSheetOpen(true)} aria-label="Add spec">+</button>
+        <button className={styles.addBtn} onClick={() => setSheetOpen(true)} aria-label="Add spec"><Plus size={16} /></button>
       </div>
 
       {displayedDefs.length === 0 && <p className={styles.empty}>No specs defined yet. Use + to add the first one.</p>}
