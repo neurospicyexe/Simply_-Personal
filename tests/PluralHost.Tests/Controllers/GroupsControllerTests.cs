@@ -67,6 +67,25 @@ public class GroupsControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAll_ReturnsMemberCount()
+    {
+        var group = new Group { Name = "Counted" };
+        var m1 = new Member { Name = "X", BucketId = PrivacyBucket.PublicId };
+        _ctx.Groups.Add(group);
+        _ctx.Members.Add(m1);
+        _ctx.SaveChanges();
+        m1.ParentIds = [group.Id];
+        _ctx.SaveChanges();
+
+        var result = await _sut.GetAllAsync();
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var list = Assert.IsAssignableFrom<System.Collections.IEnumerable>(ok.Value);
+        var first = list.Cast<object>().First();
+        var memberCount = (int)first.GetType().GetProperty("memberCount")!.GetValue(first)!;
+        Assert.Equal(1, memberCount);
+    }
+
+    [Fact]
     public async Task Create_AddsGroup()
     {
         var result = await _sut.CreateAsync(new GroupCreateRequest("Gamma", "#ff0000"));
