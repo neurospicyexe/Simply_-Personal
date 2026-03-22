@@ -1,20 +1,14 @@
 import { apiFetch } from './client'
-
-interface FieldDef {
-  id: string; name: string; createdAt: string; deletedAt: string | null
-}
-interface MemberFieldEntry {
-  fieldId: string; memberId: string; value: string; updatedAt: string
-}
+import type { FieldDef, MemberFieldEntry } from '../types'
 
 export const fieldsApi = {
   listDefs: () =>
     apiFetch<FieldDef[]>('/api/fields'),
 
-  createDef: (name: string) =>
+  createDef: (label: string) =>
     apiFetch<FieldDef>('/api/fields', {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ label, fieldType: 0 }),
     }),
 
   getMemberFields: (memberId: string) =>
