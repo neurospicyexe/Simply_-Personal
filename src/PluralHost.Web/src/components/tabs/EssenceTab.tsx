@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Pencil } from 'lucide-react'
 import { mediaApi } from '../../api/media'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { membersApi } from '../../api/members'
@@ -156,7 +157,7 @@ export default function EssenceTab({ member, groups }: Props) {
             disabled={uploading}
             type="button"
           >
-            ✏
+            <Pencil size={11} strokeWidth={2.5} />
           </button>
           <input
             ref={fileInputRef}

@@ -9,7 +9,6 @@
 }
 
 .fieldLabel {
-  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-muted);
   text-transform: uppercase;
@@ -156,8 +155,8 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--color-primary);
   color: var(--color-bg);
@@ -166,7 +165,6 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.75rem;
   padding: 0;
 }
 
