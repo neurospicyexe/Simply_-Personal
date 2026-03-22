@@ -174,7 +174,18 @@ docker compose down
 - `api/media.ts`, `api/secure.ts` — new frontend modules
 - 278 backend / 52 frontend tests passing
 
-**Next — Plan 7 (not yet specced):**
+**Plan 7a `2026-03-22-plan7a-frontend-repair.md` — COMPLETE (2026-03-22)**
+
+- **SpecsTab fixed** — `FieldDef`/`MemberFieldEntry` types aligned with backend DTOs (`name`→`label`, added `fieldType: number`, `sortOrder`, `privacyTier`); `fields.ts` `createDef` now sends `{label, fieldType: 0}` instead of `{name}` (was always 400)
+- **Board delete fixed** — removed PIN requirement from `BoardController.DeleteAsync` (was always 403); `BoardControllerTests` updated
+- **AccessTab checkboxes** — `.checkboxField` row layout; label and checkbox now on same line with `htmlFor` wiring
+- **Avatar pencil** — 28px → 20px; Lucide `Pencil` icon replaces emoji
+- **Add buttons** — Lucide `Plus size={16}` replaces typographic `+` in SpecsTab, CommsTab, DossierTab
+- **Color token** — `--color-danger: #f87171` added to `tokens.css`; `AccessTab` fallback now resolves to token
+- **Settings UX** — Security section opens by default (was collapsed, obscuring PIN setup for new users)
+- 278 backend / 52 frontend tests passing
+
+**Next — Plan 7b (not yet specced):**
 - Journal UI (`/journals` page)
 - Groups management UI (create/edit/delete groups; batch-assign members from the group side)
 - Friends / Privacy Buckets management UI

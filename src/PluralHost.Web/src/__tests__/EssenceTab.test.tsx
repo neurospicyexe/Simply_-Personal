@@ -12,12 +12,12 @@ vi.mock('../api/media', () => ({
 
 const mockMember: Member = {
   id: 'm1', name: 'Aria', displayName: 'The Aria', pronouns: 'she/her',
-  privacyTier: 'Public', isArchived: false, isUntracked: false, isPinned: false,
+  bucketId: '00000000-0000-0000-0000-000000000001', isArchived: false, isUntracked: false, isPinned: false,
   preventFrontNotification: false, receiveBoardNotifications: false,
   groupIds: ['g1'], parentIds: [],
   createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z',
 }
-const mockGroups: Group[] = [{ id: 'g1', name: 'Protectors', members: ['m1'] }]
+const mockGroups: Group[] = [{ id: 'g1', name: 'Protectors', memberCount: 1 }]
 
 function wrap(ui: React.ReactElement) {
   const qc = new QueryClient()

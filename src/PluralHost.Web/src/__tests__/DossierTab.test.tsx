@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import DossierTab from '../components/tabs/DossierTab'
@@ -16,7 +16,7 @@ vi.mock('../api/notes', () => ({
 import { notesApi } from '../api/notes'
 
 const mockMember: Member = {
-  id: 'member-1', name: 'Aria', privacyTier: 'Public',
+  id: 'member-1', name: 'Aria', bucketId: '00000000-0000-0000-0000-000000000001',
   isArchived: false, isUntracked: false, isPinned: false,
   preventFrontNotification: false, receiveBoardNotifications: false,
   groupIds: [], parentIds: [],

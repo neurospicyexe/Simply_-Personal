@@ -10,7 +10,7 @@ const BASE = {
     name: 'Kai',
     color: '#b6ff00',
     pronouns: 'they/them',
-    privacyTier: 'Public' as const,
+    bucketId: '00000000-0000-0000-0000-000000000001',
     isArchived: false,
     groupIds: [],
     parentIds: [],

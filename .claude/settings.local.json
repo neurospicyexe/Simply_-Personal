@@ -80,7 +80,21 @@
       "Bash(npx vitest:*)",
       "mcp__plugin_serena_serena__create_text_file",
       "Bash(bash \"C:/Users/razse/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.4/skills/brainstorming/scripts/start-server.sh\" --project-dir \"C:/dev/simply-personal\")",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(node \"C:/Users/razse/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.4/skills/brainstorming/scripts/server.js\" \"$SCREEN_DIR\")",
+      "Read(//c/dev/simply-personal/$TEMP/**)",
+      "Read(//c/Users/razse/AppData/Local/Temp/**)",
+      "mcp__plugin_serena_serena__find_symbol",
+      "Bash(npx tsc:*)",
+      "Bash(cd:*)",
+      "Bash(ls C:/dev/simply-personal/src/PluralHost.Api/Data/Migrations/*.cs)",
+      "Bash(ls C:/dev/simply-personal/src/PluralHost.Api/*.db)",
+      "Bash(ls C:/dev/simply-personal/*.db)",
+      "Bash(npm run:*)",
+      "Bash(sed -i \"s/privacyTier: ''Public'' as const/bucketId: ''00000000-0000-0000-0000-000000000001''/g\" FrontCard.test.tsx)",
+      "Bash(for f:*)",
+      "Bash(do sed:*)",
+      "Bash(done)"
     ]
   }
 }

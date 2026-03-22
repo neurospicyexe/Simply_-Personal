@@ -16,7 +16,7 @@ vi.mock('../api/fields', () => ({
 import { fieldsApi } from '../api/fields'
 
 const mockMember: Member = {
-  id: 'member-1', name: 'Aria', privacyTier: 'Public',
+  id: 'member-1', name: 'Aria', bucketId: '00000000-0000-0000-0000-000000000001',
   isArchived: false, isUntracked: false, isPinned: false,
   preventFrontNotification: false, receiveBoardNotifications: false,
   groupIds: [], parentIds: [],
@@ -47,10 +47,10 @@ describe('SpecsTab', () => {
 
   it('renders a field row with its value', async () => {
     vi.mocked(fieldsApi.listDefs).mockResolvedValue([
-      { id: 'f1', label: 'Role', fieldType: 'Text', sortOrder: 0, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null },
+      { id: 'f1', label: 'Role', fieldType: 0, sortOrder: 0, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null },
     ])
     vi.mocked(fieldsApi.getMemberFields).mockResolvedValue([
-      { fieldId: 'f1', label: 'Role', fieldType: 'Text', sortOrder: 0, value: 'Protector', privacyTier: 'Public' },
+      { fieldId: 'f1', label: 'Role', fieldType: 0, sortOrder: 0, value: 'Protector', privacyTier: 'Public' },
     ])
     wrap(<SpecsTab member={mockMember} />)
     await screen.findByText('Role')
@@ -59,8 +59,8 @@ describe('SpecsTab', () => {
 
   it('hides soft-deleted field defs', async () => {
     vi.mocked(fieldsApi.listDefs).mockResolvedValue([
-      { id: 'f1', label: 'Role', fieldType: 'Text', sortOrder: 0, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null },
-      { id: 'f2', label: 'OldField', fieldType: 'Text', sortOrder: 1, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: '2026-02-01T00:00:00Z' },
+      { id: 'f1', label: 'Role', fieldType: 0, sortOrder: 0, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null },
+      { id: 'f2', label: 'OldField', fieldType: 0, sortOrder: 1, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: '2026-02-01T00:00:00Z' },
     ])
     vi.mocked(fieldsApi.getMemberFields).mockResolvedValue([])
     wrap(<SpecsTab member={mockMember} />)

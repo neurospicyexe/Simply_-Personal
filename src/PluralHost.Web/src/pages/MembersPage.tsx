@@ -6,7 +6,7 @@ import { frontApi } from '../api/front'
 import MemberCard from '../components/MemberCard'
 import CreateMemberSheet from '../components/CreateMemberSheet'
 import styles from './MembersPage.module.css'
-import type { Member, Group, SpEnvelope } from '../types'
+import type { Member, SpEnvelope } from '../types'
 
 type ViewMode = 'list' | 'folder'
 type Density = 'card' | 'compact'
@@ -23,7 +23,7 @@ export default function MembersPage() {
     queryFn: membersApi.list,
   })
 
-  const { data: groupEnvelopes = [] } = useQuery({
+  const { data: groups = [] } = useQuery({
     queryKey: ['groups'],
     queryFn: groupsApi.list,
   })
@@ -36,11 +36,6 @@ export default function MembersPage() {
   const frontingIds = useMemo(
     () => new Set((fronters as SpEnvelope<{ member: string }>[]).map(f => f.content.member)),
     [fronters]
-  )
-
-  const groups: Group[] = useMemo(
-    () => (groupEnvelopes as SpEnvelope<Group>[]).map(e => e.content),
-    [groupEnvelopes]
   )
 
   const filtered = useMemo(() => {
@@ -147,7 +142,7 @@ export default function MembersPage() {
       ) : (
         <div className={styles.folderContent}>
           {groups.map(group => {
-            const groupMembers = filtered.filter(m => group.members.includes(m.id))
+            const groupMembers = filtered.filter(m => m.parentIds.includes(group.id))
             if (groupMembers.length === 0) return null
             const expanded = expandedFolders.has(group.id)
             return (

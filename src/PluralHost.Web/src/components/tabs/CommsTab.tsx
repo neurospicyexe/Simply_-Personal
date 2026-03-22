@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { boardApi } from '../../api/board'
 import BottomSheet from '../BottomSheet'
-import type { Member, BoardMessage } from '../../types'
+import type { Member } from '../../types'
 import styles from './CommsTab.module.css'
 
 interface Props { member: Member }

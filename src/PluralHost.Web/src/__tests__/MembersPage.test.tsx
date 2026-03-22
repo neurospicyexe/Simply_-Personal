@@ -9,9 +9,9 @@ import MembersPage from '../pages/MembersPage'
 vi.mock('../api/members', () => ({
   membersApi: {
     list: vi.fn().mockResolvedValue([
-      { id: '1', name: 'Aiden', color: '#b6ff00', pronouns: 'he/him', isArchived: false, groupIds: [], privacyTier: 'Public', parentIds: [], allowsBoardPosting: false, isPinned: false, isUntracked: false, preventFrontNotification: false, receiveBoardNotifications: false, extraImages: [], createdAt: '', updatedAt: '' },
-      { id: '2', name: 'Blake', color: '#ff4db8', pronouns: null, isArchived: false, groupIds: [], privacyTier: 'Public', parentIds: [], allowsBoardPosting: false, isPinned: false, isUntracked: false, preventFrontNotification: false, receiveBoardNotifications: false, extraImages: [], createdAt: '', updatedAt: '' },
-      { id: '3', name: 'Casey', color: '#00d4ff', pronouns: 'they/them', isArchived: false, groupIds: [], privacyTier: 'Public', parentIds: [], allowsBoardPosting: false, isPinned: false, isUntracked: false, preventFrontNotification: false, receiveBoardNotifications: false, extraImages: [], createdAt: '', updatedAt: '' },
+      { id: '1', name: 'Aiden', color: '#b6ff00', pronouns: 'he/him', isArchived: false, groupIds: [], bucketId: '00000000-0000-0000-0000-000000000001', parentIds: [], allowsBoardPosting: false, isPinned: false, isUntracked: false, preventFrontNotification: false, receiveBoardNotifications: false, extraImages: [], createdAt: '', updatedAt: '' },
+      { id: '2', name: 'Blake', color: '#ff4db8', pronouns: null, isArchived: false, groupIds: [], bucketId: '00000000-0000-0000-0000-000000000001', parentIds: [], allowsBoardPosting: false, isPinned: false, isUntracked: false, preventFrontNotification: false, receiveBoardNotifications: false, extraImages: [], createdAt: '', updatedAt: '' },
+      { id: '3', name: 'Casey', color: '#00d4ff', pronouns: 'they/them', isArchived: false, groupIds: [], bucketId: '00000000-0000-0000-0000-000000000001', parentIds: [], allowsBoardPosting: false, isPinned: false, isUntracked: false, preventFrontNotification: false, receiveBoardNotifications: false, extraImages: [], createdAt: '', updatedAt: '' },
     ]),
   },
 }))

@@ -18,24 +18,23 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('button', { name: /security/i })).toBeInTheDocument()
   })
 
-  it('Security section is collapsed by default', () => {
+  it('Security section is open by default (first-run UX)', () => {
     render(<SettingsPage />)
-    expect(
-      screen.getByRole('button', { name: /security/i })
-    ).toHaveAttribute('aria-expanded', 'false')
-  })
-
-  it('expands Security section on click', () => {
-    render(<SettingsPage />)
-    fireEvent.click(screen.getByRole('button', { name: /security/i }))
     expect(
       screen.getByRole('button', { name: /security/i })
     ).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('shows Change Password and Gatekeeper PIN headings when expanded', () => {
+  it('collapses Security section on click', () => {
     render(<SettingsPage />)
     fireEvent.click(screen.getByRole('button', { name: /security/i }))
+    expect(
+      screen.getByRole('button', { name: /security/i })
+    ).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('shows Change Password and Gatekeeper PIN headings by default', () => {
+    render(<SettingsPage />)
     expect(screen.getByRole('heading', { name: /change password/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /gatekeeper pin/i })).toBeInTheDocument()
   })

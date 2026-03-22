@@ -1,13 +1,5 @@
 namespace PluralHost.Api.Domain;
 
-public enum MemberPrivacy
-{
-    Public  = 0,   // visible to all token levels
-    Friend  = 1,   // visible to Friend and Trusted tokens
-    Trusted = 2,   // visible to Trusted tokens only
-    Private = 3    // never visible to any token
-}
-
 public enum MemberStatus { Active, Dormant, Fused, Gone }
 
 public class Member : BaseEntity
@@ -19,9 +11,7 @@ public class Member : BaseEntity
     public string? Color { get; set; }
     public string? Role { get; set; }
     public string? Description { get; set; }
-    public MemberPrivacy PrivacyTier { get; set; } = MemberPrivacy.Public;
-    // New: FK to PrivacyBucket (nullable until Migration 1 runs)
-    public Guid? BucketId { get; set; }
+    public Guid BucketId { get; set; } = PrivacyBucket.PublicId;
     public PrivacyBucket? Bucket { get; set; }
     public bool AllowsBoardPosting { get; set; } = true;
     public MemberStatus Status { get; set; } = MemberStatus.Active;

@@ -52,9 +52,6 @@ namespace PluralHost.Api.Data.Migrations
                     b.Property<int>("MinBucketSortOrder")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Permission")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("TEXT");
 
@@ -140,6 +137,9 @@ namespace PluralHost.Api.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("BucketId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -152,9 +152,6 @@ namespace PluralHost.Api.Data.Migrations
                     b.Property<Guid>("MemberId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("PrivacyTier")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -163,6 +160,8 @@ namespace PluralHost.Api.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BucketId");
 
                     b.HasIndex("MemberId");
 
@@ -417,7 +416,7 @@ namespace PluralHost.Api.Data.Migrations
                     b.Property<string>("Birthday")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("BucketId")
+                    b.Property<Guid>("BucketId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Color")
@@ -460,9 +459,6 @@ namespace PluralHost.Api.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("PreventFrontNotification")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PrivacyTier")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Pronouns")
@@ -638,6 +634,12 @@ namespace PluralHost.Api.Data.Migrations
 
             modelBuilder.Entity("PluralHost.Api.Domain.CustomFieldValue", b =>
                 {
+                    b.HasOne("PluralHost.Api.Domain.PrivacyBucket", "Bucket")
+                        .WithMany()
+                        .HasForeignKey("BucketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("PluralHost.Api.Domain.CustomField", "Field")
                         .WithMany("Values")
                         .HasForeignKey("FieldId")
@@ -649,6 +651,8 @@ namespace PluralHost.Api.Data.Migrations
                         .HasForeignKey("MemberId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Bucket");
 
                     b.Navigation("Field");
 
@@ -677,7 +681,8 @@ namespace PluralHost.Api.Data.Migrations
                     b.HasOne("PluralHost.Api.Domain.PrivacyBucket", "Bucket")
                         .WithMany("Members")
                         .HasForeignKey("BucketId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Bucket");
                 });

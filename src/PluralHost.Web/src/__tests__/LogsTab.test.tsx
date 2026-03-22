@@ -17,7 +17,7 @@ import { frontApi } from '../api/front'
 const mockMember: Member = {
   id: 'member-1',
   name: 'Aria',
-  privacyTier: 'Public',
+  bucketId: '00000000-0000-0000-0000-000000000001',
   isArchived: false,
   isUntracked: false,
   isPinned: false,

@@ -3,7 +3,6 @@ import { Pencil } from 'lucide-react'
 import { mediaApi } from '../../api/media'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { membersApi } from '../../api/members'
-import { groupsApi } from '../../api/groups'
 import type { Member, Group, MemberUpdatePayload } from '../../types'
 import styles from './EssenceTab.module.css'
 
@@ -109,11 +108,6 @@ export default function EssenceTab({ member, groups }: Props) {
     }
   }
 
-  const groupMutation = useMutation({
-    mutationFn: (groupIds: string[]) => groupsApi.setMemberships(member.id, groupIds),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['groups'] }),
-  })
-
   const startEdit = (field: string, current: string) => {
     setEditField(field)
     setEditValues(v => ({ ...v, [field]: current }))
@@ -124,17 +118,6 @@ export default function EssenceTab({ member, groups }: Props) {
   }
 
   const cancelEdit = () => setEditField(null)
-
-  const memberGroupIds = groups
-    .filter(g => g.members.includes(member.id))
-    .map(g => g.id)
-
-  const toggleGroup = (groupId: string) => {
-    const next = memberGroupIds.includes(groupId)
-      ? memberGroupIds.filter(gid => gid !== groupId)
-      : [...memberGroupIds, groupId]
-    groupMutation.mutate(next)
-  }
 
   return (
     <div className={styles.tab} role="tabpanel">
@@ -240,17 +223,15 @@ export default function EssenceTab({ member, groups }: Props) {
         <span className={styles.fieldLabel}>Groups</span>
         <div className={styles.groupChips}>
           {groups.map(group => (
-            <button
+            <span
               key={group.id}
               className={[
                 styles.chip,
-                memberGroupIds.includes(group.id) && styles.chipActive,
+                member.parentIds.includes(group.id) && styles.chipActive,
               ].filter(Boolean).join(' ')}
-              onClick={() => toggleGroup(group.id)}
-              aria-pressed={memberGroupIds.includes(group.id)}
             >
               {group.name}
-            </button>
+            </span>
           ))}
           {groups.length === 0 && (
             <span className={styles.fieldEmpty}>No groups yet</span>

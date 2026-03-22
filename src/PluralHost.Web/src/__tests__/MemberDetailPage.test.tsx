@@ -9,7 +9,7 @@ vi.mock('../api/members', () => ({
   membersApi: {
     get: vi.fn().mockResolvedValue({
       id: 'm1', name: 'Sage', color: '#b6ff00', pronouns: 'they/them',
-      description: 'A test member', privacyTier: 'Public',
+      description: 'A test member', bucketId: '00000000-0000-0000-0000-000000000001',
       isArchived: false, groupIds: [], parentIds: [], avatarPath: undefined,
       isPinned: false, isUntracked: false,
       preventFrontNotification: false, receiveBoardNotifications: false,
@@ -17,7 +17,7 @@ vi.mock('../api/members', () => ({
     }),
     update: vi.fn().mockResolvedValue({
       id: 'm1', name: 'Sage Updated', color: '#b6ff00', pronouns: 'they/them',
-      description: 'A test member', privacyTier: 'Public',
+      description: 'A test member', bucketId: '00000000-0000-0000-0000-000000000001',
       isArchived: false, groupIds: [], parentIds: [], avatarPath: undefined,
       isPinned: false, isUntracked: false,
       preventFrontNotification: false, receiveBoardNotifications: false,

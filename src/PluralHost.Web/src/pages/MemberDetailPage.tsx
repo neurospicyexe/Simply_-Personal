@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { membersApi } from '../api/members'
@@ -12,7 +12,6 @@ import CommsTab from '../components/tabs/CommsTab'
 import LogsTab from '../components/tabs/LogsTab'
 import AccessTab from '../components/tabs/AccessTab'
 import styles from './MemberDetailPage.module.css'
-import type { SpEnvelope, Group } from '../types'
 
 const TABS = [
   { id: 'essence', label: 'Essence' },
@@ -35,15 +34,10 @@ export default function MemberDetailPage() {
     enabled: !!id,
   })
 
-  const { data: groupEnvelopes = [] } = useQuery({
+  const { data: groups = [] } = useQuery({
     queryKey: ['groups'],
     queryFn: groupsApi.list,
   })
-
-  const groups = useMemo(
-    () => (groupEnvelopes as SpEnvelope<Group>[]).map(e => e.content),
-    [groupEnvelopes]
-  )
 
   if (isLoading || !member) {
     return <div className={styles.loading}>Loading…</div>
@@ -64,7 +58,7 @@ export default function MemberDetailPage() {
         </div>
       </div>
 
-      <TabBar tabs={TABS} activeTab={activeTab} onChange={tab => setActiveTab(tab as TabId)} />
+      <TabBar tabs={[...TABS]} activeTab={activeTab} onChange={tab => setActiveTab(tab as TabId)} />
 
       {activeTab === 'essence'  && <EssenceTab  member={member} groups={groups} />}
       {activeTab === 'specs'    && <SpecsTab    member={member} />}

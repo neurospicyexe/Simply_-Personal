@@ -10,7 +10,7 @@ const qc = () => new QueryClient({ defaultOptions: { queries: { retry: false } }
 test('unauthenticated user at /front is redirected to /login', () => {
   render(
     <QueryClientProvider client={qc()}>
-      <AuthContext.Provider value={{ isAuthenticated: false, setAuthenticated: () => {} }}>
+      <AuthContext.Provider value={{ isAuthenticated: false, setAuthenticated: () => {}, logout: () => Promise.resolve() }}>
         <MemoryRouter initialEntries={['/front']}>
           <App />
         </MemoryRouter>
@@ -23,7 +23,7 @@ test('unauthenticated user at /front is redirected to /login', () => {
 test('authenticated user at / is redirected to /front', () => {
   render(
     <QueryClientProvider client={qc()}>
-      <AuthContext.Provider value={{ isAuthenticated: true, setAuthenticated: () => {} }}>
+      <AuthContext.Provider value={{ isAuthenticated: true, setAuthenticated: () => {}, logout: () => Promise.resolve() }}>
         <MemoryRouter initialEntries={['/']}>
           <App />
         </MemoryRouter>

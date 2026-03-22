@@ -9,8 +9,11 @@ import { bucketsApi } from '../api/buckets'
 import type { Group, PrivacyBucket } from '../types'
 import styles from './SystemPage.module.css'
 
-const TABS = ['Groups', 'Buckets'] as const
-type Tab = typeof TABS[number]
+const TABS = [
+  { id: 'Groups', label: 'Groups' },
+  { id: 'Buckets', label: 'Buckets' },
+]
+type Tab = 'Groups' | 'Buckets'
 
 export default function SystemPage() {
   const [tab, setTab] = useState<Tab>('Groups')
@@ -37,7 +40,7 @@ export default function SystemPage() {
         </button>
       </header>
 
-      <TabBar tabs={[...TABS]} active={tab} onChange={t => setTab(t as Tab)} />
+      <TabBar tabs={TABS} activeTab={tab} onChange={t => setTab(t as Tab)} />
 
       {tab === 'Groups' && (
         <section className={styles.list}>

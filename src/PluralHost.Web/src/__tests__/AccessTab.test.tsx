@@ -15,7 +15,7 @@ vi.mock('../api/secure', () => ({
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }))
 
 const mockMember: Member = {
-  id: 'm1', name: 'Aria', privacyTier: 'Public',
+  id: 'm1', name: 'Aria', bucketId: '00000000-0000-0000-0000-000000000001',
   isArchived: false, isUntracked: false, isPinned: false,
   preventFrontNotification: false, receiveBoardNotifications: false,
   groupIds: [], parentIds: [],
