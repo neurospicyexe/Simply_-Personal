@@ -47,10 +47,10 @@ describe('SpecsTab', () => {
 
   it('renders a field row with its value', async () => {
     vi.mocked(fieldsApi.listDefs).mockResolvedValue([
-      { id: 'f1', name: 'Role', createdAt: '2026-01-01T00:00:00Z', deletedAt: null },
+      { id: 'f1', label: 'Role', fieldType: 'Text', sortOrder: 0, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null },
     ])
     vi.mocked(fieldsApi.getMemberFields).mockResolvedValue([
-      { fieldId: 'f1', memberId: 'member-1', value: 'Protector', updatedAt: '2026-01-01T00:00:00Z' },
+      { fieldId: 'f1', label: 'Role', fieldType: 'Text', sortOrder: 0, value: 'Protector', privacyTier: 'Public' },
     ])
     wrap(<SpecsTab member={mockMember} />)
     await screen.findByText('Role')
@@ -59,8 +59,8 @@ describe('SpecsTab', () => {
 
   it('hides soft-deleted field defs', async () => {
     vi.mocked(fieldsApi.listDefs).mockResolvedValue([
-      { id: 'f1', name: 'Role', createdAt: '2026-01-01T00:00:00Z', deletedAt: null },
-      { id: 'f2', name: 'OldField', createdAt: '2026-01-01T00:00:00Z', deletedAt: '2026-02-01T00:00:00Z' },
+      { id: 'f1', label: 'Role', fieldType: 'Text', sortOrder: 0, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: null },
+      { id: 'f2', label: 'OldField', fieldType: 'Text', sortOrder: 1, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', deletedAt: '2026-02-01T00:00:00Z' },
     ])
     vi.mocked(fieldsApi.getMemberFields).mockResolvedValue([])
     wrap(<SpecsTab member={mockMember} />)

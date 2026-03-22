@@ -103,14 +103,19 @@ export interface BoardMessage {
 
 export interface FieldDef {
   id: string
-  name: string
+  label: string
+  fieldType: string
+  sortOrder: number
   createdAt: string
+  updatedAt: string
   deletedAt: string | null
 }
 
 export interface MemberFieldEntry {
   fieldId: string
-  memberId: string
-  value: string
-  updatedAt: string
+  label: string
+  fieldType: string
+  sortOrder: number
+  value: string | null
+  privacyTier: string
 }
