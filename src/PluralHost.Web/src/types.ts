@@ -104,7 +104,7 @@ export interface BoardMessage {
 export interface FieldDef {
   id: string
   label: string
-  fieldType: string
+  fieldType: number
   sortOrder: number
   createdAt: string
   updatedAt: string
@@ -114,7 +114,7 @@ export interface FieldDef {
 export interface MemberFieldEntry {
   fieldId: string
   label: string
-  fieldType: string
+  fieldType: number
   sortOrder: number
   value: string | null
   privacyTier: string
