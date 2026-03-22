@@ -16,6 +16,25 @@
   letter-spacing: 0.06em;
 }
 
+.checkboxField {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-surface);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.checkboxField .fieldLabel {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--color-text);
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
 .segmented {
   display: flex;
   background: var(--color-surface);

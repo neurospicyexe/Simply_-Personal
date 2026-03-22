@@ -101,27 +101,41 @@ export default function AccessTab({ member }: Props) {
         </div>
       </div>
 
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>Archived</span>
-        <input type="checkbox" checked={member.isArchived}
-          onChange={() => updateMutation.mutate({ isArchived: !member.isArchived })} aria-label="Archived" />
+      <div className={styles.checkboxField}>
+        <label htmlFor="chk-archived" className={styles.fieldLabel}>Archived</label>
+        <input
+          id="chk-archived"
+          type="checkbox"
+          checked={member.isArchived}
+          onChange={() => updateMutation.mutate({ isArchived: !member.isArchived })}
+        />
       </div>
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>Pinned</span>
-        <input type="checkbox" checked={member.isPinned}
-          onChange={() => updateMutation.mutate({ isPinned: !member.isPinned })} aria-label="Pinned" />
+      <div className={styles.checkboxField}>
+        <label htmlFor="chk-pinned" className={styles.fieldLabel}>Pinned</label>
+        <input
+          id="chk-pinned"
+          type="checkbox"
+          checked={member.isPinned}
+          onChange={() => updateMutation.mutate({ isPinned: !member.isPinned })}
+        />
       </div>
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>Prevent front notifications</span>
-        <input type="checkbox" checked={member.preventFrontNotification}
+      <div className={styles.checkboxField}>
+        <label htmlFor="chk-prevent-front" className={styles.fieldLabel}>Prevent front notifications</label>
+        <input
+          id="chk-prevent-front"
+          type="checkbox"
+          checked={member.preventFrontNotification}
           onChange={() => updateMutation.mutate({ preventFrontNotification: !member.preventFrontNotification })}
-          aria-label="Prevent front notifications" />
+        />
       </div>
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>Receive board notifications</span>
-        <input type="checkbox" checked={member.receiveBoardNotifications}
+      <div className={styles.checkboxField}>
+        <label htmlFor="chk-board-notifications" className={styles.fieldLabel}>Receive board notifications</label>
+        <input
+          id="chk-board-notifications"
+          type="checkbox"
+          checked={member.receiveBoardNotifications}
           onChange={() => updateMutation.mutate({ receiveBoardNotifications: !member.receiveBoardNotifications })}
-          aria-label="Receive board notifications" />
+        />
       </div>
 
       <div className={styles.dangerZone}>
