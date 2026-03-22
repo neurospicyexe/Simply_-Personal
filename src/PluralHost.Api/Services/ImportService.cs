@@ -203,9 +203,9 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
 
         var visibility = pk.Privacy?.Visibility?.ToLowerInvariant();
         if (visibility == "private")
-            m.PrivacyTier = MemberPrivacy.Private;
-        else if (visibility == "public" && m.PrivacyTier == MemberPrivacy.Private)
-            m.PrivacyTier = MemberPrivacy.Public;
+            m.BucketId = PrivacyBucket.PrivateId;
+        else if (visibility == "public" && m.BucketId == PrivacyBucket.PrivateId)
+            m.BucketId = PrivacyBucket.PublicId;
     }
 
     private static void ApplySpFields(
@@ -220,9 +220,9 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
         m.PreventFrontNotification = c.PreventsFrontNotifs;
         m.ReceiveBoardNotifications = c.ReceiveMessageBoardNotifs;
         if (c.Private)
-            m.PrivacyTier = MemberPrivacy.Private;
-        else if (m.PrivacyTier == MemberPrivacy.Private)
-            m.PrivacyTier = MemberPrivacy.Public; // SP false only upgrades if currently Private
+            m.BucketId = PrivacyBucket.PrivateId;
+        else if (m.BucketId == PrivacyBucket.PrivateId)
+            m.BucketId = PrivacyBucket.PublicId; // SP false only upgrades if currently Private
     }
 
     private static bool ShouldApply(string? existing, string? incoming, ImportConflictStrategy strategy, bool isNew)

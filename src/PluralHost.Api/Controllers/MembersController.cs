@@ -18,7 +18,7 @@ public class MembersController(
 {
     private static MemberResponse ToResponse(Member m) => new(
         m.Id, m.Name, m.DisplayName, m.Pronouns, m.Color, m.Role,
-        m.Description, m.AvatarPath, m.BucketId ?? PrivacyBucket.PublicId, m.AllowsBoardPosting,
+        m.Description, m.AvatarPath, m.BucketId, m.AllowsBoardPosting,
         m.IsPinned, m.IsArchived, m.IsUntracked,
         m.PreventFrontNotification, m.ReceiveBoardNotifications,
         m.ExtraImages, m.SpMemberId, m.Status, m.ParentIds,
