@@ -1,5 +1,7 @@
 using PluralHost.Api.Domain;
 
+namespace PluralHost.Tests.Domain;
+
 public class PrivacyBucketTests
 {
     [Fact]
