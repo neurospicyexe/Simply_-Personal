@@ -11,35 +11,6 @@ namespace PluralHost.Api.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<Guid>(
-                name: "BucketId",
-                table: "Members",
-                type: "TEXT",
-                nullable: true);
-
-            // Map existing PrivacyTier enum values to bucket GUIDs
-            migrationBuilder.Sql(@"
-    UPDATE ""Members"" SET ""BucketId"" = '00000000-0000-0000-0000-000000000001' WHERE ""PrivacyTier"" = 0 OR ""PrivacyTier"" IS NULL;
-    UPDATE ""Members"" SET ""BucketId"" = '00000000-0000-0000-0000-000000000002' WHERE ""PrivacyTier"" = 1;
-    UPDATE ""Members"" SET ""BucketId"" = '00000000-0000-0000-0000-000000000003' WHERE ""PrivacyTier"" = 2;
-    UPDATE ""Members"" SET ""BucketId"" = '00000000-0000-0000-0000-000000000004' WHERE ""PrivacyTier"" = 3;
-");
-
-            migrationBuilder.AddColumn<int>(
-                name: "MinBucketSortOrder",
-                table: "AccessTokens",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: 0);
-
-            // Map existing TokenPermission enum values to MinBucketSortOrder
-            migrationBuilder.Sql(@"
-    UPDATE ""AccessTokens"" SET ""MinBucketSortOrder"" = -1 WHERE ""Permission"" = 0;
-    UPDATE ""AccessTokens"" SET ""MinBucketSortOrder"" =  0 WHERE ""Permission"" = 1;
-    UPDATE ""AccessTokens"" SET ""MinBucketSortOrder"" =  1 WHERE ""Permission"" = 2;
-    UPDATE ""AccessTokens"" SET ""MinBucketSortOrder"" =  2 WHERE ""Permission"" = 3;
-");
-
             migrationBuilder.CreateTable(
                 name: "PrivacyBuckets",
                 columns: table => new
@@ -70,6 +41,35 @@ namespace PluralHost.Api.Data.Migrations
         ('00000000-0000-0000-0000-000000000002', 'Friend',  'Visible to friends',            '🤝', NULL, 1, 1, NULL, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z'),
         ('00000000-0000-0000-0000-000000000003', 'Trusted', 'Visible to trusted people',     '💛', NULL, 2, 1, NULL, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z'),
         ('00000000-0000-0000-0000-000000000004', 'Private', 'Never visible to token holders','🔒', NULL, 3, 1, NULL, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+");
+
+            migrationBuilder.AddColumn<Guid>(
+                name: "BucketId",
+                table: "Members",
+                type: "TEXT",
+                nullable: true);
+
+            // Map existing PrivacyTier enum values to bucket GUIDs
+            migrationBuilder.Sql(@"
+    UPDATE ""Members"" SET ""BucketId"" = '00000000-0000-0000-0000-000000000001' WHERE ""PrivacyTier"" = 0 OR ""PrivacyTier"" IS NULL;
+    UPDATE ""Members"" SET ""BucketId"" = '00000000-0000-0000-0000-000000000002' WHERE ""PrivacyTier"" = 1;
+    UPDATE ""Members"" SET ""BucketId"" = '00000000-0000-0000-0000-000000000003' WHERE ""PrivacyTier"" = 2;
+    UPDATE ""Members"" SET ""BucketId"" = '00000000-0000-0000-0000-000000000004' WHERE ""PrivacyTier"" = 3;
+");
+
+            migrationBuilder.AddColumn<int>(
+                name: "MinBucketSortOrder",
+                table: "AccessTokens",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: 0);
+
+            // Map existing TokenPermission enum values to MinBucketSortOrder
+            migrationBuilder.Sql(@"
+    UPDATE ""AccessTokens"" SET ""MinBucketSortOrder"" = -1 WHERE ""Permission"" = 0;
+    UPDATE ""AccessTokens"" SET ""MinBucketSortOrder"" =  0 WHERE ""Permission"" = 1;
+    UPDATE ""AccessTokens"" SET ""MinBucketSortOrder"" =  1 WHERE ""Permission"" = 2;
+    UPDATE ""AccessTokens"" SET ""MinBucketSortOrder"" =  2 WHERE ""Permission"" = 3;
 ");
 
             migrationBuilder.CreateIndex(
