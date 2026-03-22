@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PluralHost.Api.Data;
+using PluralHost.Api.Dto;
 using PluralHost.Api.Services;
 
 namespace PluralHost.Api.Controllers;
@@ -80,5 +81,44 @@ public class SecureActionController(
         await context.SaveChangesAsync();
 
         return Ok(new { message = "Deletion cancelled. Your data is safe." });
+    }
+
+    // GET /api/secure/status
+    [HttpGet("status")]
+    public async Task<IActionResult> GetStatusAsync(
+        [FromServices] PluralHostContext? context = null)
+    {
+        if (context == null)
+            return BadRequest(new { error = "Context unavailable." });
+
+        var pinIsSet = await gatekeeper.IsPinSetAsync();
+        var settings = await context.SystemSettings.FirstAsync();
+        DateTime? cooldownEnd = null;
+        if (settings.DeletionCooldownEnd.HasValue
+            && settings.DeletionCooldownEnd.Value > DateTime.UtcNow)
+            cooldownEnd = settings.DeletionCooldownEnd;
+
+        return Ok(new SecureStatusResponse(pinIsSet, cooldownEnd));
+    }
+
+    // PUT /api/secure/pin
+    [HttpPut("pin")]
+    public async Task<IActionResult> SetPinAsync([FromBody] SetPinRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.NewPin)
+            || request.NewPin.Length < 4 || request.NewPin.Length > 64)
+            return BadRequest(new { error = "PIN must be between 4 and 64 characters." });
+
+        var pinIsSet = await gatekeeper.IsPinSetAsync();
+        if (pinIsSet)
+        {
+            if (string.IsNullOrEmpty(request.CurrentPin))
+                return BadRequest(new { error = "Current PIN is required to change the PIN." });
+            if (!await gatekeeper.ValidatePinAsync(request.CurrentPin))
+                return StatusCode(403, new { error = "Invalid current Gatekeeper PIN." });
+        }
+
+        await gatekeeper.SetPinAsync(request.NewPin);
+        return NoContent();
     }
 }

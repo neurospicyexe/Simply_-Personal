@@ -126,6 +126,10 @@ public record JournalUpdateRequest(
 // Slim DTO for GET /share/{token}/journals
 public record SharedJournalDto(Guid Id, string? Title, string Content, DateTime CreatedAt);
 
+// ── Secure actions ────────────────────────────────────────────────────
+public record SetPinRequest(string? CurrentPin, string NewPin);
+public record SecureStatusResponse(bool PinIsSet, DateTime? DeletionCooldownEnd);
+
 // ── Media upload ───────────────────────────────────────────────────────
 public record UploadResponse(string Id);
 
