@@ -25,6 +25,15 @@ public class ShareControllerTests : IDisposable
             .Options;
         _context = new PluralHostContext(options);
         _context.Database.EnsureCreated();
+
+        // Seed all 4 buckets as fresh instances so EF change tracker doesn't share state across tests
+        _context.PrivacyBuckets.AddRange(
+            new PrivacyBucket { Id = PrivacyBucket.PublicId,  Name = "Public",  SortOrder = 0 },
+            new PrivacyBucket { Id = PrivacyBucket.FriendId,  Name = "Friend",  SortOrder = 1 },
+            new PrivacyBucket { Id = PrivacyBucket.TrustedId, Name = "Trusted", SortOrder = 2 },
+            new PrivacyBucket { Id = PrivacyBucket.PrivateId, Name = "Private", SortOrder = 3 });
+        _context.SaveChanges();
+
         _tokenService = new Mock<IShareTokenService>();
         _ghostMode = new Mock<IGhostModeService>();
         _ghostMode.Setup(g => g.IsFrozenAsync()).ReturnsAsync(false);
@@ -32,8 +41,9 @@ public class ShareControllerTests : IDisposable
         _controller = new ShareController(_tokenService.Object, _ghostMode.Object, _context, _visibility);
     }
 
-    private AccessToken MakeToken(TokenPermission permission, bool allowsBoardPosting = false) =>
-        new() { TokenValue = "t", Permission = permission, AllowsBoardPosting = allowsBoardPosting };
+    // MinBucketSortOrder: -1=ReadFrontOnly, 0=Public, 1=Friend, 2=Trusted
+    private static AccessToken MakeToken(int minBucketSortOrder, bool allowsBoardPosting = false) =>
+        new() { TokenValue = "t", MinBucketSortOrder = minBucketSortOrder, AllowsBoardPosting = allowsBoardPosting };
 
     // ── Ghost Mode ────────────────────────────────────────────────────
 
@@ -76,13 +86,13 @@ public class ShareControllerTests : IDisposable
     public async Task GetSharedView_PublicToken_ReturnsOnlyPublicMembers()
     {
         _context.Members.AddRange(
-            new Member { Name = "Pub", PrivacyTier = MemberPrivacy.Public },
-            new Member { Name = "Fri", PrivacyTier = MemberPrivacy.Friend },
-            new Member { Name = "Pri", PrivacyTier = MemberPrivacy.Private });
+            new Member { Name = "Pub", BucketId = PrivacyBucket.PublicId },
+            new Member { Name = "Fri", BucketId = PrivacyBucket.FriendId },
+            new Member { Name = "Pri", BucketId = PrivacyBucket.PrivateId });
         await _context.SaveChangesAsync();
 
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
-            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Public), TokenResolveStatus.Valid));
+            .ReturnsAsync(new TokenResolveResult(MakeToken(0), TokenResolveStatus.Valid));
 
         var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
         // Result has a members property
@@ -131,11 +141,11 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task BoardPost_TokenCannotPost_Returns403()
     {
-        var token = MakeToken(TokenPermission.Public, allowsBoardPosting: false);
+        var token = MakeToken(0, allowsBoardPosting: false);
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
             .ReturnsAsync(new TokenResolveResult(token, TokenResolveStatus.Valid));
 
-        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Public };
+        var m = new Member { Name = "Ash", BucketId = PrivacyBucket.PublicId };
         _context.Members.Add(m);
         await _context.SaveChangesAsync();
 
@@ -148,11 +158,11 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task BoardPost_ValidRequest_CreatesBoardMessageWithTokenId()
     {
-        var token = MakeToken(TokenPermission.Friend, allowsBoardPosting: true);
+        var token = MakeToken(1, allowsBoardPosting: true);
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
             .ReturnsAsync(new TokenResolveResult(token, TokenResolveStatus.Valid));
 
-        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Public };
+        var m = new Member { Name = "Ash", BucketId = PrivacyBucket.PublicId };
         _context.Members.Add(m);
         await _context.SaveChangesAsync();
 
@@ -168,7 +178,7 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task BoardPost_MemberDoesNotExist_Returns404()
     {
-        var token = MakeToken(TokenPermission.Friend, allowsBoardPosting: true);
+        var token = MakeToken(1, allowsBoardPosting: true);
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
             .ReturnsAsync(new TokenResolveResult(token, TokenResolveStatus.Valid));
 
@@ -180,12 +190,12 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task BoardPost_MemberTierTooHighForToken_Returns403()
     {
-        // Public token (int=1) cannot see Friend-tier member (int=1): 1 >= 1 → 403
-        var token = MakeToken(TokenPermission.Public, allowsBoardPosting: true);
+        // Public token (MinBucketSortOrder=0) cannot see Friend-tier member (SortOrder=1): 1 > 0 → 403
+        var token = MakeToken(0, allowsBoardPosting: true);
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
             .ReturnsAsync(new TokenResolveResult(token, TokenResolveStatus.Valid));
 
-        var m = new Member { Name = "Fri", PrivacyTier = MemberPrivacy.Friend };
+        var m = new Member { Name = "Fri", BucketId = PrivacyBucket.FriendId };
         _context.Members.Add(m);
         await _context.SaveChangesAsync();
 
@@ -200,7 +210,7 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task GetSharedView_PublicToken_IncludesPublicTierCustomFields()
     {
-        var member = new Member { Name = "Ember", PrivacyTier = MemberPrivacy.Public };
+        var member = new Member { Name = "Ember", BucketId = PrivacyBucket.PublicId };
         _context.Members.Add(member);
         await _context.SaveChangesAsync();
 
@@ -213,13 +223,13 @@ public class ShareControllerTests : IDisposable
             MemberId = member.Id,
             FieldId = field.Id,
             Value = "25",
-            PrivacyTier = MemberPrivacy.Public
+            BucketId = PrivacyBucket.PublicId
         };
         _context.CustomFieldValues.Add(cfv);
         await _context.SaveChangesAsync();
 
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
-            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Friend), TokenResolveStatus.Valid));
+            .ReturnsAsync(new TokenResolveResult(MakeToken(1), TokenResolveStatus.Valid));
 
         var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
         Assert.NotNull(result);
@@ -238,7 +248,7 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task GetSharedView_FriendToken_IncludesFriendTierFields()
     {
-        var member = new Member { Name = "Ember", PrivacyTier = MemberPrivacy.Public };
+        var member = new Member { Name = "Ember", BucketId = PrivacyBucket.PublicId };
         _context.Members.Add(member);
         await _context.SaveChangesAsync();
 
@@ -251,13 +261,13 @@ public class ShareControllerTests : IDisposable
             MemberId = member.Id,
             FieldId = field.Id,
             Value = "Em",
-            PrivacyTier = MemberPrivacy.Friend
+            BucketId = PrivacyBucket.FriendId
         };
         _context.CustomFieldValues.Add(cfv);
         await _context.SaveChangesAsync();
 
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
-            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Friend), TokenResolveStatus.Valid));
+            .ReturnsAsync(new TokenResolveResult(MakeToken(1), TokenResolveStatus.Valid));
 
         var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
         Assert.NotNull(result);
@@ -276,7 +286,7 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task GetSharedView_PrivateValueExcluded()
     {
-        var member = new Member { Name = "Ember", PrivacyTier = MemberPrivacy.Public };
+        var member = new Member { Name = "Ember", BucketId = PrivacyBucket.PublicId };
         _context.Members.Add(member);
         await _context.SaveChangesAsync();
 
@@ -289,14 +299,14 @@ public class ShareControllerTests : IDisposable
             MemberId = member.Id,
             FieldId = field.Id,
             Value = "hidden",
-            PrivacyTier = MemberPrivacy.Private
+            BucketId = PrivacyBucket.PrivateId
         };
         _context.CustomFieldValues.Add(cfv);
         await _context.SaveChangesAsync();
 
-        // Use Trusted token (int=3): Private is 3, and 3 < 3 is false → excluded
+        // Use Trusted token (MinBucketSortOrder=2): Private SortOrder=3, and 3 > 2 → excluded
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
-            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Trusted), TokenResolveStatus.Valid));
+            .ReturnsAsync(new TokenResolveResult(MakeToken(2), TokenResolveStatus.Valid));
 
         var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
         Assert.NotNull(result);
@@ -315,7 +325,7 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task GetSharedView_SoftDeletedFieldExcluded()
     {
-        var member = new Member { Name = "Ember", PrivacyTier = MemberPrivacy.Public };
+        var member = new Member { Name = "Ember", BucketId = PrivacyBucket.PublicId };
         _context.Members.Add(member);
         await _context.SaveChangesAsync();
 
@@ -328,7 +338,7 @@ public class ShareControllerTests : IDisposable
             MemberId = member.Id,
             FieldId = field.Id,
             Value = "somevalue",
-            PrivacyTier = MemberPrivacy.Public
+            BucketId = PrivacyBucket.PublicId
         };
         _context.CustomFieldValues.Add(cfv);
         await _context.SaveChangesAsync();
@@ -338,7 +348,7 @@ public class ShareControllerTests : IDisposable
         await _context.SaveChangesAsync();
 
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
-            .ReturnsAsync(new TokenResolveResult(MakeToken(TokenPermission.Friend), TokenResolveStatus.Valid));
+            .ReturnsAsync(new TokenResolveResult(MakeToken(1), TokenResolveStatus.Valid));
 
         var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
         Assert.NotNull(result);
@@ -383,7 +393,7 @@ public class ShareControllerTests : IDisposable
     [Fact]
     public async Task GetSharedJournals_ReadFrontOnlyToken_Returns403()
     {
-        var token = MakeToken(TokenPermission.ReadFrontOnly);
+        var token = MakeToken(-1);
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
             .ReturnsAsync(new TokenResolveResult(token, TokenResolveStatus.Valid));
 
@@ -401,7 +411,7 @@ public class ShareControllerTests : IDisposable
             new JournalEntry { Title = "Private Entry", Content = "hidden", IsPrivate = true });
         await _context.SaveChangesAsync();
 
-        var token = MakeToken(TokenPermission.Public);
+        var token = MakeToken(0);
         _tokenService.Setup(s => s.ResolveTokenAsync("t"))
             .ReturnsAsync(new TokenResolveResult(token, TokenResolveStatus.Valid));
 

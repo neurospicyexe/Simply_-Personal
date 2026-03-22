@@ -110,25 +110,25 @@ public class MembersControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_DefaultPrivacyTier_IsPublic()
+    public async Task Create_DefaultBucket_IsPublic()
     {
         var result = await _controller.CreateAsync(
             new MemberCreateRequest("Ash")) as OkObjectResult;
         var member = result!.Value as MemberResponse;
-        Assert.Equal(MemberPrivacy.Public, member!.PrivacyTier);
+        Assert.Equal(PrivacyBucket.PublicId, member!.BucketId);
     }
 
     [Fact]
-    public async Task Update_PrivacyTier_Persists()
+    public async Task Update_BucketId_Persists()
     {
         var created = _context.Members.Add(new Member { Name = "Ash" });
         await _context.SaveChangesAsync();
 
         await _controller.UpdateAsync(created.Entity.Id,
-            new MemberUpdateRequest(PrivacyTier: MemberPrivacy.Trusted));
+            new MemberUpdateRequest(BucketId: PrivacyBucket.TrustedId));
 
         var updated = await _context.Members.FindAsync(created.Entity.Id);
-        Assert.Equal(MemberPrivacy.Trusted, updated!.PrivacyTier);
+        Assert.Equal(PrivacyBucket.TrustedId, updated!.BucketId);
     }
 
     [Fact]

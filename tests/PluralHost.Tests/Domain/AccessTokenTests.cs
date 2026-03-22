@@ -56,26 +56,34 @@ public class AccessTokenTests
     }
 
     [Fact]
-    public void TokenPermission_PublicHasIntValue1()
+    public void AccessToken_DefaultMinBucketSortOrder_IsMinusOne()
     {
-        Assert.Equal(1, (int)TokenPermission.Public);
+        // -1 = ReadFrontOnly (most restrictive default)
+        var t = new AccessToken { TokenValue = "test" };
+        Assert.Equal(-1, t.MinBucketSortOrder);
     }
 
     [Fact]
-    public void TokenPermission_ReadFrontOnlyHasIntValue0()
+    public void AccessToken_MinBucketSortOrder_PublicConvention()
     {
-        Assert.Equal(0, (int)TokenPermission.ReadFrontOnly);
+        // MinBucketSortOrder=0 means Public bucket (SortOrder 0) and above
+        var t = new AccessToken { TokenValue = "test", MinBucketSortOrder = 0 };
+        Assert.Equal(0, t.MinBucketSortOrder);
     }
 
     [Fact]
-    public void TokenPermission_FriendHasIntValue2()
+    public void AccessToken_MinBucketSortOrder_FriendConvention()
     {
-        Assert.Equal(2, (int)TokenPermission.Friend);
+        // MinBucketSortOrder=1 means Friend bucket (SortOrder 1) and above
+        var t = new AccessToken { TokenValue = "test", MinBucketSortOrder = 1 };
+        Assert.Equal(1, t.MinBucketSortOrder);
     }
 
     [Fact]
-    public void TokenPermission_TrustedHasIntValue3()
+    public void AccessToken_MinBucketSortOrder_TrustedConvention()
     {
-        Assert.Equal(3, (int)TokenPermission.Trusted);
+        // MinBucketSortOrder=2 means Trusted bucket (SortOrder 2) and above
+        var t = new AccessToken { TokenValue = "test", MinBucketSortOrder = 2 };
+        Assert.Equal(2, t.MinBucketSortOrder);
     }
 }

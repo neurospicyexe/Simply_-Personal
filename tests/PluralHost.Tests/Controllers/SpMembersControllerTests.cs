@@ -126,31 +126,31 @@ public class SpMembersControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_WithPrivateTrue_SetsPrivacyTierToPrivate()
+    public async Task Create_WithPrivateTrue_SetsBucketToPrivate()
     {
         var result = await _controller.CreateAsync(
             new SpMemberCreateRequest("Ash", Private: true)) as OkObjectResult;
 
         var id = Guid.Parse(result!.Value!.ToString()!);
         var member = await _context.Members.FindAsync(id);
-        Assert.Equal(MemberPrivacy.Private, member!.PrivacyTier);
+        Assert.Equal(PrivacyBucket.PrivateId, member!.BucketId);
     }
 
     [Fact]
-    public async Task Create_WithPrivateFalse_SetsPrivacyTierToPublic()
+    public async Task Create_WithPrivateFalse_SetsBucketToPublic()
     {
         var result = await _controller.CreateAsync(
             new SpMemberCreateRequest("Ash", Private: false)) as OkObjectResult;
 
         var id = Guid.Parse(result!.Value!.ToString()!);
         var member = await _context.Members.FindAsync(id);
-        Assert.Equal(MemberPrivacy.Public, member!.PrivacyTier);
+        Assert.Equal(PrivacyBucket.PublicId, member!.BucketId);
     }
 
     [Fact]
-    public async Task Update_PrivateFalse_OnFriendTier_LeavesUnchanged()
+    public async Task Update_PrivateFalse_OnFriendBucket_LeavesUnchanged()
     {
-        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Friend };
+        var m = new Member { Name = "Ash", BucketId = PrivacyBucket.FriendId };
         _context.Members.Add(m);
         await _context.SaveChangesAsync();
 
@@ -158,13 +158,13 @@ public class SpMembersControllerTests : IDisposable
             new SpMemberUpdateRequest { Private = false });
 
         var updated = await _context.Members.FindAsync(m.Id);
-        Assert.Equal(MemberPrivacy.Friend, updated!.PrivacyTier);
+        Assert.Equal(PrivacyBucket.FriendId, updated!.BucketId);
     }
 
     [Fact]
-    public async Task Update_PrivateFalse_OnPrivateTier_SetsToPublic()
+    public async Task Update_PrivateFalse_OnPrivateBucket_SetsToPublic()
     {
-        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Private };
+        var m = new Member { Name = "Ash", BucketId = PrivacyBucket.PrivateId };
         _context.Members.Add(m);
         await _context.SaveChangesAsync();
 
@@ -172,13 +172,13 @@ public class SpMembersControllerTests : IDisposable
             new SpMemberUpdateRequest { Private = false });
 
         var updated = await _context.Members.FindAsync(m.Id);
-        Assert.Equal(MemberPrivacy.Public, updated!.PrivacyTier);
+        Assert.Equal(PrivacyBucket.PublicId, updated!.BucketId);
     }
 
     [Fact]
-    public async Task ToEnvelope_PrivateTierMember_ReturnsPrivateTrue()
+    public async Task ToEnvelope_PrivateBucketMember_ReturnsPrivateTrue()
     {
-        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Private };
+        var m = new Member { Name = "Ash", BucketId = PrivacyBucket.PrivateId };
         _context.Members.Add(m);
         await _context.SaveChangesAsync();
 
@@ -188,9 +188,9 @@ public class SpMembersControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task ToEnvelope_FriendTierMember_ReturnsPrivateFalse()
+    public async Task ToEnvelope_FriendBucketMember_ReturnsPrivateFalse()
     {
-        var m = new Member { Name = "Ash", PrivacyTier = MemberPrivacy.Friend };
+        var m = new Member { Name = "Ash", BucketId = PrivacyBucket.FriendId };
         _context.Members.Add(m);
         await _context.SaveChangesAsync();
 

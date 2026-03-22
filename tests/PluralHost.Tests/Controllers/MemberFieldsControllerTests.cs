@@ -61,7 +61,7 @@ public class MemberFieldsControllerTests : IDisposable
         _context.CustomFieldValues.Add(new CustomFieldValue
         {
             FieldId = _field.Id, MemberId = _member.Id,
-            Value = "25", PrivacyTier = MemberPrivacy.Trusted
+            Value = "25", BucketId = PrivacyBucket.TrustedId
         });
         await _context.SaveChangesAsync();
 
@@ -69,7 +69,7 @@ public class MemberFieldsControllerTests : IDisposable
         var entries = (result!.Value as IEnumerable<MemberFieldEntry>)!.ToList();
 
         Assert.Equal("25", entries[0].Value);
-        Assert.Equal(MemberPrivacy.Trusted, entries[0].PrivacyTier);
+        Assert.Equal(PrivacyBucket.TrustedId, entries[0].BucketId);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class MemberFieldsControllerTests : IDisposable
         var response = result!.Value as CustomFieldValueResponse;
 
         Assert.Equal("25", response!.Value);
-        Assert.Equal(MemberPrivacy.Public, response.PrivacyTier);
+        Assert.Equal(PrivacyBucket.PublicId, response.BucketId);
     }
 
     [Fact]

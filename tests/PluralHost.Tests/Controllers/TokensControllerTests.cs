@@ -36,14 +36,14 @@ public class TokensControllerTests : IDisposable
         {
             TokenValue = "old",
             Label = "Old",
-            Permission = TokenPermission.Public,
+            MinBucketSortOrder = 0,
             CreatedAt = DateTime.UtcNow.AddDays(-2)
         };
         var newer = new AccessToken
         {
             TokenValue = "new",
             Label = "New",
-            Permission = TokenPermission.Friend,
+            MinBucketSortOrder = 1,
             CreatedAt = DateTime.UtcNow.AddDays(-1)
         };
         _context.AccessTokens.AddRange(older, newer);
@@ -61,7 +61,7 @@ public class TokensControllerTests : IDisposable
     public async Task Create_MissingLabel_Returns400()
     {
         var result = await _controller.CreateAsync(
-            new TokenCreateRequest("", TokenPermission.Friend));
+            new TokenCreateRequest("", MinBucketSortOrder: 1));
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
@@ -72,19 +72,19 @@ public class TokensControllerTests : IDisposable
         {
             TokenValue = "abc123",
             Label = "Blue",
-            Permission = TokenPermission.Friend,
+            MinBucketSortOrder = 1,
             AllowsBoardPosting = true
         };
         _tokenService
-            .Setup(s => s.CreateTokenAsync("Blue", TokenPermission.Friend, true, null))
+            .Setup(s => s.CreateTokenAsync("Blue", 1, true, null))
             .ReturnsAsync(created);
 
         var result = await _controller.CreateAsync(
-            new TokenCreateRequest("Blue", TokenPermission.Friend, AllowsBoardPosting: true)) as OkObjectResult;
+            new TokenCreateRequest("Blue", MinBucketSortOrder: 1, AllowsBoardPosting: true)) as OkObjectResult;
         var response = result!.Value as TokenResponse;
 
         Assert.Equal("abc123", response!.TokenValue);
-        Assert.Equal(TokenPermission.Friend, response.Permission);
+        Assert.Equal(1, response.MinBucketSortOrder);
         Assert.True(response.AllowsBoardPosting);
     }
 

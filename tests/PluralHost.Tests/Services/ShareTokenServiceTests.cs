@@ -26,7 +26,7 @@ public class ShareTokenServiceTests : IDisposable
     {
         var token = await _service.CreateTokenAsync(
             label: "Partner",
-            permission: TokenPermission.Public,
+            minBucketSortOrder: 0,
             allowsBoardPosting: false,
             expiresAt: DateTime.UtcNow.AddDays(30));
         Assert.NotEmpty(token.TokenValue);
@@ -35,15 +35,15 @@ public class ShareTokenServiceTests : IDisposable
     [Fact]
     public async Task CreateTwoTokens_HaveDifferentValues()
     {
-        var t1 = await _service.CreateTokenAsync("A", TokenPermission.Public, false, null);
-        var t2 = await _service.CreateTokenAsync("B", TokenPermission.Public, false, null);
+        var t1 = await _service.CreateTokenAsync("A", 0, false, null);
+        var t2 = await _service.CreateTokenAsync("B", 0, false, null);
         Assert.NotEqual(t1.TokenValue, t2.TokenValue);
     }
 
     [Fact]
     public async Task CreateToken_StoresAllowsBoardPosting()
     {
-        var token = await _service.CreateTokenAsync("Blue", TokenPermission.Friend, true, null);
+        var token = await _service.CreateTokenAsync("Blue", 1, true, null);
         var stored = await _context.AccessTokens.FindAsync(token.TokenValue);
         Assert.True(stored!.AllowsBoardPosting);
     }
@@ -51,7 +51,7 @@ public class ShareTokenServiceTests : IDisposable
     [Fact]
     public async Task RevokeToken_ExistingToken_ReturnsTrueAndSetsRevokedAt()
     {
-        var token = await _service.CreateTokenAsync("Partner", TokenPermission.Public, false, null);
+        var token = await _service.CreateTokenAsync("Partner", 0, false, null);
         var result = await _service.RevokeTokenAsync(token.TokenValue);
 
         Assert.True(result);
@@ -71,7 +71,7 @@ public class ShareTokenServiceTests : IDisposable
     [Fact]
     public async Task RevokeToken_AlreadyRevoked_ReturnsFalse()
     {
-        var token = await _service.CreateTokenAsync("Test", TokenPermission.Public, false, null);
+        var token = await _service.CreateTokenAsync("Test", 0, false, null);
         await _service.RevokeTokenAsync(token.TokenValue);
         // Second revoke — token is now revoked, not "found as valid"
         var result = await _service.RevokeTokenAsync(token.TokenValue);
@@ -81,7 +81,7 @@ public class ShareTokenServiceTests : IDisposable
     [Fact]
     public async Task ResolveToken_ValidToken_ReturnsValid()
     {
-        var token = await _service.CreateTokenAsync("Test", TokenPermission.ReadFrontOnly, false,
+        var token = await _service.CreateTokenAsync("Test", -1, false,
             DateTime.UtcNow.AddDays(1));
         var result = await _service.ResolveTokenAsync(token.TokenValue);
         Assert.Equal(TokenResolveStatus.Valid, result.Status);
@@ -91,7 +91,7 @@ public class ShareTokenServiceTests : IDisposable
     [Fact]
     public async Task ResolveToken_ExpiredToken_ReturnsExpired()
     {
-        var token = await _service.CreateTokenAsync("Test", TokenPermission.ReadFrontOnly, false,
+        var token = await _service.CreateTokenAsync("Test", -1, false,
             DateTime.UtcNow.AddHours(-1));
         var result = await _service.ResolveTokenAsync(token.TokenValue);
         Assert.Equal(TokenResolveStatus.Expired, result.Status);
@@ -101,7 +101,7 @@ public class ShareTokenServiceTests : IDisposable
     [Fact]
     public async Task ResolveToken_RevokedToken_ReturnsRevoked()
     {
-        var token = await _service.CreateTokenAsync("Test", TokenPermission.ReadFrontOnly, false, null);
+        var token = await _service.CreateTokenAsync("Test", -1, false, null);
         await _service.RevokeTokenAsync(token.TokenValue);
         var result = await _service.ResolveTokenAsync(token.TokenValue);
         Assert.Equal(TokenResolveStatus.Revoked, result.Status);

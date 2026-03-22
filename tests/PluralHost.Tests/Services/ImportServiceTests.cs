@@ -205,7 +205,7 @@ public class ImportServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ImportSp_SetsSpPrivateTrue_SetsPrivacyTierPrivate()
+    public async Task ImportSp_SetsSpPrivateTrue_SetsBucketToPrivate()
     {
         var req = new SpImportRequest(
             Members: [new SpMemberEntry("sp-001", new SpImportMemberContent(
@@ -219,7 +219,7 @@ public class ImportServiceTests : IDisposable
         await _svc.ImportSpAsync(req);
 
         var member = await _context.Members.FirstAsync();
-        Assert.Equal(MemberPrivacy.Private, member.PrivacyTier);
+        Assert.Equal(PrivacyBucket.PrivateId, member.BucketId);
     }
 
     [Fact]
@@ -259,13 +259,13 @@ public class ImportServiceTests : IDisposable
         var cfvs = await _context.CustomFieldValues.ToListAsync();
         Assert.Single(cfvs);
         Assert.Equal("Pyromancer", cfvs[0].Value);
-        Assert.Equal(MemberPrivacy.Private, cfvs[0].PrivacyTier); // always private on import
+        Assert.Equal(PrivacyBucket.PrivateId, cfvs[0].BucketId); // always private on import
     }
 
     [Fact]
     public async Task ImportSp_SpPrivateFalse_WhenCurrentlyPrivate_SetsPublic()
     {
-        _context.Members.Add(new Member { Name = "Ember", SpMemberId = "sp-001", PrivacyTier = MemberPrivacy.Private });
+        _context.Members.Add(new Member { Name = "Ember", SpMemberId = "sp-001", BucketId = PrivacyBucket.PrivateId });
         await _context.SaveChangesAsync();
 
         var req = new SpImportRequest(
@@ -281,7 +281,7 @@ public class ImportServiceTests : IDisposable
         await _svc.ImportSpAsync(req);
 
         var member = await _context.Members.FirstAsync();
-        Assert.Equal(MemberPrivacy.Public, member.PrivacyTier); // false + currently Private → Public
+        Assert.Equal(PrivacyBucket.PublicId, member.BucketId); // false + currently Private → Public
     }
 
     [Fact]
@@ -296,7 +296,7 @@ public class ImportServiceTests : IDisposable
         var cfv = new PluralHost.Api.Domain.CustomFieldValue
         {
             FieldId = field.Id, MemberId = member.Id, Value = "OldRole",
-            PrivacyTier = MemberPrivacy.Private
+            BucketId = PrivacyBucket.PrivateId
         };
         _context.CustomFieldValues.Add(cfv);
         await _context.SaveChangesAsync();
@@ -368,7 +368,7 @@ public class ImportServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ImportPk_PrivateVisibility_SetsPrivacyTierPrivate()
+    public async Task ImportPk_PrivateVisibility_SetsBucketToPrivate()
     {
         var req = new PkImportRequest(
             Members: [new PkMemberEntry(
@@ -381,7 +381,7 @@ public class ImportServiceTests : IDisposable
         await _svc.ImportPkAsync(req);
 
         var member = await _context.Members.FirstAsync();
-        Assert.Equal(MemberPrivacy.Private, member.PrivacyTier);
+        Assert.Equal(PrivacyBucket.PrivateId, member.BucketId);
     }
 
     [Fact]

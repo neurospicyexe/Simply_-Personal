@@ -13,10 +13,10 @@ public class MemberTests
     }
 
     [Fact]
-    public void MemberPrivacy_PrivateHasOrdinalValue3()
+    public void PrivacyBucket_PrivateId_IsWellKnownGuid()
     {
-        // Load-bearing: ITokenVisibilityService uses ordinal comparison (int)tier < (int)permission
-        Assert.Equal(3, (int)MemberPrivacy.Private);
+        // Load-bearing: TokenVisibilityService uses Bucket.SortOrder comparison
+        Assert.Equal(Guid.Parse("00000000-0000-0000-0000-000000000004"), PrivacyBucket.PrivateId);
     }
 
     [Fact]
@@ -56,10 +56,10 @@ public class MemberTests
     }
 
     [Fact]
-    public void Member_DefaultPrivacyTier_IsPublic()
+    public void Member_DefaultBucketId_IsPublicId()
     {
         var m = new Member { Name = "Ash" };
-        Assert.Equal(MemberPrivacy.Public, m.PrivacyTier);
+        Assert.Equal(PrivacyBucket.PublicId, m.BucketId);
     }
 
     [Fact]
