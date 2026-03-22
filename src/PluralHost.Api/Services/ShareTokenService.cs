@@ -8,7 +8,7 @@ public class ShareTokenService(PluralHostContext context) : IShareTokenService
 {
     public async Task<AccessToken> CreateTokenAsync(
         string? label,
-        TokenPermission permission,
+        int minBucketSortOrder,
         bool allowsBoardPosting,
         DateTime? expiresAt)
     {
@@ -16,7 +16,7 @@ public class ShareTokenService(PluralHostContext context) : IShareTokenService
         {
             TokenValue = GenerateToken(),
             Label = label,
-            Permission = permission,
+            MinBucketSortOrder = minBucketSortOrder,
             AllowsBoardPosting = allowsBoardPosting,
             ExpiresAt = expiresAt
         };

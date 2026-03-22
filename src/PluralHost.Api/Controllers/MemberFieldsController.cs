@@ -24,7 +24,7 @@ public class MemberFieldsController(PluralHostContext context) : ControllerBase
     };
 
     private static CustomFieldValueResponse ToValueResponse(CustomFieldValue v) => new(
-        v.Id, v.FieldId, v.MemberId, v.Value, v.PrivacyTier, v.CreatedAt, v.UpdatedAt);
+        v.Id, v.FieldId, v.MemberId, v.Value, v.BucketId, v.CreatedAt, v.UpdatedAt);
 
     [HttpGet]
     public async Task<IActionResult> GetAsync(Guid memberId)
@@ -51,7 +51,7 @@ public class MemberFieldsController(PluralHostContext context) : ControllerBase
             return new MemberFieldEntry(
                 f.Id, f.Label, f.FieldType, f.SortOrder,
                 hasValue ? val!.Value : null,
-                hasValue ? val!.PrivacyTier : MemberPrivacy.Public);
+                hasValue ? val!.BucketId : PrivacyBucket.PublicId);
         });
 
         return Ok(entries);
@@ -85,7 +85,7 @@ public class MemberFieldsController(PluralHostContext context) : ControllerBase
         {
             existing.Restore();
             existing.Value = body.Value;
-            existing.PrivacyTier = body.PrivacyTier;
+            existing.BucketId = body.BucketId == default ? PrivacyBucket.PublicId : body.BucketId;
         }
         else
         {
@@ -94,7 +94,7 @@ public class MemberFieldsController(PluralHostContext context) : ControllerBase
                 FieldId = fieldId,
                 MemberId = memberId,
                 Value = body.Value,
-                PrivacyTier = body.PrivacyTier
+                BucketId = body.BucketId == default ? PrivacyBucket.PublicId : body.BucketId
             };
             context.CustomFieldValues.Add(existing);
         }

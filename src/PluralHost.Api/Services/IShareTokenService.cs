@@ -6,7 +6,7 @@ public interface IShareTokenService
 {
     Task<AccessToken> CreateTokenAsync(
         string? label,
-        TokenPermission permission,
+        int minBucketSortOrder,
         bool allowsBoardPosting,
         DateTime? expiresAt);
 

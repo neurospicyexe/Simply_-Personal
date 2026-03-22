@@ -14,11 +14,30 @@ public record FrontStatusCreateRequest(string Label, string? Color = null);
 public record FrontStatusUpdateRequest(
     string? Label = null, string? Color = null, bool? IsHidden = null);
 
+// ── PrivacyBucket ─────────────────────────────────────────────────────
+public record BucketDto(
+    Guid Id, string Name, string? Description, string? Emoji,
+    string? Color, int SortOrder, bool IsDefault, int MemberCount);
+
+public record BucketCreateRequest(
+    string Name, string? Description, string? Emoji, string? Color);
+
+public record BucketUpdateRequest(
+    string? Name, string? Description, string? Emoji, string? Color, int? SortOrder);
+
+public record ReorderItem(Guid Id, int SortOrder);
+
+// ── Group ─────────────────────────────────────────────────────────────
+public record SetGroupMembersRequest(List<Guid> MemberIds);
+
+public record GroupCreateRequest(string Name, string? Color);
+public record GroupUpdateRequest(string? Name, string? Color);
+
 // ── Member (native) ───────────────────────────────────────────────────
 public record MemberResponse(
     Guid Id, string Name, string? DisplayName, string? Pronouns,
     string? Color, string? Role, string? Description, string? AvatarPath,
-    MemberPrivacy PrivacyTier, bool AllowsBoardPosting,
+    Guid BucketId, bool AllowsBoardPosting,
     bool IsPinned, bool IsArchived, bool IsUntracked,
     bool PreventFrontNotification, bool ReceiveBoardNotifications,
     List<string> ExtraImages, string? SpMemberId,
@@ -30,12 +49,12 @@ public record DeleteMemberRequest(string Pin);
 public record MemberCreateRequest(
     string Name, string? DisplayName = null, string? Pronouns = null,
     string? Color = null, string? Role = null, string? Description = null,
-    MemberPrivacy PrivacyTier = MemberPrivacy.Public);
+    Guid BucketId = default);
 
 public record MemberUpdateRequest(
     string? Name = null, string? DisplayName = null, string? Pronouns = null,
     string? Color = null, string? Role = null, string? Description = null,
-    MemberPrivacy? PrivacyTier = null, bool? AllowsBoardPosting = null,
+    Guid? BucketId = null, bool? AllowsBoardPosting = null,
     bool? IsPinned = null, bool? IsArchived = null,
     bool? IsUntracked = null, bool? PreventFrontNotification = null,
     bool? ReceiveBoardNotifications = null, List<string>? ExtraImages = null,
@@ -62,13 +81,13 @@ public record MemberNoteUpdateRequest(
 
 // ── AccessToken ───────────────────────────────────────────────────────
 public record TokenResponse(
-    string TokenValue, string? Label, TokenPermission Permission,
+    string TokenValue, string? Label, int MinBucketSortOrder,
     bool AllowsBoardPosting, DateTime? ExpiresAt,
     DateTime? RevokedAt, DateTime CreatedAt);
 
 public record TokenCreateRequest(
     string Label,
-    TokenPermission Permission,
+    int MinBucketSortOrder,
     bool AllowsBoardPosting = false,
     DateTime? ExpiresAt = null);
 
@@ -93,17 +112,17 @@ public record CustomFieldUpdateRequest(
 // ── CustomFieldValue ──────────────────────────────────────────────────
 public record CustomFieldValueResponse(
     Guid Id, Guid FieldId, Guid MemberId,
-    string Value, MemberPrivacy PrivacyTier,
+    string Value, Guid BucketId,
     DateTime CreatedAt, DateTime UpdatedAt);
 
 // Used in GET /api/members/{id}/fields — one entry per field definition
 public record MemberFieldEntry(
     Guid FieldId, string Label, FieldType FieldType, int SortOrder,
-    string? Value, MemberPrivacy PrivacyTier);  // Value null = not set
+    string? Value, Guid BucketId);  // Value null = not set
 
 public record CustomFieldValueUpsertRequest(
     string Value,
-    MemberPrivacy PrivacyTier = MemberPrivacy.Public);
+    Guid BucketId = default);
 
 // Slim DTO used in GET /share/{token} member response
 public record SharedCustomFieldDto(string Label, FieldType FieldType, string Value);

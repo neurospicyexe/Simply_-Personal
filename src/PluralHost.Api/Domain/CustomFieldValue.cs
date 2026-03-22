@@ -9,5 +9,6 @@ public class CustomFieldValue : BaseEntity
     public Member Member { get; set; } = null!;
 
     public string Value { get; set; } = string.Empty;
-    public MemberPrivacy PrivacyTier { get; set; } = MemberPrivacy.Public;
+    public Guid BucketId { get; set; } = PrivacyBucket.PublicId;
+    public PrivacyBucket? Bucket { get; set; }
 }

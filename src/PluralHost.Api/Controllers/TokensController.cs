@@ -17,7 +17,7 @@ public class TokensController(
     IGatekeeperService gatekeeper) : ControllerBase
 {
     private static TokenResponse ToResponse(AccessToken t) => new(
-        t.TokenValue, t.Label, t.Permission, t.AllowsBoardPosting,
+        t.TokenValue, t.Label, t.MinBucketSortOrder, t.AllowsBoardPosting,
         t.ExpiresAt, t.RevokedAt, t.CreatedAt);
 
     [HttpGet]
@@ -37,7 +37,7 @@ public class TokensController(
             return BadRequest(new { error = "Label is required" });
 
         var token = await tokenService.CreateTokenAsync(
-            body.Label, body.Permission, body.AllowsBoardPosting, body.ExpiresAt);
+            body.Label, body.MinBucketSortOrder, body.AllowsBoardPosting, body.ExpiresAt);
         return Ok(ToResponse(token));
     }
 

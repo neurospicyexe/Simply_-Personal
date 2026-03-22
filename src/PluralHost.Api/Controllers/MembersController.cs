@@ -18,7 +18,7 @@ public class MembersController(
 {
     private static MemberResponse ToResponse(Member m) => new(
         m.Id, m.Name, m.DisplayName, m.Pronouns, m.Color, m.Role,
-        m.Description, m.AvatarPath, m.PrivacyTier, m.AllowsBoardPosting,
+        m.Description, m.AvatarPath, m.BucketId ?? PrivacyBucket.PublicId, m.AllowsBoardPosting,
         m.IsPinned, m.IsArchived, m.IsUntracked,
         m.PreventFrontNotification, m.ReceiveBoardNotifications,
         m.ExtraImages, m.SpMemberId, m.Status, m.ParentIds,
@@ -59,7 +59,7 @@ public class MembersController(
             Color = body.Color,
             Role = body.Role,
             Description = body.Description,
-            PrivacyTier = body.PrivacyTier
+            BucketId = body.BucketId == default ? PrivacyBucket.PublicId : body.BucketId
         };
         context.Members.Add(member);
         await context.SaveChangesAsync();
@@ -89,7 +89,7 @@ public class MembersController(
         if (body.Color is not null)                       member.Color = body.Color;
         if (body.Role is not null)                        member.Role = body.Role;
         if (body.Description is not null)                 member.Description = body.Description;
-        if (body.PrivacyTier is not null)                 member.PrivacyTier = body.PrivacyTier.Value;
+        if (body.BucketId is not null)                    member.BucketId = body.BucketId.Value;
         if (body.AllowsBoardPosting is not null)          member.AllowsBoardPosting = body.AllowsBoardPosting.Value;
         if (body.IsPinned is not null)                    member.IsPinned = body.IsPinned.Value;
         if (body.IsArchived is not null)                  member.IsArchived = body.IsArchived.Value;

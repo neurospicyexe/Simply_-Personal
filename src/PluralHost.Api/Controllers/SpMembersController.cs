@@ -21,7 +21,7 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
                 Pronouns: m.Pronouns,
                 Color: m.Color,
                 AvatarUrl: null,      // avatars served via /api/media/ — no direct URL
-                Private: m.PrivacyTier == MemberPrivacy.Private,
+                Private: m.BucketId == PrivacyBucket.PrivateId,
                 Archived: m.IsArchived,
                 PkId: m.PkId
             ));
@@ -58,7 +58,7 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
             Description = body.Desc,
             Pronouns = body.Pronouns,
             Color = body.Color,
-            PrivacyTier = body.Private ? MemberPrivacy.Private : MemberPrivacy.Public
+            BucketId = body.Private ? PrivacyBucket.PrivateId : PrivacyBucket.PublicId
         };
         context.Members.Add(member);
         await context.SaveChangesAsync();
@@ -82,10 +82,10 @@ public class SpMembersController(PluralHostContext context) : ControllerBase
         if (body.Private is not null)
         {
             if (body.Private.Value)
-                member.PrivacyTier = MemberPrivacy.Private;
-            else if (member.PrivacyTier == MemberPrivacy.Private)
-                member.PrivacyTier = MemberPrivacy.Public;
-            // else: Private=false on a non-Private tier → leave unchanged (SP has no intermediate tiers)
+                member.BucketId = PrivacyBucket.PrivateId;
+            else if (member.BucketId == PrivacyBucket.PrivateId)
+                member.BucketId = PrivacyBucket.PublicId;
+            // else: Private=false on a non-Private bucket → leave unchanged (SP has no intermediate tiers)
         }
         if (body.Archived is not null) member.IsArchived = body.Archived.Value;
 

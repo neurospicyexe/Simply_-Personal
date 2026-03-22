@@ -146,6 +146,13 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
             .HasForeignKey(cfv => cfv.MemberId)
             .OnDelete(DeleteBehavior.NoAction);
 
+        // CustomFieldValue → PrivacyBucket FK
+        modelBuilder.Entity<CustomFieldValue>()
+            .HasOne(cfv => cfv.Bucket)
+            .WithMany()
+            .HasForeignKey(cfv => cfv.BucketId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // JournalEntry: soft-delete only
         modelBuilder.Entity<JournalEntry>()
             .HasQueryFilter(j => j.DeletedAt == null);

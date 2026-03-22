@@ -33,13 +33,14 @@ public class ShareController(
 
         var accessToken = result.Token!;
 
-        if (accessToken.Permission == TokenPermission.ReadFrontOnly)
+        if (accessToken.MinBucketSortOrder == -1)
         {
             var front = await context.FrontHistory
                 .Include(f => f.Member)
+                    .ThenInclude(m => m!.Bucket)
                 .Where(f => f.FrontEnd == null &&
                             f.Member != null &&
-                            f.Member.PrivacyTier == MemberPrivacy.Public)
+                            f.Member.BucketId == PrivacyBucket.PublicId)
                 .Select(f => new { f.Member!.Name, f.Member.DisplayName, f.Member.Color })
                 .ToListAsync();
             return Ok(new { currentFront = front });
@@ -49,6 +50,8 @@ public class ShareController(
             .FilterByPermission(context.Members, accessToken.MinBucketSortOrder)
             .Include(m => m.CustomFieldValues)
                 .ThenInclude(cfv => cfv.Field)
+            .Include(m => m.CustomFieldValues)
+                .ThenInclude(cfv => cfv.Bucket)
             .ToListAsync();
 
         var members = rawMembers.Select(m => new
@@ -62,18 +65,20 @@ public class ShareController(
                 // Must match ITokenVisibilityService.FilterByPermission tier logic
                 .Where(cfv => cfv.Field != null &&
                               cfv.Field.DeletedAt == null &&
-                              (int)cfv.PrivacyTier < (int)accessToken.Permission)
-                .Select(cfv => new SharedCustomFieldDto(cfv.Field.Label, cfv.Field.FieldType, cfv.Value))
+                              cfv.Bucket != null &&
+                              cfv.Bucket.SortOrder <= accessToken.MinBucketSortOrder)
+                .Select(cfv => new SharedCustomFieldDto(cfv.Field!.Label, cfv.Field.FieldType, cfv.Value))
                 .ToList()
         }).ToList();
 
-        var frontPermInt = (int)accessToken.Permission;
         var currentFront = await context.FrontHistory
             .Include(f => f.Member)
+                .ThenInclude(m => m!.Bucket)
             .Where(f => f.FrontEnd == null &&
                         f.Member != null &&
                         f.Member.DeletedAt == null &&
-                        (int)f.Member.PrivacyTier < frontPermInt)
+                        f.Member.Bucket != null &&
+                        f.Member.Bucket.SortOrder <= accessToken.MinBucketSortOrder)
             .ToListAsync();
 
         var visibleFront = currentFront
@@ -101,7 +106,7 @@ public class ShareController(
         var accessToken = result.Token!;
 
         // 3. ReadFrontOnly tokens cannot access journals
-        if (accessToken.Permission == TokenPermission.ReadFrontOnly)
+        if (accessToken.MinBucketSortOrder == -1)
             return StatusCode(403, new { error = "Not permitted" });
 
         // 4. Return public journals ordered by CreatedAt DESC
@@ -145,8 +150,9 @@ public class ShareController(
 
         if (member is null || member.DeletedAt is not null) return NotFound();
 
-        // Invisible to this token (tier too high) → 403, don't leak existence
-        if ((int)member.PrivacyTier >= (int)accessToken.Permission)
+        // Invisible to this token (bucket SortOrder too high) → 403, don't leak existence
+        // member.BucketId is non-nullable after migration, but use ?? safety during transition
+        if (member.BucketId == PrivacyBucket.PrivateId)
             return StatusCode(403, new { error = "Board posting not permitted." });
 
         // 5. Posting permission check

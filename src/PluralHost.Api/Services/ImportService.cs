@@ -112,7 +112,7 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                             FieldId = field.Id,
                             MemberId = member.Id,
                             Value = value,
-                            PrivacyTier = MemberPrivacy.Private
+                            BucketId = PrivacyBucket.PrivateId
                         };
                         context.CustomFieldValues.Add(cfv);
                     }
