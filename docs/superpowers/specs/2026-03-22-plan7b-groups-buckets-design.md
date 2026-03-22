@@ -45,12 +45,20 @@ Member assignment section:
 - Tap any row to toggle membership in/out of the group.
 
 Actions:
-- **Save** -- patches affected members via `PATCH /api/members/{id}` with updated `parentIds`.
+- **Save** -- issues a single `POST /api/groups/{id}/members` with the full list of member IDs currently toggled in. The backend replaces the group's membership in one operation. If the request fails, the sheet stays open and shows an inline error; no partial state is committed. New groups are created first (`POST /api/groups`), then membership is set.
 - **Delete** -- Lucide `Trash2`; requires a single confirm step (no Gatekeeper PIN needed for groups). Calls `DELETE /api/groups/{id}`.
 
 ### Backend
 
-No new endpoints required. The `Group` entity and `GET/POST/DELETE /api/groups` already exist. Member-to-group assignment uses `Member.ParentIds` (comma-separated GUIDs), updated via the existing `PATCH /api/members/{id}` endpoint.
+A new batch membership endpoint is added:
+
+```
+POST /api/groups/{id}/members   -- body: { memberIds: Guid[] }
+                                -- replaces all current members of the group atomically
+                                -- returns 204 No Content
+```
+
+The `Group` entity and `GET/POST/DELETE /api/groups` already exist. Member-to-group assignment uses `Member.ParentIds` (comma-separated GUIDs); this endpoint updates all affected members in a single transaction. `GET /api/groups` response includes a `memberCount` field derived server-side.
 
 ---
 
@@ -59,6 +67,7 @@ No new endpoints required. The `Group` entity and `GET/POST/DELETE /api/groups` 
 ### List View
 
 - Scrollable list of bucket cards: emoji, color bar, name, member count.
+- Member count is returned by `GET /api/buckets` as a `memberCount` field; computed server-side via a join, not derived client-side.
 - Four default buckets shown first (non-removable), then user-created buckets.
 - Lucide `Plus` button to create a custom bucket.
 - Empty custom section: defaults always present; no empty state needed.
@@ -116,9 +125,15 @@ Seeded defaults (IsDefault = true):
 
 ### Member Migration
 
-- `Member.PrivacyTier` (`MemberPrivacy` enum) replaced with `Member.BucketId` (Guid FK → `PrivacyBucket`).
-- EF Core migration maps existing enum values to seeded bucket IDs before dropping the column.
-- `Member.BucketId` is non-nullable after migration (defaults to Public bucket if unset during migration).
+Migration sequence (implemented as raw SQL in the EF Core migration `Up()` method):
+
+1. Add `BucketId` column to `Members` as **nullable** Guid.
+2. Insert the 4 default `PrivacyBucket` rows with fixed, known GUIDs (hardcoded in the migration so the UPDATE in step 3 can reference them by ID).
+3. Run `UPDATE Members SET BucketId = <bucket-guid> WHERE PrivacyTier = <enum-int>` for each of the 4 enum values.
+4. Set `BucketId` NOT NULL constraint (all rows are populated after step 3).
+5. Drop the `PrivacyTier` column.
+
+Any member with no `PrivacyTier` value (null) is assigned the Public bucket in step 3 as a safe default.
 
 ### Visibility Service
 
@@ -130,6 +145,8 @@ member.Bucket.SortOrder < token.MinBucketSortOrder
 
 `AccessToken` gains a `MinBucketSortOrder` int column (replaces `TokenPermission` enum). Existing tokens migrated: `ReadFrontOnly=0 → -1`, `Public=1 → 0`, `Friend=2 → 1`, `Trusted=3 → 2`.
 
+`ReadFrontOnly` tokens intentionally receive `MinBucketSortOrder = -1`. No bucket will ever have `SortOrder < 0` (defaults start at 0, custom buckets at 4+), so these tokens see no members by design -- correct behavior preserved.
+
 ### SP Compat (`SpMembersController`)
 
 - `private: true` → assign member to Private bucket (SortOrder 3).
@@ -139,12 +156,16 @@ member.Bucket.SortOrder < token.MinBucketSortOrder
 ### New Endpoints
 
 ```
-GET    /api/buckets          -- list all non-deleted buckets (owner)
-POST   /api/buckets          -- create custom bucket
-PUT    /api/buckets/{id}     -- update bucket (name/description/emoji/color/sortOrder)
-DELETE /api/buckets/{id}     -- soft-delete (returns 400 if IsDefault = true)
-PUT    /api/buckets/reorder  -- update SortOrder for custom buckets (body: [{id, sortOrder}])
+GET    /api/buckets             -- list all non-deleted buckets (owner); includes memberCount
+POST   /api/buckets             -- create custom bucket
+PUT    /api/buckets/{id}        -- update bucket (name/description/emoji/color/sortOrder)
+DELETE /api/buckets/{id}        -- soft-delete (returns 400 if IsDefault = true)
+PUT    /api/buckets/reorder     -- update SortOrder for custom buckets (body: [{id, sortOrder}])
+                                -- annotated [HttpPut("reorder")] BEFORE the {id} route in the
+                                -- controller to prevent ASP.NET Core route ambiguity
 ```
+
+All `/api/buckets` endpoints are `[Authorize]` (owner-only). Ghost Mode (`IsFrozen`) does not apply to bucket metadata -- the bucket list is an admin surface, not a member-visibility surface. Ghost Mode continues to apply to member queries that reference buckets.
 
 Member assignment uses the existing `PATCH /api/members/{id}` with a `bucketId` field.
 
