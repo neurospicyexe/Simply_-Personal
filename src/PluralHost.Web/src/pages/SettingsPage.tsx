@@ -4,8 +4,8 @@ import { secureApi } from '../api/secure'
 import { apiFetch } from '../api/client'
 import styles from './SettingsPage.module.css'
 
-function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false)
+function CollapsibleSection({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   return (
     <section className={styles.section}>
       <button
@@ -109,7 +109,7 @@ export default function SettingsPage() {
         </button>
       </section>
 
-      <CollapsibleSection title="Security">
+      <CollapsibleSection title="Security" defaultOpen>
         <div className={styles.subSection}>
           <h3 className={styles.subTitle}>Change Password</h3>
           <form onSubmit={handleChangePassword} className={styles.form}>
