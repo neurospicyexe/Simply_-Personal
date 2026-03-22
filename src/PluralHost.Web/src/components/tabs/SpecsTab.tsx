@@ -30,7 +30,7 @@ export default function SpecsTab({ member }: Props) {
   })
 
   const addDefMutation = useMutation({
-    mutationFn: (name: string) => fieldsApi.createDef(name),
+    mutationFn: (label: string) => fieldsApi.createDef(label),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['field-defs'] }),
   })
 
@@ -42,7 +42,7 @@ export default function SpecsTab({ member }: Props) {
     if (!trimmed) return
     let fieldId: string
 
-    const existing = activeDefs.find((d: FieldDef) => d.name.toLowerCase() === trimmed.toLowerCase())
+    const existing = activeDefs.find((d: FieldDef) => d.label.toLowerCase() === trimmed.toLowerCase())
     if (existing) {
       fieldId = existing.id
     } else {
@@ -95,7 +95,7 @@ export default function SpecsTab({ member }: Props) {
         const isEditing = editingFieldId === def.id
         return (
           <div key={def.id} className={styles.fieldRow}>
-            <span className={styles.fieldName}>{def.name}</span>
+            <span className={styles.fieldName}>{def.label}</span>
             {isEditing ? (
               <input
                 className={styles.fieldInput}
@@ -113,7 +113,7 @@ export default function SpecsTab({ member }: Props) {
                 {entry?.value || 'Click to add…'}
               </span>
             )}
-            <button className={styles.deleteIcon} onClick={() => deleteMutation.mutate(def.id)} aria-label={`Delete ${def.name}`}>🗑</button>
+            <button className={styles.deleteIcon} onClick={() => deleteMutation.mutate(def.id)} aria-label={`Delete ${def.label}`}>🗑</button>
           </div>
         )
       })}
@@ -122,7 +122,7 @@ export default function SpecsTab({ member }: Props) {
         <p className={styles.presetLabel}>Common fields</p>
         <div className={styles.presets}>
           {PRESETS.map(name => {
-            const exists = activeDefs.find((d: FieldDef) => d.name.toLowerCase() === name.toLowerCase())
+            const exists = activeDefs.find((d: FieldDef) => d.label.toLowerCase() === name.toLowerCase())
             const alreadyAssigned = exists && memberDefIds.has(exists.id)
             return (
               <button
