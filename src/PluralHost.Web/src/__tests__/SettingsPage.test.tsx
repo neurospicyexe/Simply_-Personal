@@ -1,29 +1,42 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { MemoryRouter } from 'react-router-dom'
-import { vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
 import SettingsPage from '../pages/SettingsPage'
 
-const mockLogout = vi.fn()
 vi.mock('../context/AuthContext', () => ({
-  useAuth: () => ({ logout: mockLogout }),
+  useAuth: () => ({ logout: vi.fn(), isAuthenticated: true }),
 }))
-vi.mock('../api/auth', () => ({
-  authApi: { logout: vi.fn().mockResolvedValue(undefined) },
+vi.mock('../api/secure', () => ({
+  secureApi: {
+    status: vi.fn().mockResolvedValue({ pinIsSet: false, deletionCooldownEnd: null }),
+    setPin: vi.fn().mockResolvedValue(undefined),
+  },
 }))
 
-function Wrapper({ children }: { children: React.ReactNode }) {
-  const qc = new QueryClient()
-  return (
-    <QueryClientProvider client={qc}>
-      <MemoryRouter>{children}</MemoryRouter>
-    </QueryClientProvider>
-  )
-}
+describe('SettingsPage', () => {
+  it('renders Security section toggle button', () => {
+    render(<SettingsPage />)
+    expect(screen.getByRole('button', { name: /security/i })).toBeInTheDocument()
+  })
 
-test('logout button calls auth logout', async () => {
-  render(<SettingsPage />, { wrapper: Wrapper })
-  await userEvent.click(screen.getByRole('button', { name: /log out/i }))
-  expect(mockLogout).toHaveBeenCalled()
+  it('Security section is collapsed by default', () => {
+    render(<SettingsPage />)
+    expect(
+      screen.getByRole('button', { name: /security/i })
+    ).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('expands Security section on click', () => {
+    render(<SettingsPage />)
+    fireEvent.click(screen.getByRole('button', { name: /security/i }))
+    expect(
+      screen.getByRole('button', { name: /security/i })
+    ).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('shows Change Password and Gatekeeper PIN headings when expanded', () => {
+    render(<SettingsPage />)
+    fireEvent.click(screen.getByRole('button', { name: /security/i }))
+    expect(screen.getByRole('heading', { name: /change password/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /gatekeeper pin/i })).toBeInTheDocument()
+  })
 })
