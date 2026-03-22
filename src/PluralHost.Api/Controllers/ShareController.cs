@@ -46,7 +46,7 @@ public class ShareController(
         }
 
         var rawMembers = await visibility
-            .FilterByPermission(context.Members, accessToken.Permission)
+            .FilterByPermission(context.Members, accessToken.MinBucketSortOrder)
             .Include(m => m.CustomFieldValues)
                 .ThenInclude(cfv => cfv.Field)
             .ToListAsync();

@@ -21,24 +21,32 @@ public class TokenVisibilityServiceTests : IDisposable
         _service = new TokenVisibilityService();
     }
 
-    private Member Make(MemberPrivacy tier, string name = "X") =>
-        new() { Name = name, PrivacyTier = tier };
+    // Buckets matching the 4 default tiers
+    private static PrivacyBucket MakeBucket(int sortOrder, string name) =>
+        new() { Id = Guid.NewGuid(), Name = name, SortOrder = sortOrder };
+
+    private static readonly PrivacyBucket PublicBucket  = MakeBucket(0, "Public");
+    private static readonly PrivacyBucket FriendBucket  = MakeBucket(1, "Friend");
+    private static readonly PrivacyBucket TrustedBucket = MakeBucket(2, "Trusted");
+    private static readonly PrivacyBucket PrivateBucket = MakeBucket(3, "Private");
+
+    private static Member Make(PrivacyBucket bucket, string name = "X") =>
+        new() { Name = name, BucketId = bucket.Id, Bucket = bucket };
 
     // ── FilterByPermission ────────────────────────────────────────────
 
     [Fact]
     public void FilterByPermission_Public_SeesOnlyPublicMembers()
     {
-        _context.Members.AddRange(
-            Make(MemberPrivacy.Public, "Pub"),
-            Make(MemberPrivacy.Friend, "Fri"),
-            Make(MemberPrivacy.Trusted, "Tru"),
-            Make(MemberPrivacy.Private, "Pri"));
-        _context.SaveChanges();
+        var members = new List<Member>
+        {
+            Make(PublicBucket,  "Pub"),
+            Make(FriendBucket,  "Fri"),
+            Make(TrustedBucket, "Tru"),
+            Make(PrivateBucket, "Pri"),
+        }.AsQueryable();
 
-        var result = _service
-            .FilterByPermission(_context.Members, TokenPermission.Public)
-            .ToList();
+        var result = _service.FilterByPermission(members, 0).ToList();
 
         Assert.Single(result);
         Assert.Equal("Pub", result[0].Name);
@@ -47,16 +55,15 @@ public class TokenVisibilityServiceTests : IDisposable
     [Fact]
     public void FilterByPermission_Friend_SeePublicAndFriend()
     {
-        _context.Members.AddRange(
-            Make(MemberPrivacy.Public, "Pub"),
-            Make(MemberPrivacy.Friend, "Fri"),
-            Make(MemberPrivacy.Trusted, "Tru"),
-            Make(MemberPrivacy.Private, "Pri"));
-        _context.SaveChanges();
+        var members = new List<Member>
+        {
+            Make(PublicBucket,  "Pub"),
+            Make(FriendBucket,  "Fri"),
+            Make(TrustedBucket, "Tru"),
+            Make(PrivateBucket, "Pri"),
+        }.AsQueryable();
 
-        var result = _service
-            .FilterByPermission(_context.Members, TokenPermission.Friend)
-            .OrderBy(m => m.Name).ToList();
+        var result = _service.FilterByPermission(members, 1).OrderBy(m => m.Name).ToList();
 
         Assert.Equal(2, result.Count);
         Assert.Contains(result, m => m.Name == "Pub");
@@ -66,16 +73,15 @@ public class TokenVisibilityServiceTests : IDisposable
     [Fact]
     public void FilterByPermission_Trusted_SeePublicFriendTrusted()
     {
-        _context.Members.AddRange(
-            Make(MemberPrivacy.Public, "Pub"),
-            Make(MemberPrivacy.Friend, "Fri"),
-            Make(MemberPrivacy.Trusted, "Tru"),
-            Make(MemberPrivacy.Private, "Pri"));
-        _context.SaveChanges();
+        var members = new List<Member>
+        {
+            Make(PublicBucket,  "Pub"),
+            Make(FriendBucket,  "Fri"),
+            Make(TrustedBucket, "Tru"),
+            Make(PrivateBucket, "Pri"),
+        }.AsQueryable();
 
-        var result = _service
-            .FilterByPermission(_context.Members, TokenPermission.Trusted)
-            .OrderBy(m => m.Name).ToList();
+        var result = _service.FilterByPermission(members, 2).OrderBy(m => m.Name).ToList();
 
         Assert.Equal(3, result.Count);
         Assert.DoesNotContain(result, m => m.Name == "Pri");
@@ -84,56 +90,58 @@ public class TokenVisibilityServiceTests : IDisposable
     [Fact]
     public void FilterByPermission_PrivateMembersNeverReturned()
     {
-        _context.Members.Add(Make(MemberPrivacy.Private, "Pri"));
-        _context.SaveChanges();
+        var members = new List<Member>
+        {
+            Make(PrivateBucket, "Pri"),
+        }.AsQueryable();
 
-        var result = _service
-            .FilterByPermission(_context.Members, TokenPermission.Trusted)
-            .ToList();
+        var result = _service.FilterByPermission(members, 2).ToList();
 
         Assert.Empty(result);
     }
 
     [Fact]
-    public void FilterByPermission_ReadFrontOnly_ThrowsInvalidOperation()
+    public void FilterByPermission_ThrowsOnReadFrontOnly()
     {
-        Assert.Throws<InvalidOperationException>(() =>
-            _service.FilterByPermission(_context.Members, TokenPermission.ReadFrontOnly));
+        var svc = new TokenVisibilityService();
+        var members = new List<Member>().AsQueryable();
+        Assert.Throws<InvalidOperationException>(
+            () => svc.FilterByPermission(members, -1).ToList());
     }
 
     // ── CanPostToBoard ────────────────────────────────────────────────
 
     private static AccessToken MakeToken(
-        TokenPermission permission,
+        int minBucketSortOrder,
         bool allowsBoardPosting = true) =>
-        new() { TokenValue = Guid.NewGuid().ToString(), Permission = permission, AllowsBoardPosting = allowsBoardPosting };
+        new() { TokenValue = Guid.NewGuid().ToString(), MinBucketSortOrder = minBucketSortOrder, AllowsBoardPosting = allowsBoardPosting };
 
     private static Member MakeMember(bool allowsBoardPosting = true) =>
         new() { Name = "M", AllowsBoardPosting = allowsBoardPosting };
 
     [Fact]
     public void CanPostToBoard_FriendTokenBothFlagsTrue_ReturnsTrue()
-        => Assert.True(_service.CanPostToBoard(MakeToken(TokenPermission.Friend), MakeMember()));
+        => Assert.True(_service.CanPostToBoard(MakeToken(1), MakeMember()));
 
     [Fact]
     public void CanPostToBoard_TrustedTokenBothFlagsTrue_ReturnsTrue()
-        => Assert.True(_service.CanPostToBoard(MakeToken(TokenPermission.Trusted), MakeMember()));
+        => Assert.True(_service.CanPostToBoard(MakeToken(2), MakeMember()));
 
     [Fact]
     public void CanPostToBoard_PublicToken_ReturnsFalse()
-        => Assert.False(_service.CanPostToBoard(MakeToken(TokenPermission.Public), MakeMember()));
+        => Assert.False(_service.CanPostToBoard(MakeToken(0), MakeMember()));
 
     [Fact]
     public void CanPostToBoard_ReadFrontOnlyToken_ReturnsFalse()
-        => Assert.False(_service.CanPostToBoard(MakeToken(TokenPermission.ReadFrontOnly), MakeMember()));
+        => Assert.False(_service.CanPostToBoard(MakeToken(-1), MakeMember()));
 
     [Fact]
     public void CanPostToBoard_TokenFlagFalse_ReturnsFalse()
-        => Assert.False(_service.CanPostToBoard(MakeToken(TokenPermission.Friend, allowsBoardPosting: false), MakeMember()));
+        => Assert.False(_service.CanPostToBoard(MakeToken(1, allowsBoardPosting: false), MakeMember()));
 
     [Fact]
     public void CanPostToBoard_MemberFlagFalse_ReturnsFalse()
-        => Assert.False(_service.CanPostToBoard(MakeToken(TokenPermission.Friend), MakeMember(allowsBoardPosting: false)));
+        => Assert.False(_service.CanPostToBoard(MakeToken(1), MakeMember(allowsBoardPosting: false)));
 
     public void Dispose() => _context.Dispose();
 }

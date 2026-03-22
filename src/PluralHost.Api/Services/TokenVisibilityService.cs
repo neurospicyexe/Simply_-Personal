@@ -4,25 +4,18 @@ namespace PluralHost.Api.Services;
 
 public class TokenVisibilityService : ITokenVisibilityService
 {
-    public IQueryable<Member> FilterByPermission(
-        IQueryable<Member> members, TokenPermission permission)
+    public IQueryable<Member> FilterByPermission(IQueryable<Member> members, int minBucketSortOrder)
     {
-        if (permission == TokenPermission.ReadFrontOnly)
+        if (minBucketSortOrder == -1)
             throw new InvalidOperationException(
-                "ReadFrontOnly tokens must not call FilterByPermission. " +
+                "ReadFrontOnly tokens (MinBucketSortOrder = -1) must not call FilterByPermission. " +
                 "The front endpoint handles this case separately.");
 
-        // Strict less-than because token enum is offset +1 from member enum:
-        //   Public(1)  → tier < 1 → only Public(0)
-        //   Friend(2)  → tier < 2 → Public(0), Friend(1)
-        //   Trusted(3) → tier < 3 → Public(0), Friend(1), Trusted(2)
-        var permInt = (int)permission;
-        return members.Where(m => (int)m.PrivacyTier < permInt);
+        return members.Where(m => m.Bucket!.SortOrder <= minBucketSortOrder);
     }
 
     public bool CanPostToBoard(AccessToken token, Member member) =>
-        (token.Permission == TokenPermission.Friend ||
-         token.Permission == TokenPermission.Trusted) &&
+        token.MinBucketSortOrder >= 1 &&
         token.AllowsBoardPosting &&
         member.AllowsBoardPosting;
 }
