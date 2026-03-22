@@ -14,7 +14,6 @@ namespace PluralHost.Api.Controllers;
 [Route("api/members/{memberId:guid}/board")]
 public class BoardController(
     PluralHostContext context,
-    IGatekeeperService gatekeeper,
     IGhostModeService ghostMode) : ControllerBase
 {
     private static BoardMessageResponse ToResponse(BoardMessage m) =>
@@ -57,12 +56,8 @@ public class BoardController(
     }
 
     [HttpDelete("{msgId:guid}")]
-    public async Task<IActionResult> DeleteAsync(Guid memberId, Guid msgId,
-        [FromQuery] string pin)
+    public async Task<IActionResult> DeleteAsync(Guid memberId, Guid msgId)
     {
-        if (!await gatekeeper.ValidatePinAsync(pin))
-            return Forbid();
-
         var msg = await context.BoardMessages
             .FirstOrDefaultAsync(m => m.Id == msgId && m.MemberId == memberId);
         if (msg is null) return NotFound();

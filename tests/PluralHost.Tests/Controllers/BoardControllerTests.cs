@@ -14,7 +14,6 @@ namespace PluralHost.Tests.Controllers;
 public class BoardControllerTests : IDisposable
 {
     private readonly PluralHostContext _context;
-    private readonly Mock<IGatekeeperService> _gatekeeper;
     private readonly Mock<IGhostModeService> _ghostMode;
     private readonly BoardController _controller;
     private readonly Member _member;
@@ -29,10 +28,9 @@ public class BoardControllerTests : IDisposable
         _member = new Member { Name = "Ash" };
         _context.Members.Add(_member);
         _context.SaveChanges();
-        _gatekeeper = new Mock<IGatekeeperService>();
         _ghostMode = new Mock<IGhostModeService>();
         _ghostMode.Setup(g => g.IsFrozenAsync()).ReturnsAsync(false);
-        _controller = new BoardController(_context, _gatekeeper.Object, _ghostMode.Object);
+        _controller = new BoardController(_context, _ghostMode.Object);
     }
 
     [Fact]
@@ -73,15 +71,14 @@ public class BoardControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task Delete_WithValidPin_SoftDeletes()
+    public async Task Delete_SoftDeletes_Message()
     {
-        _gatekeeper.Setup(g => g.ValidatePinAsync("1234")).ReturnsAsync(true);
         var msg = new BoardMessage
             { MemberId = _member.Id, AuthorName = "Sol", Content = "hi" };
         _context.BoardMessages.Add(msg);
         await _context.SaveChangesAsync();
 
-        var result = await _controller.DeleteAsync(_member.Id, msg.Id, "1234");
+        var result = await _controller.DeleteAsync(_member.Id, msg.Id);
         Assert.IsType<OkResult>(result);
 
         var inDb = await _context.BoardMessages
@@ -91,16 +88,10 @@ public class BoardControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task Delete_InvalidPin_Returns403()
+    public async Task Delete_UnknownMessage_Returns404()
     {
-        _gatekeeper.Setup(g => g.ValidatePinAsync("bad")).ReturnsAsync(false);
-        var msg = new BoardMessage
-            { MemberId = _member.Id, AuthorName = "Sol", Content = "hi" };
-        _context.BoardMessages.Add(msg);
-        await _context.SaveChangesAsync();
-
-        var result = await _controller.DeleteAsync(_member.Id, msg.Id, "bad");
-        Assert.IsType<ForbidResult>(result);
+        var result = await _controller.DeleteAsync(_member.Id, Guid.NewGuid());
+        Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
