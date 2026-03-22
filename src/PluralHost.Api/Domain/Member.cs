@@ -20,6 +20,9 @@ public class Member : BaseEntity
     public string? Role { get; set; }
     public string? Description { get; set; }
     public MemberPrivacy PrivacyTier { get; set; } = MemberPrivacy.Public;
+    // New: FK to PrivacyBucket (nullable until Migration 1 runs)
+    public Guid? BucketId { get; set; }
+    public PrivacyBucket? Bucket { get; set; }
     public bool AllowsBoardPosting { get; set; } = true;
     public MemberStatus Status { get; set; } = MemberStatus.Active;
     public List<Guid> ParentIds { get; set; } = [];

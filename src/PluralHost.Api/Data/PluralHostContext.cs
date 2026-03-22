@@ -20,6 +20,7 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
     public DbSet<CustomField> CustomFields => Set<CustomField>();
     public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
+    public DbSet<PrivacyBucket> PrivacyBuckets => Set<PrivacyBucket>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -148,6 +149,24 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
         // JournalEntry: soft-delete only
         modelBuilder.Entity<JournalEntry>()
             .HasQueryFilter(j => j.DeletedAt == null);
+
+        // ── PrivacyBucket ─────────────────────────────────────────────────
+        // Soft-delete only — Ghost Mode does NOT apply (owner-only admin data)
+        modelBuilder.Entity<PrivacyBucket>(b =>
+        {
+            b.HasKey(p => p.Id);
+            b.Property(p => p.Name).IsRequired().HasMaxLength(150);
+            b.Property(p => p.Description).HasMaxLength(500);
+            b.Property(p => p.Emoji).HasMaxLength(10);
+            b.HasQueryFilter(p => p.DeletedAt == null);
+        });
+
+        // Member → PrivacyBucket FK (nullable, restrict delete)
+        modelBuilder.Entity<Member>()
+            .HasOne<PrivacyBucket>(m => m.Bucket)
+            .WithMany(b => b.Members)
+            .HasForeignKey(m => m.BucketId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 
     private static FrontStatus Seed(Guid id, string label) => new()

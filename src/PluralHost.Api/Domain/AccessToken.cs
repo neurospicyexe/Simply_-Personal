@@ -12,6 +12,8 @@ public class AccessToken
 {
     public required string TokenValue { get; set; }
     public TokenPermission Permission { get; set; } = TokenPermission.ReadFrontOnly;
+    // New: replaces Permission enum. ReadFrontOnly → -1, Public → 0, Friend → 1, Trusted → 2+
+    public int MinBucketSortOrder { get; set; } = -1;
     public bool AllowsBoardPosting { get; set; } = false;
     public DateTime? ExpiresAt { get; set; }
     public DateTime? RevokedAt { get; set; }
