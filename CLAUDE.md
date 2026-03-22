@@ -32,12 +32,14 @@ src/
       Migrations/       # EF Core migration files (committed to repo)
     Services/           # IGhostModeService, IGatekeeperService, IShareTokenService, ITokenVisibilityService, IAuthService, IMemberService
     Controllers/        # SecureActionController, ShareController, TokensController, MembersController, BoardController, MemberNotesController, FrontStatusController, SpMembersController, SpFrontController, SpGroupsController, MediaController, FieldsController, MemberFieldsController, JournalsController
+                        # SecureActionController also has GET /api/secure/status + PUT /api/secure/pin
     BackgroundServices/ # AutoUnfreezeService
     Dto/                # NativeDtos.cs, SpDtos.cs
   PluralHost.Web/       # React PWA (Vite + TypeScript, port 5173 in dev)
     src/
-      api/              # apiFetch client + per-domain modules (auth, members, front, groups)
-      components/       # Avatar, BottomNav, FrontCard, MemberCard, TabBar, CreateMemberSheet
+      api/              # apiFetch client + per-domain modules (auth, members, front, groups, notes, board, fields, media, secure)
+      components/       # Avatar, BottomNav, FrontCard, MemberCard, TabBar, CreateMemberSheet, BottomSheet
+        tabs/           # EssenceTab, SpecsTab, DossierTab, CommsTab, LogsTab, AccessTab (+ CSS modules)
       context/          # AuthContext (isAuthenticated, logout)
       pages/            # LoginPage, FrontPage, MembersPage, MemberDetailPage, HistoryStubPage, SettingsPage
       styles/           # tokens.css (design system), globals.css
@@ -146,22 +148,45 @@ docker compose down
   - `POST /api/members` wired up; invalidates `['members']` query on success
 - `docs/cypher-notes.md` — running session notes file
 
-**Next — Plan 6 (not yet specced/planned):**
-- Member detail: History tab, Notes tab, Message Board tab, Custom Fields tab
-- Avatar upload (`POST /api/media/upload` — endpoint not yet built)
+**Plan 6a `2026-03-21-plan6a-member-detail-tabs.md` — COMPLETE (2026-03-21)**
+
+- `BottomSheet` shared component (`src/components/BottomSheet.tsx`) + `useReducedMotion` hook
+- **EssenceTab** — bio, pronouns, description, color display (no upload yet)
+- **SpecsTab** — custom fields UI (add from presets or define own; GET/POST/DELETE `/api/fields`, GET/PUT/DELETE `/api/members/:id/fields`)
+- **DossierTab** — member notes (GET/POST/DELETE `/api/members/:id/notes`)
+- **CommsTab** — board messages filtered by member (GET/POST `/api/board`)
+- **LogsTab** — front history (GET `/api/front/history`)
+- **AccessTab** — privacy tier selector, group chips, group membership toggle
+- `MemberDetailPage` wired up: 6-tab layout, each tab as standalone component
+- `api/notes.ts`, `api/board.ts`, `api/fields.ts`, `api/groups.ts` — new domain modules
+- 278 backend / 49 frontend tests passing
+
+**Plan 6b `2026-03-21-plan6b-avatar-delete-security.md` — COMPLETE (2026-03-22)**
+
+- `POST /api/media/upload` — multipart upload, magic byte validation, UUID filenames, 5MB limit
+- `DELETE /api/members/{id}` — soft-delete gated by Gatekeeper PIN + 72h system-wide cooldown (`SystemSettings.DeletionCooldownEnd`)
+- `GET /api/secure/status` — returns `{ pinIsSet, deletionCooldownEnd }`
+- `PUT /api/secure/pin` — set or change Gatekeeper PIN (BCrypt wf=12)
+- `AvatarPath` added to `MemberUpdateRequest` DTO and `PATCH /api/members/{id}` handler
+- **EssenceTab** — avatar circle with pencil button overlay; upload flow with preview + error revert
+- **AccessTab** — Danger Zone section: delete button, PIN confirmation sheet, 60s cooldown countdown, auto-transition when cooldown expires
+- **SettingsPage** — collapsible Security section: Change Password form + Gatekeeper PIN form
+- `api/media.ts`, `api/secure.ts` — new frontend modules
+- 278 backend / 52 frontend tests passing
+
+**Next — Plan 7 (not yet specced):**
 - Journal UI (`/journals` page)
 - Groups management UI (create/edit/delete groups; batch-assign members from the group side)
 - Friends / Privacy Buckets management UI
 - React Flow mind map (system visualization)
 - 24h front heatmaps
 - Per-alter theming (background, accent color)
-- Delete member flow (Gatekeeper PIN gate, soft-delete only)
 
 **SP UI Alignment (reference: `docs/reference/simply-plural-ui.md`):**
 - Goal: all of SP's features, but actually beautiful and desktop-first-responsive
 - Do NOT replicate: mobile-only layout, thin left-edge color bars, alter-by-alter bucket assignment
 - DO improve on: member color usage (let it breathe), bucket-to-alters assignment direction, per-alter theming, desktop sidebar/panel layout alongside mobile-first responsive
-- SP member profile has 6 tabs (Groups / Profile / Board / History / Notes / Options) — we have 2 now (Profile / Options); rest come in Plan 6
+- SP member profile has 6 tabs (Groups / Profile / Board / History / Notes / Options) — we now have all 6 equivalent tabs implemented
 
 **Branch:** `claude/init-project-setup-sO5k5`
 **Remote:** https://github.com/neurospicyexe/Simply_-Personal
