@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { mediaApi } from '../../api/media'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { membersApi } from '../../api/members'
 import { groupsApi } from '../../api/groups'
@@ -84,6 +85,29 @@ export default function EssenceTab({ member, groups }: Props) {
     },
   })
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const previousAvatarPath = member.avatarPath ?? null
+    setUploading(true)
+    setUploadError(null)
+    try {
+      const { id } = await mediaApi.upload(file)
+      await membersApi.update(member.id, { avatarPath: id })
+      qc.invalidateQueries({ queryKey: ['member', member.id] })
+    } catch {
+      await membersApi.update(member.id, { avatarPath: previousAvatarPath ?? undefined }).catch(() => {})
+      setUploadError('Upload failed. Please try again.')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   const groupMutation = useMutation({
     mutationFn: (groupIds: string[]) => groupsApi.setMemberships(member.id, groupIds),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['groups'] }),
@@ -113,6 +137,37 @@ export default function EssenceTab({ member, groups }: Props) {
 
   return (
     <div className={styles.tab} role="tabpanel">
+      <div className={styles.avatarSection}>
+        <div className={styles.avatarWrap}>
+          <div
+            className={styles.avatarCircle}
+            style={{ background: member.color ?? '#555' }}
+          >
+            {member.avatarPath
+              ? <img src={`/api/media/${member.avatarPath}`} alt={member.name} className={styles.avatarImg} />
+              : <span className={styles.avatarInitial}>{member.name[0]?.toUpperCase()}</span>
+            }
+          </div>
+          {uploading && <div className={styles.avatarSpinner} aria-label="Uploading…" />}
+          <button
+            className={styles.avatarPencil}
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Change avatar"
+            disabled={uploading}
+            type="button"
+          >
+            ✏
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className={styles.avatarInput}
+            onChange={handleFileChange}
+          />
+        </div>
+        {uploadError && <p className={styles.uploadError} role="alert">{uploadError}</p>}
+      </div>
       <EditableField
         label="Name"
         value={member.name}

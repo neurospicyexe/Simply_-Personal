@@ -6,6 +6,9 @@ import type { Member, Group } from '../types'
 
 vi.mock('../api/members', () => ({ membersApi: { update: vi.fn() } }))
 vi.mock('../api/groups', () => ({ groupsApi: { setMemberships: vi.fn() } }))
+vi.mock('../api/media', () => ({
+  mediaApi: { upload: vi.fn().mockResolvedValue({ id: 'new-avatar.jpg' }) },
+}))
 
 const mockMember: Member = {
   id: 'm1', name: 'Aria', displayName: 'The Aria', pronouns: 'she/her',
@@ -31,5 +34,16 @@ describe('EssenceTab', () => {
   it('renders group chip', () => {
     wrap(<EssenceTab member={mockMember} groups={mockGroups} />)
     expect(screen.getByText('Protectors')).toBeInTheDocument()
+  })
+
+  it('renders pencil button for avatar upload', () => {
+    wrap(<EssenceTab member={mockMember} groups={mockGroups} />)
+    expect(screen.getByLabelText(/change avatar/i)).toBeInTheDocument()
+  })
+
+  it('has hidden file input for avatar selection', () => {
+    const { container } = wrap(<EssenceTab member={mockMember} groups={mockGroups} />)
+    const input = container.querySelector('input[type="file"]')
+    expect(input).toBeInTheDocument()
   })
 })
