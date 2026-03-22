@@ -1,10 +1,11 @@
-import { Radio, Users, Clock, Settings } from 'lucide-react'
+import { Radio, Users, Layers, Clock, Settings } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import styles from './BottomNav.module.css'
 
 const TABS = [
   { to: '/front',    label: 'Front',    Icon: Radio },
   { to: '/members',  label: 'Members',  Icon: Users },
+  { to: '/system',   label: 'System',   Icon: Layers },
   { to: '/history',  label: 'History',  Icon: Clock },
   { to: '/settings', label: 'Settings', Icon: Settings },
 ]

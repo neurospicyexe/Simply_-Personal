@@ -6,6 +6,7 @@ import MembersPage from './pages/MembersPage'
 import MemberDetailPage from './pages/MemberDetailPage'
 import SettingsPage from './pages/SettingsPage'
 import HistoryStubPage from './pages/HistoryStubPage'
+import SystemPage from './pages/SystemPage'
 import BottomNav from './components/BottomNav'
 
 function Protected({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/front" element={<Protected><FrontPage /></Protected>} />
         <Route path="/members" element={<Protected><MembersPage /></Protected>} />
         <Route path="/members/:id" element={<Protected><MemberDetailPage /></Protected>} />
+        <Route path="/system" element={<Protected><SystemPage /></Protected>} />
         <Route path="/history" element={<Protected><HistoryStubPage /></Protected>} />
         <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
       </Routes>

@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { membersApi } from '../../api/members'
 import { secureApi } from '../../api/secure'
+import { bucketsApi } from '../../api/buckets'
 import BottomSheet from '../BottomSheet'
 import type { Member, MemberUpdatePayload } from '../../types'
 import styles from './AccessTab.module.css'
 
 interface Props { member: Member }
 
-const PRIVACY_TIERS = ['Public', 'Friend', 'Trusted', 'Private'] as const
-
 export default function AccessTab({ member }: Props) {
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const { data: buckets = [] } = useQuery({ queryKey: ['buckets'], queryFn: bucketsApi.list })
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [pin, setPin] = useState('')
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -87,18 +87,18 @@ export default function AccessTab({ member }: Props) {
     <div className={styles.tab} role="tabpanel">
       <div className={styles.field}>
         <span className={styles.fieldLabel}>Privacy</span>
-        <div className={styles.segmented} role="group" aria-label="Privacy tier">
-          {PRIVACY_TIERS.map(tier => (
-            <button
-              key={tier}
-              className={[styles.segBtn, member.privacyTier === tier && styles.segActive].filter(Boolean).join(' ')}
-              onClick={() => updateMutation.mutate({ privacyTier: tier })}
-              aria-pressed={member.privacyTier === tier}
-            >
-              {tier}
-            </button>
+        <select
+          className={styles.bucketSelect}
+          value={member.bucketId}
+          onChange={e => updateMutation.mutate({ bucketId: e.target.value })}
+          aria-label="Privacy bucket"
+        >
+          {buckets.map(b => (
+            <option key={b.id} value={b.id}>
+              {b.emoji ? `${b.emoji} ` : ''}{b.name}
+            </option>
           ))}
-        </div>
+        </select>
       </div>
 
       <div className={styles.checkboxField}>
