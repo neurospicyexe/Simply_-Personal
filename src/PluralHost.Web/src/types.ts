@@ -1,5 +1,16 @@
 export type PrivacyTier = 'Public' | 'Friend' | 'Trusted' | 'Private'
 
+export interface PrivacyBucket {
+  id: string
+  name: string
+  description: string | null
+  emoji: string | null
+  color: string | null
+  sortOrder: number
+  isDefault: boolean
+  memberCount: number
+}
+
 export interface Member {
   id: string
   name: string
@@ -8,7 +19,7 @@ export interface Member {
   color?: string
   avatarPath?: string
   description?: string
-  privacyTier: PrivacyTier
+  bucketId: string
   isArchived: boolean
   isUntracked: boolean
   isPinned: boolean
@@ -26,7 +37,7 @@ export interface CreateMemberPayload {
   pronouns?: string
   color?: string
   description?: string
-  privacyTier?: PrivacyTier
+  bucketId?: string
 }
 
 export interface MemberUpdatePayload {
@@ -36,7 +47,7 @@ export interface MemberUpdatePayload {
   color?: string
   avatarPath?: string
   description?: string
-  privacyTier?: PrivacyTier
+  bucketId?: string
   isArchived?: boolean
   isPinned?: boolean
   preventFrontNotification?: boolean
@@ -81,7 +92,7 @@ export interface Group {
   description?: string
   color?: string
   emoji?: string
-  members: string[]
+  memberCount: number
 }
 
 export interface MemberNote {

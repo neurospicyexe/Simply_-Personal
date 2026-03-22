@@ -1,12 +1,28 @@
 import { apiFetch } from './client'
-import type { SpEnvelope, Group } from '../types'
+import type { Group } from '../types'
 
 export const groupsApi = {
-  list: () => apiFetch<SpEnvelope<Group>[]>('/v1/groups/owner'),
+  list: () =>
+    apiFetch<Group[]>('/api/groups'),
 
-  setMemberships: (memberId: string, groupIds: string[]) =>
-    apiFetch<void>('/v1/group/members', {
-      method: 'PATCH',
-      body: JSON.stringify({ member: memberId, groups: groupIds }),
+  create: (data: { name: string; color?: string }) =>
+    apiFetch<Group>('/api/groups', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  update: (id: string, data: { name?: string; color?: string }) =>
+    apiFetch<Group>(`/api/groups/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: string) =>
+    apiFetch<void>(`/api/groups/${id}`, { method: 'DELETE' }),
+
+  setMembers: (groupId: string, memberIds: string[]) =>
+    apiFetch<void>(`/api/groups/${groupId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ memberIds }),
     }),
 }
