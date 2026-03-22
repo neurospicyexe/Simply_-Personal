@@ -34,6 +34,7 @@ export interface MemberUpdatePayload {
   displayName?: string
   pronouns?: string
   color?: string
+  avatarPath?: string
   description?: string
   privacyTier?: PrivacyTier
   isArchived?: boolean

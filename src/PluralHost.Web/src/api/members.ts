@@ -14,4 +14,9 @@ export const membersApi = {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
+  delete: (id: string, pin: string) =>
+    apiFetch<void>(`/api/members/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ pin }),
+    }),
 }
