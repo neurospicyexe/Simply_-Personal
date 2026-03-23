@@ -7,7 +7,7 @@ import MemberPickerList from './MemberPickerList'
 import { bucketsApi, PUBLIC_BUCKET_ID } from '../api/buckets'
 import { membersApi } from '../api/members'
 import { tokensApi } from '../api/tokens'
-import type { PrivacyBucket, AccessToken } from '../types'
+import type { PrivacyBucket } from '../types'
 import styles from './BucketSheet.module.css'
 
 interface Props {
@@ -37,7 +37,7 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
     queryFn: tokensApi.list,
   })
 
-  const bucketTokens = (allTokens as AccessToken[]).filter(
+  const bucketTokens = allTokens.filter(
     t => !t.revokedAt && t.minBucketSortOrder === (bucket?.sortOrder ?? -999)
   )
 
