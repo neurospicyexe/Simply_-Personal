@@ -86,21 +86,23 @@ export default function TokenSheet({ isOpen, onClose }: Props) {
       <div className={styles.field}>
         <div className={styles.label}>Access Level</div>
         <div className={styles.accessList}>
-          <div
+          <button
+            type="button"
             className={`${styles.accessOption} ${isFrontOnly ? styles.selected : ''}`}
             onClick={() => setAccessLevel(FRONT_ONLY)}
           >
             Front Only
             <span className={styles.accessDesc}>Who's fronting, no member list</span>
-          </div>
+          </button>
           {(buckets as PrivacyBucket[]).map(b => (
-            <div
+            <button
               key={b.id}
+              type="button"
               className={`${styles.accessOption} ${accessLevel === b.sortOrder ? styles.selected : ''}`}
               onClick={() => setAccessLevel(b.sortOrder)}
             >
               {b.name}
-            </div>
+            </button>
           ))}
         </div>
       </div>
