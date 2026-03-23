@@ -157,17 +157,17 @@
   position: absolute;
   bottom: 2px;
   right: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: var(--color-bg);
-  border: 2px solid var(--color-bg);
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: none;
+  color: var(--color-pink);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
 }
 
 .avatarPencil:disabled { opacity: 0.5; cursor: not-allowed; }

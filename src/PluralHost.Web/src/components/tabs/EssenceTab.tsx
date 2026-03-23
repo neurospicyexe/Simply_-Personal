@@ -140,7 +140,7 @@ export default function EssenceTab({ member, groups }: Props) {
             disabled={uploading}
             type="button"
           >
-            <Pencil size={8} strokeWidth={2.5} />
+            <Pencil size={14} strokeWidth={2.5} />
           </button>
           <input
             ref={fileInputRef}
