@@ -62,7 +62,7 @@ describe('SystemPage', () => {
 
   it('shows Tokens tab when ?tab=Tokens', async () => {
     wrapWithRoute('/system?tab=Tokens', <SystemPage />)
-    expect(await screen.findByText('No share links yet.')).toBeInTheDocument()
+    expect(await screen.findByText('No share links yet. Create one to share your system.')).toBeInTheDocument()
   })
 
   it('Tokens tab renders token list', async () => {
@@ -103,7 +103,7 @@ describe('SystemPage', () => {
     const { tokensApi } = await import('../api/tokens')
     vi.mocked(tokensApi.list).mockResolvedValue([])
     wrapWithRoute('/system?tab=Tokens', <SystemPage />)
-    await screen.findByText('No share links yet.')
+    await screen.findByText('No share links yet. Create one to share your system.')
     fireEvent.click(screen.getByRole('button', { name: /add token/i }))
     expect(await screen.findByRole('dialog', { name: /new token/i })).toBeInTheDocument()
   })

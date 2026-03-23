@@ -96,7 +96,7 @@ export default function LogsTab({ member }: Props) {
   return (
     <div className={styles.container}>
       {entries.length === 0 && (
-        <p className={styles.empty}>No front history for this alter.</p>
+        <p className={styles.empty}>No switches logged for this alter yet.</p>
       )}
 
       {shown.map(entry => {

@@ -34,7 +34,7 @@ describe('CommsTab', () => {
   it('shows empty state', async () => {
     vi.mocked(boardApi.list).mockResolvedValue([])
     wrap(<CommsTab member={mockMember} />)
-    await screen.findByText('No messages yet.')
+    await screen.findByText('Nothing posted here yet.')
   })
 
   it('renders message cards newest first', async () => {

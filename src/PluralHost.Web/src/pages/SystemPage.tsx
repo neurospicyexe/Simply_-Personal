@@ -139,7 +139,7 @@ export default function SystemPage() {
           {tokensLoading && <p className={styles.empty} role="status" aria-live="polite">Loading…</p>}
           {tokensError && <p className={styles.empty}>Failed to load tokens.</p>}
           {!tokensLoading && !tokensError && tokens.length === 0 && (
-            <p className={styles.empty}>No share links yet.</p>
+            <p className={styles.empty}>No share links yet. Create one to share your system.</p>
           )}
           <div className={styles.list}>
             {tokens

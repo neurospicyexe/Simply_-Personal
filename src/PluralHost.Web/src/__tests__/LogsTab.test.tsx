@@ -48,7 +48,7 @@ describe('LogsTab', () => {
       { exists: true, id: 'other', content: { uid: 'other', member: 'other-member', live: false, startTime: 1000, custom: false } },
     ])
     wrap(<LogsTab member={mockMember} />)
-    await screen.findByText('No front history for this alter.')
+    await screen.findByText('No switches logged for this alter yet.')
   })
 
   it('renders a matching log card', async () => {

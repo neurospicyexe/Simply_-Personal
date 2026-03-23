@@ -60,7 +60,7 @@ export default function CommsTab({ member }: Props) {
         <button className={styles.addBtn} onClick={openSheet} aria-label="Post message"><Plus size={16} /></button>
       </div>
 
-      {messages.length === 0 && <p className={styles.empty}>No messages yet.</p>}
+      {messages.length === 0 && <p className={styles.empty}>Nothing posted here yet.</p>}
 
       {messages.map(msg => (
         <div key={msg.id} className={styles.card}>

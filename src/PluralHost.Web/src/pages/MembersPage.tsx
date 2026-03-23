@@ -136,7 +136,7 @@ export default function MembersPage() {
             </div>
           ))}
           {filtered.length === 0 && (
-            <p className={styles.empty}>No members found.</p>
+            <p className={styles.empty}>{search ? 'No members match that search.' : 'No members yet. Tap + to add the first one.'}</p>
           )}
         </div>
       ) : (
@@ -176,7 +176,7 @@ export default function MembersPage() {
             )
           })}
           {groups.length === 0 && (
-            <p className={styles.empty}>No groups yet.</p>
+            <p className={styles.empty}>No groups yet. Head to System to create some.</p>
           )}
         </div>
       )}

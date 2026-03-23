@@ -88,7 +88,7 @@ export default function LogsPage() {
           />
           {filtered.length === 0 ? (
             <p className={styles.empty}>
-              {searchTerm ? 'No entries match your search.' : 'No journal entries yet.'}
+              {searchTerm ? 'No entries match your search.' : 'No journal entries yet. Tap + to write something.'}
             </p>
           ) : (
             <div className={styles.list}>
@@ -121,7 +121,7 @@ export default function LogsPage() {
               )
             })}
           {frontHistory.length === 0 && (
-            <p className={styles.empty}>No front history yet.</p>
+            <p className={styles.empty}>No switches logged yet. Front changes will show up here.</p>
           )}
         </div>
       )}
