@@ -33,3 +33,86 @@
 
 .empty { text-align: center; color: var(--color-text-muted); padding: 2rem; }
 .futureNote { font-size: 0.75rem; color: var(--color-text-muted); text-align: center; padding: 0.5rem; }
+
+.tokenRow {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.tokenRow.revoked {
+  opacity: 0.4;
+}
+
+.tokenInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tokenLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.tokenMeta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 11px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--color-primary);
+}
+
+.metaItem {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.tokenActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.copyBtn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.revokeBtn {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pinInput {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--color-text);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
