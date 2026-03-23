@@ -96,6 +96,13 @@ public class TokensControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Revoke_WhitespacePin_Returns400()
+    {
+        var result = await _controller.RevokeAsync("anytoken", new PinRequest("   "));
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
     public async Task Revoke_InvalidPin_Returns403()
     {
         _gatekeeper.Setup(g => g.ValidatePinAsync("bad")).ReturnsAsync(false);

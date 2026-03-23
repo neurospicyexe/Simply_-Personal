@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -42,9 +43,9 @@ public class TokensController(
     }
 
     [HttpDelete("{tokenValue}")]
-    public async Task<IActionResult> RevokeAsync(string tokenValue, [FromBody] PinRequest body)
+    public async Task<IActionResult> RevokeAsync(string tokenValue, [FromBody][Required] PinRequest body)
     {
-        if (body is null || string.IsNullOrWhiteSpace(body.Pin))
+        if (string.IsNullOrWhiteSpace(body.Pin))
             return BadRequest(new { error = "PIN is required" });
 
         if (!await gatekeeper.ValidatePinAsync(body.Pin))
