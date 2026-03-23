@@ -1,6 +1,6 @@
 .container { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
 .header { display: flex; justify-content: space-between; align-items: center; }
-.addBtn { background: var(--color-primary, #b6ff00); color: #000; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.4rem; cursor: pointer; font-weight: 700; }
+.addBtn { background: var(--color-primary); color: #000; border: none; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .empty { color: #666; text-align: center; padding: 40px 0; }
 .error { color: #f87171; text-align: center; padding: 20px; }
 .retryBtn { background: none; border: 1px solid #444; color: #aaa; padding: 6px 14px; border-radius: 6px; cursor: pointer; margin-top: 8px; }

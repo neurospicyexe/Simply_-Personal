@@ -34,7 +34,7 @@
 .timer {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-cyan);
   font-variant-numeric: tabular-nums;
 }
 
