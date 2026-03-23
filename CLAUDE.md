@@ -185,13 +185,23 @@ docker compose down
 - **Settings UX** — Security section opens by default (was collapsed, obscuring PIN setup for new users)
 - 278 backend / 52 frontend tests passing
 
-**Next — Plan 7b (not yet specced):**
-- Journal UI (`/journals` page)
-- Groups management UI (create/edit/delete groups; batch-assign members from the group side)
-- Friends / Privacy Buckets management UI
+**Plan 7b `2026-03-22-plan7b-groups-buckets.md` — COMPLETE (2026-03-22)**
+
+- `PrivacyBucket` entity replaces `MemberPrivacy` enum — 4 seeded defaults + user-created custom buckets
+- Two EF Core migrations: `AddPrivacyBuckets` (additive) + `CleanupLegacyPrivacyColumns` (destructive)
+- `BucketsController` — GET/POST/PUT/DELETE/reorder `/api/buckets`; defaults protected from deletion
+- `GroupsController` — native groups CRUD + `POST /api/groups/{id}/members` atomic batch assignment
+- `TokenVisibilityService` updated: `MinBucketSortOrder` int replaces `TokenPermission` enum; `<=` comparison
+- **System** page (5th nav entry) with Groups and Buckets tabs + MemberPickerList shared component
+- `GroupSheet` / `BucketSheet` bottom sheets with live member picker + color/emoji editing
+- `AccessTab` privacy selector now fetches live buckets from API (replaces hardcoded 4-tier segmented control)
+- 291 backend / 52 frontend tests passing
+
+**Next — Future Work:**
 - React Flow mind map (system visualization)
 - 24h front heatmaps
 - Per-alter theming (background, accent color)
+- SP/PluralKit import pipeline (Plan 4 — auto-populate members from Simply Plural or PluralKit)
 
 **SP UI Alignment (reference: `docs/reference/simply-plural-ui.md`):**
 - Goal: all of SP's features, but actually beautiful and desktop-first-responsive
@@ -244,14 +254,23 @@ Generated with `RandomNumberGenerator.GetBytes(32)` — cryptographically secure
 - `TokenResolveResult` discriminated type: `Valid` / `NotFound` / `Revoked` / `Expired`
 - `RevokeTokenAsync` returns `bool` (false = not found or already revoked, no throw)
 
-### Privacy Tiers
-`MemberPrivacy` enum: Public=0, Friend=1, Trusted=2, Private=3.
-`TokenPermission` is offset +1 from `MemberPrivacy`. Visibility uses **strict less-than**:
-`(int)member.PrivacyTier < (int)tokenPermission` — so Public(1) sees only Public(0), etc.
-SP protocol maps `Private: true/false` using three-way logic in `SpMembersController`:
-- `true` → always set `PrivacyTier = Private`
-- `false` + currently Private → set `PrivacyTier = Public`
-- `false` + currently Friend/Trusted → leave unchanged (SP has no intermediate tiers)
+### Privacy Buckets (Plan 7b — replaces MemberPrivacy enum)
+`PrivacyBucket` is a first-class entity. Four seeded defaults with fixed GUIDs:
+- `PrivacyBucket.PublicId`  = `00000000-0000-0000-0000-000000000001` (SortOrder 0)
+- `PrivacyBucket.FriendId`  = `00000000-0000-0000-0000-000000000002` (SortOrder 1)
+- `PrivacyBucket.TrustedId` = `00000000-0000-0000-0000-000000000003` (SortOrder 2)
+- `PrivacyBucket.PrivateId` = `00000000-0000-0000-0000-000000000004` (SortOrder 3)
+
+`AccessToken.MinBucketSortOrder` replaces `Permission` enum. Mapping: ReadFrontOnly=-1, Public=0, Friend=1, Trusted=2.
+Visibility uses **less-than-or-equal**: `member.Bucket.SortOrder <= token.MinBucketSortOrder`
+`ReadFrontOnly` (`MinBucketSortOrder = -1`) throws if passed to `FilterByPermission` — guard intentional.
+Buckets are owner-only admin data — **Ghost Mode filter NOT applied** to `PrivacyBuckets` DbSet (soft-delete only).
+`PUBLIC_BUCKET_ID` exported from `api/buckets.ts` — always import, never hardcode.
+
+SP protocol maps `Private: true/false` via `SpMembersController`:
+- `true` → `BucketId = PrivacyBucket.PrivateId`
+- `false` + currently Private → `BucketId = PrivacyBucket.PublicId`
+- `false` + currently non-Private → leave unchanged
 
 ### Member.ParentIds
 Stored as comma-separated GUIDs in SQLite. Has a `ValueComparer<List<Guid>>` configured in `PluralHostContext` to prevent spurious EF Core change-tracking warnings and unnecessary UPDATE statements.
@@ -329,6 +348,32 @@ The current API returns JWT as a response body value. When the React PWA is buil
 
 ### INFO — `POST /share/{token}/board/{memberId}` Leaks Member Existence
 Returns 403 when a member exists but is above the token's permission tier. Token holders can confirm whether any GUID corresponds to a real (non-deleted) member, even if they can't see it. Intentional per spec design — acceptable for this threat model.
+
+## Frontend Patterns
+
+### TabBar component
+- Expects `tabs: { id: string; label: string }[]` — not plain strings
+- Active prop is `activeTab`, not `active`
+- Pass `[...TABS]` if TABS is `as const` (removes readonly so TabBar accepts it)
+
+### Group Membership Architecture
+- Group membership is managed group-centric from System page (GroupSheet → `POST /api/groups/{id}/members`)
+- EssenceTab group chips are read-only display using `member.parentIds.includes(group.id)`
+- No "set all groups for one member" endpoint — direction is group → members, not member → groups
+- `Group.memberCount` is computed server-side in the SELECT projection; `Group.members[]` does not exist
+
+### Test Fixture Maintenance
+- `npx vitest run` skips TypeScript type-checking — run `npm run build` (tsc -b) to catch fixture type errors after type migrations
+- After changing a core type (e.g. Member), grep `__tests__` for stale field names before build
+- `logout` in `AuthContext` returns `Promise<void>` — mock as `logout: () => Promise.resolve()`
+
+## EF Core / Backend Patterns
+
+- `m.ParentIds.Contains(id)` takes a `Guid`, not string — required for EF InMemory LINQ compatibility
+- Route order matters: `[HttpPut("reorder")]` must be declared before `[HttpPut("{id:guid}")]`
+- Two-migration strategy for breaking schema changes: Migration 1 additive (add + seed + UPDATE), Migration 2 destructive (drop old columns, add NOT NULL constraint)
+- InMemory provider doesn't enforce FK constraints — tests can use FK GUIDs directly without seeding parent rows
+- `memberCount` in list endpoints must be computed server-side in the LINQ `.Select()` projection, not derived client-side
 
 # context-mode — MANDATORY routing rules
 
