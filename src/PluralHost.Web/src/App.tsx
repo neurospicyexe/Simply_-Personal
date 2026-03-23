@@ -5,7 +5,7 @@ import FrontPage from './pages/FrontPage'
 import MembersPage from './pages/MembersPage'
 import MemberDetailPage from './pages/MemberDetailPage'
 import SettingsPage from './pages/SettingsPage'
-import HistoryStubPage from './pages/HistoryStubPage'
+import LogsPage from './pages/LogsPage'
 import SystemPage from './pages/SystemPage'
 import BottomNav from './components/BottomNav'
 
@@ -25,7 +25,7 @@ export default function App() {
         <Route path="/members" element={<Protected><MembersPage /></Protected>} />
         <Route path="/members/:id" element={<Protected><MemberDetailPage /></Protected>} />
         <Route path="/system" element={<Protected><SystemPage /></Protected>} />
-        <Route path="/history" element={<Protected><HistoryStubPage /></Protected>} />
+        <Route path="/logs" element={<Protected><LogsPage /></Protected>} />
         <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
       </Routes>
       {isAuthenticated && <BottomNav />}

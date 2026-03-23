@@ -130,3 +130,12 @@ export interface MemberFieldEntry {
   value: string | null
   privacyTier: string
 }
+
+export interface JournalEntry {
+  id: string
+  title: string | null
+  content: string
+  isPrivate: boolean
+  createdAt: string
+  updatedAt: string
+}
