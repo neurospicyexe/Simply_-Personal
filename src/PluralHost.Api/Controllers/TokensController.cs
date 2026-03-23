@@ -42,9 +42,12 @@ public class TokensController(
     }
 
     [HttpDelete("{tokenValue}")]
-    public async Task<IActionResult> RevokeAsync(string tokenValue, [FromQuery] string pin)
+    public async Task<IActionResult> RevokeAsync(string tokenValue, [FromBody] PinRequest body)
     {
-        if (!await gatekeeper.ValidatePinAsync(pin))
+        if (body is null || string.IsNullOrWhiteSpace(body.Pin))
+            return BadRequest(new { error = "PIN is required" });
+
+        if (!await gatekeeper.ValidatePinAsync(body.Pin))
             return Forbid();
 
         var revoked = await tokenService.RevokeTokenAsync(tokenValue);

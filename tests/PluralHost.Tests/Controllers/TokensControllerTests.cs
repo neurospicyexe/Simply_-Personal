@@ -89,11 +89,18 @@ public class TokensControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Revoke_MissingPin_Returns400()
+    {
+        var result = await _controller.RevokeAsync("anytoken", new PinRequest(""));
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
     public async Task Revoke_InvalidPin_Returns403()
     {
         _gatekeeper.Setup(g => g.ValidatePinAsync("bad")).ReturnsAsync(false);
 
-        var result = await _controller.RevokeAsync("sometoken", "bad");
+        var result = await _controller.RevokeAsync("sometoken", new PinRequest("bad"));
         Assert.IsType<ForbidResult>(result);
     }
 
@@ -103,7 +110,7 @@ public class TokensControllerTests : IDisposable
         _gatekeeper.Setup(g => g.ValidatePinAsync("good")).ReturnsAsync(true);
         _tokenService.Setup(s => s.RevokeTokenAsync("missing")).ReturnsAsync(false);
 
-        var result = await _controller.RevokeAsync("missing", "good");
+        var result = await _controller.RevokeAsync("missing", new PinRequest("good"));
         Assert.IsType<NotFoundResult>(result);
     }
 
@@ -113,7 +120,7 @@ public class TokensControllerTests : IDisposable
         _gatekeeper.Setup(g => g.ValidatePinAsync("good")).ReturnsAsync(true);
         _tokenService.Setup(s => s.RevokeTokenAsync("valid")).ReturnsAsync(true);
 
-        var result = await _controller.RevokeAsync("valid", "good");
+        var result = await _controller.RevokeAsync("valid", new PinRequest("good"));
         Assert.IsType<OkResult>(result);
     }
 
