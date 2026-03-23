@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import BottomSheet from './BottomSheet'
 import MemberPickerList from './MemberPickerList'
 import { bucketsApi, PUBLIC_BUCKET_ID } from '../api/buckets'
 import { membersApi } from '../api/members'
-import type { PrivacyBucket } from '../types'
+import { tokensApi } from '../api/tokens'
+import type { PrivacyBucket, AccessToken } from '../types'
 import styles from './BucketSheet.module.css'
 
 interface Props {
@@ -24,10 +26,27 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const navigate = useNavigate()
   const { data: members = [] } = useQuery({
     queryKey: ['members'],
     queryFn: membersApi.list,
   })
+
+  const { data: allTokens = [] } = useQuery({
+    queryKey: ['tokens'],
+    queryFn: tokensApi.list,
+  })
+
+  const bucketTokens = (allTokens as AccessToken[]).filter(
+    t => !t.revokedAt && t.minBucketSortOrder === (bucket?.sortOrder ?? -999)
+  )
+
+  const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  function copyUrl(tokenValue: string) {
+    navigator.clipboard.writeText(`${window.location.origin}/share/${tokenValue}`)
+    setCopiedToken(tokenValue)
+    setTimeout(() => setCopiedToken(v => v === tokenValue ? null : v), 2000)
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -150,7 +169,33 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
       </div>
 
       {!isNew && (
-        <p className={styles.futureNote}>Share token integration coming soon.</p>
+        <div className={styles.tokenSection}>
+          <div className={styles.sectionLabel}>Share Links</div>
+          {bucketTokens.length === 0 ? (
+            <p className={styles.tokenEmpty}>No links for this bucket yet.</p>
+          ) : (
+            <div className={styles.tokenList}>
+              {bucketTokens.map(t => (
+                <div key={t.tokenValue} className={styles.tokenPreviewRow}>
+                  <span className={styles.tokenPreviewLabel}>{t.label ?? 'Untitled'}</span>
+                  <button
+                    className={styles.tokenCopyBtn}
+                    onClick={() => copyUrl(t.tokenValue)}
+                    aria-label={`Copy URL for ${t.label}`}
+                  >
+                    {copiedToken === t.tokenValue ? 'Copied!' : '📋 Copy'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            className={styles.manageLink}
+            onClick={() => navigate('/system?tab=Tokens')}
+          >
+            Manage in Tokens tab →
+          </button>
+        </div>
       )}
     </BottomSheet>
   )

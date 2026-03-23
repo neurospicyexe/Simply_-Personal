@@ -54,4 +54,64 @@
 }
 .defaultNote { font-size: 0.75rem; color: var(--color-text-muted); margin-right: auto; }
 .error { color: var(--color-danger); font-size: 0.875rem; margin: 0; }
-.futureNote { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.5rem; text-align: center; }
+.tokenSection {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.sectionLabel {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.tokenEmpty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+}
+
+.tokenList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.tokenPreviewRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.tokenPreviewLabel {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.tokenCopyBtn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.manageLink {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 4px;
+  text-decoration: underline;
+}
