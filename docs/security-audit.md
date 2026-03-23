@@ -4,7 +4,7 @@
 **Reviewer:** OWASP Top 10:2025 + ASVS 5.0 scan
 **Status:** Pending repair (scheduled after remaining feature work)
 
-**Summary:** 0 Critical | 0 High | 4 Medium | 3 Low | 2 Info
+**Summary:** 0 Critical | 0 High | 5 Medium | 3 Low | 2 Info
 
 ---
 
@@ -16,6 +16,42 @@
 ---
 
 ## Open Issues
+
+### MEDIUM — SSRF via DNS Rebinding in AvatarDownloadService
+**Location:** `src/PluralHost.Api/Services/AvatarDownloadService.cs:IsPrivateAddress()`
+**Risk:** The service correctly blocks raw private IPs (10.x, 172.16.x, 192.168.x, loopback) but skips validation entirely for hostnames: `"Hostname — allow (public DNS resolves it). Only raw IPs need SSRF checking."` An attacker who controls DNS for a domain can point it at `169.254.169.254` (AWS instance metadata), `10.x.x.x` (internal network), or any other private address. The IP check is only applied when the host parses as a raw IP.
+**Fix:** Resolve DNS before connecting and validate the resolved IP:
+```csharp
+private static bool IsPrivateAddress(Uri uri)
+{
+    var host = uri.Host.ToLowerInvariant();
+    if (host == "localhost") return true;
+
+    // Resolve hostname to IP, then check
+    IPAddress ip;
+    if (!IPAddress.TryParse(host, out ip))
+    {
+        try
+        {
+            var addresses = Dns.GetHostAddresses(host);
+            if (addresses.Length == 0) return true; // can't resolve = block
+            ip = addresses[0];
+        }
+        catch { return true; } // resolution failure = block
+    }
+
+    var bytes = ip.GetAddressBytes();
+    if (bytes.Length == 16) return true; // block IPv6
+    return (bytes[0] == 10) ||
+           (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) ||
+           (bytes[0] == 192 && bytes[1] == 168) ||
+           (bytes[0] == 169 && bytes[1] == 254) || // link-local / cloud metadata
+           (bytes[0] == 127);
+}
+```
+**Reference:** OWASP A10 / CWE-918 (SSRF)
+
+---
 
 ### MEDIUM — No HTTPS Enforcement
 **Location:** `src/PluralHost.Api/Program.cs` (middleware pipeline)
@@ -124,7 +160,7 @@ return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
 
 ---
 
-## Confirmed Clean
+## Confirmed Clean (vibesec deep scan 2026-03-23)
 
 - SQL injection — EF Core LINQ throughout, no raw queries
 - Path traversal — null-byte + `StartsWith` check in MediaController
@@ -133,3 +169,8 @@ return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
 - Ghost Mode order — checked before token lookup in ShareController
 - Board post content — length limits enforced (100/1000 chars)
 - File upload — magic byte validation + UUID filenames + extension allowlist
+- XSS via markdown — react-markdown renders as React components, not raw HTML; no unsafe innerHTML usage
+- XSS via board/member content — all rendered through JSX interpolation which auto-escapes HTML
+- Mass assignment — all endpoints use explicit DTO records; no over-posting surface
+- JWT algorithm confusion — SymmetricSecurityKey locks to HS256; alg-none rejected by Microsoft.IdentityModel.Tokens by default
+- CSRF — SameSite=Strict cookies + explicit CORS allowlist; sufficient for single-user self-hosted threat model
