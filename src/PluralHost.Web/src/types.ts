@@ -139,3 +139,20 @@ export interface JournalEntry {
   createdAt: string
   updatedAt: string
 }
+
+export interface AccessToken {
+  tokenValue: string
+  label: string | null
+  minBucketSortOrder: number
+  allowsBoardPosting: boolean
+  expiresAt: string | null
+  revokedAt: string | null
+  createdAt: string
+}
+
+export interface TokenCreatePayload {
+  label: string
+  minBucketSortOrder: number
+  allowsBoardPosting: boolean
+  expiresAt?: string
+}
