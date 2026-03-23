@@ -143,7 +143,7 @@ export interface JournalEntry {
 export interface AccessToken {
   tokenValue: string
   label: string | null
-  minBucketSortOrder: number
+  minBucketSortOrder: number   // -1 = ReadFrontOnly sentinel
   allowsBoardPosting: boolean
   expiresAt: string | null
   revokedAt: string | null
@@ -154,5 +154,5 @@ export interface TokenCreatePayload {
   label: string
   minBucketSortOrder: number
   allowsBoardPosting: boolean
-  expiresAt?: string
+  expiresAt?: string           // ISO 8601 UTC string, omit for "never"
 }
