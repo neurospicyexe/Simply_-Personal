@@ -2,7 +2,6 @@
   background: var(--color-surface);
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 12px;
 }
 
 .header {

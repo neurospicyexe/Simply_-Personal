@@ -4,7 +4,7 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 1rem 1rem 0;
 }
-.title { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
 .addBtn {
   display: flex; align-items: center; justify-content: center;
   width: 36px; height: 36px;
@@ -70,11 +70,11 @@
 
 .badge {
   font-size: 11px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: rgba(180, 0, 255, 0.1);
+  border: 1px solid rgba(180, 0, 255, 0.35);
   border-radius: 4px;
   padding: 1px 6px;
-  color: var(--color-primary);
+  color: var(--color-purple);
 }
 
 .metaItem {
@@ -101,7 +101,7 @@
 .revokeBtn {
   background: none;
   border: none;
-  color: var(--color-danger);
+  color: var(--color-pink);
   font-size: 12px;
   cursor: pointer;
 }

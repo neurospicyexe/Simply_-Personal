@@ -5,8 +5,10 @@
 }
 
 .title {
-  font-size: 1.3rem;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--color-text);
   margin: 0 0 24px;
 }
@@ -118,7 +120,8 @@
 }
 
 .input:focus {
-  outline: none;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
   border-color: var(--color-primary);
 }
 

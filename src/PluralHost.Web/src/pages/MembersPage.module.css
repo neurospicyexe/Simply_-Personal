@@ -35,8 +35,8 @@
 
 .addBtn {
   margin-left: auto;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: var(--radius-full);
   background: var(--color-primary);

@@ -1,22 +1,22 @@
 .container { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
-.empty { color: #666; text-align: center; padding: 40px 0; }
-.error { color: #f87171; text-align: center; padding: 20px; }
-.retryBtn { background: none; border: 1px solid #444; color: #aaa; padding: 6px 14px; border-radius: 6px; cursor: pointer; margin-top: 8px; }
-.card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: border-color 200ms; }
-.card:hover { border-color: #444; }
+.empty { color: var(--color-muted); text-align: center; padding: 40px 0; }
+.error { color: var(--color-danger); text-align: center; padding: 20px; }
+.retryBtn { background: none; border: 1px solid var(--color-border); color: var(--color-muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; margin-top: 8px; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: border-color 200ms; }
+.card:hover { border-color: var(--color-muted); }
 .cardTop { display: flex; justify-content: space-between; align-items: baseline; }
-.date { font-weight: 700; color: var(--color-text, #fff); }
-.duration { color: #888; font-size: 0.85rem; }
-.timeRange { color: #aaa; font-size: 0.85rem; margin-top: 2px; }
-.status { color: var(--color-primary, #b6ff00); font-size: 0.85rem; margin-top: 4px; }
-.loadMore { background: none; border: 1px solid #333; color: #aaa; padding: 8px 20px; border-radius: 8px; cursor: pointer; align-self: center; margin-top: 8px; }
+.date { font-weight: 700; color: var(--color-text); }
+.duration { color: var(--color-muted); font-size: 0.85rem; }
+.timeRange { color: var(--color-text-muted); font-size: 0.85rem; margin-top: 2px; }
+.status { color: var(--color-cyan); font-size: 0.85rem; margin-top: 4px; }
+.loadMore { background: none; border: 1px solid var(--color-border); color: var(--color-muted); padding: 8px 20px; border-radius: 8px; cursor: pointer; align-self: center; margin-top: 8px; }
 
 /* Drawer form */
 .field { display: flex; flex-direction: column; gap: 6px; }
-.fieldLabel { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; }
-.input { background: #222; border: 1px solid #444; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; width: 100%; }
+.fieldLabel { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); }
+.input { background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text); padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; width: 100%; }
 .input:disabled { opacity: 0.4; cursor: not-allowed; }
-.drawerActions { display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
-.saveBtn { flex: 1; background: var(--color-primary, #b6ff00); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
-.deleteBtn { background: none; border: 1px solid #7f1d1d; color: #f87171; padding: 10px 14px; border-radius: 8px; cursor: pointer; }
-.drawerError { color: #f87171; font-size: 0.85rem; }
+.drawerActions { display: flex; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--color-border); }
+.saveBtn { flex: 1; background: var(--color-primary); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.deleteBtn { background: none; border: 1px solid var(--color-pink); color: var(--color-pink); padding: 10px 14px; border-radius: 8px; cursor: pointer; }
+.drawerError { color: var(--color-danger); font-size: 0.85rem; }

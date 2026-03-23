@@ -1,5 +1,4 @@
 /* src/styles/globals.css */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import './tokens.css';
 
 *, *::before, *::after {
@@ -19,6 +18,12 @@ body {
   color: var(--color-text);
   background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 a { color: inherit; text-decoration: none; }

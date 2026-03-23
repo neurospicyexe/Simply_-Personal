@@ -136,7 +136,7 @@ export default function SystemPage() {
               <Plus size={20} />
             </button>
           </div>
-          {tokensLoading && <p className={styles.empty}>Loading…</p>}
+          {tokensLoading && <p className={styles.empty} role="status" aria-live="polite">Loading…</p>}
           {tokensError && <p className={styles.empty}>Failed to load tokens.</p>}
           {!tokensLoading && !tokensError && tokens.length === 0 && (
             <p className={styles.empty}>No share links yet.</p>

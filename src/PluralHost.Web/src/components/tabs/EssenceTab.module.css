@@ -146,8 +146,10 @@
 }
 
 .avatarInitial {
-  font-size: 1.8rem;
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: #fff;
 }
 

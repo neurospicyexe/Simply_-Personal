@@ -40,7 +40,7 @@ export default function MemberDetailPage() {
   })
 
   if (isLoading || !member) {
-    return <div className={styles.loading}>Loading…</div>
+    return <div className={styles.loading} role="status" aria-live="polite">Loading…</div>
   }
 
   return (

@@ -21,8 +21,10 @@
 .headerInfo { display: flex; flex-direction: column; gap: 4px; }
 
 .name {
-  font-size: 1.3rem;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--color-text);
   margin: 0;
 }

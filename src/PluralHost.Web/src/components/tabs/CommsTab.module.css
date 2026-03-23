@@ -1,23 +1,23 @@
-.container { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
-.header { display: flex; justify-content: space-between; align-items: center; }
-.addBtn { background: var(--color-primary, #b6ff00); color: #000; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.4rem; cursor: pointer; font-weight: 700; }
-.empty { color: #666; text-align: center; padding: 40px 0; }
-.error { color: #f87171; text-align: center; padding: 20px; }
-.retryBtn { background: none; border: 1px solid #444; color: #aaa; padding: 6px 14px; border-radius: 6px; cursor: pointer; margin-top: 8px; }
-.card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; }
+.container { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
+.addBtn { background: var(--color-primary, #b6ff00); color: #000; border: none; border-radius: 50%; width: 44px; height: 44px; font-size: 1.4rem; cursor: pointer; font-weight: 700; }
+.empty { color: var(--color-muted); text-align: center; padding: 40px 0; }
+.error { color: var(--color-danger); text-align: center; padding: 20px; }
+.retryBtn { background: none; border: 1px solid var(--color-border); color: var(--color-muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; margin-top: 8px; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 14px 16px; }
 .cardHeader { display: flex; justify-content: space-between; align-items: flex-start; }
-.author { font-weight: 700; color: var(--color-text, #fff); }
-.meta { color: #555; font-size: 0.75rem; }
-.content { color: #ccc; font-size: 0.9rem; margin-top: 6px; white-space: pre-wrap; }
-.deleteIcon { background: none; border: none; color: #555; cursor: pointer; padding: 2px 6px; }
-.deleteIcon:hover { color: #f87171; }
+.author { font-weight: 700; color: var(--color-text); }
+.meta { color: var(--color-muted); font-size: 0.75rem; }
+.content { color: var(--color-text-muted); font-size: 0.9rem; margin-top: 6px; white-space: pre-wrap; }
+.deleteIcon { background: none; border: none; color: var(--color-muted); cursor: pointer; padding: 2px 6px; }
+.deleteIcon:hover { color: var(--color-danger); }
 .form { display: flex; flex-direction: column; gap: 14px; }
-.label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: #aaa; }
-.input { background: #222; border: 1px solid #444; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; width: 100%; }
-.textarea { background: #222; border: 1px solid #444; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; width: 100%; min-height: 100px; resize: vertical; }
-.sheetError { color: #f87171; font-size: 0.85rem; }
+.label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--color-text-muted); }
+.input { background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text); padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; width: 100%; }
+.textarea { background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text); padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; width: 100%; min-height: 100px; resize: vertical; }
+.sheetError { color: var(--color-danger); font-size: 0.85rem; }
 .actions { display: flex; gap: 8px; }
-.cancelBtn { flex: 1; background: none; border: 1px solid #444; color: #aaa; padding: 10px; border-radius: 8px; cursor: pointer; }
-.postBtn { flex: 2; background: var(--color-primary, #b6ff00); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.cancelBtn { flex: 1; background: none; border: 1px solid var(--color-border); color: var(--color-muted); padding: 10px; border-radius: 8px; cursor: pointer; }
+.postBtn { flex: 2; background: var(--color-primary); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
 .postBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .timeMeta { display: flex; align-items: center; gap: 8px; }

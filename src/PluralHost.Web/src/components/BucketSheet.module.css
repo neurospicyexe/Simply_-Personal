@@ -44,12 +44,12 @@
 .deleteBtn {
   display: flex; align-items: center; gap: 0.375rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-danger); color: var(--color-danger);
+  border: 1px solid var(--color-pink); color: var(--color-pink);
   background: transparent; border-radius: 8px; cursor: pointer; font-size: 0.875rem;
   margin-right: auto;
 }
 .confirmDeleteBtn {
-  padding: 0.5rem 1rem; background: var(--color-danger); color: #fff;
+  padding: 0.5rem 1rem; background: var(--color-pink); color: #fff;
   border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: auto;
 }
 .defaultNote { font-size: 0.75rem; color: var(--color-text-muted); margin-right: auto; }

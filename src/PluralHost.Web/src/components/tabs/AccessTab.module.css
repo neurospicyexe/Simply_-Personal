@@ -94,9 +94,9 @@
 .deleteBtn {
   padding: 10px 16px;
   border-radius: 8px;
-  border: 1px solid var(--color-danger, #f87171);
+  border: 1px solid var(--color-pink);
   background: transparent;
-  color: var(--color-danger, #f87171);
+  color: var(--color-pink);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;

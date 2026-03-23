@@ -437,3 +437,29 @@ When spawning subagents (Agent/Task tool), the routing block is automatically in
 | `ctx stats` | Call the `ctx_stats` MCP tool and display the full output verbatim |
 | `ctx doctor` | Call the `ctx_doctor` MCP tool, run the returned shell command, display as checklist |
 | `ctx upgrade` | Call the `ctx_upgrade` MCP tool, run the returned shell command, display as checklist |
+
+## Design Context
+
+### Users
+Single user — the owner, daily driver, managing a DID/OSDD-1 system. Context: frequent use, often in high-activation states. The tool needs to be immediately navigable without friction, but it can have personality and life.
+
+### Brand Personality
+**Chaotic-ND vibrant energy — but in control.** Three words: vivid, grounded, alive.
+
+The color palette (lime #b6ff00, hot pink #ff4db8, cyan #00d4ff, purple #b400ff) is intentional brand identity — not AI defaults. These colors ARE the system. The aesthetic should feel like it belongs to someone neurodivergent who built their own thing and isn't apologizing for it.
+
+Emotional goal: open it and feel capable, not clinical. Energized, not overwhelmed.
+
+### Aesthetic Direction
+- Dark background is non-negotiable — dark canvas with vivid accent pops
+- Palette is sacred — lime, pink, cyan, purple are all in play; use them with purpose, not everywhere
+- Typography needs personality — Inter reads as "developer default." A display font for headings with character; body stays readable/functional
+- Anti-references: Clinical SaaS, generic React admin dashboards, anything that could belong to a startup
+- References: Things that feel handbuilt with strong personal taste. Bold, a little chaotic in a designed way.
+
+### Design Principles
+1. **The colors earn their chaos** — vivid accent colors are allowed and encouraged, but only when they mean something. Random color sprinkles = noise. Purposeful color = signal.
+2. **Rhythm over uniformity** — identical `padding: 16px; gap: 12px` everywhere flattens everything. Vary density to indicate hierarchy.
+3. **Typography carries personality** — headings should feel like this specific app, not every app. Inter stays for body/labels; a display font for page titles and headers gives the tool an identity.
+4. **The tool is in control, even when colorful** — vibrant doesn't mean chaotic layout. Clear information architecture, obvious affordances, nothing buried.
+5. **States talk** — empty states, loading states, errors should all have personality. Plain "No entries found" is a missed moment.

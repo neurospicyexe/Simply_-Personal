@@ -13,8 +13,10 @@
   padding: var(--space-8);
 }
 .heading {
-  font-size: var(--text-2xl);
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin-bottom: var(--space-6);
 }
 .form { display: flex; flex-direction: column; gap: var(--space-4); }
