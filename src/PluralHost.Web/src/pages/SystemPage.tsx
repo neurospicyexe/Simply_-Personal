@@ -10,7 +10,7 @@ import BottomSheet from '../components/BottomSheet'
 import { groupsApi } from '../api/groups'
 import { bucketsApi } from '../api/buckets'
 import { tokensApi } from '../api/tokens'
-import type { Group, PrivacyBucket, AccessToken } from '../types'
+import type { Group, PrivacyBucket } from '../types'
 import styles from './SystemPage.module.css'
 
 const TABS = [
@@ -131,8 +131,7 @@ export default function SystemPage() {
 
       {tab === 'Tokens' && (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 1rem' }}>
-            <span />
+          <div className={styles.tabHeader}>
             <button className={styles.addBtn} onClick={() => setTokenSheetOpen(true)} aria-label="Add token">
               <Plus size={20} />
             </button>
@@ -143,7 +142,7 @@ export default function SystemPage() {
             <p className={styles.empty}>No share links yet.</p>
           )}
           <div className={styles.list}>
-            {(tokens as AccessToken[])
+            {tokens
               .filter(t => !t.revokedAt)
               .map(t => (
                 <div key={t.tokenValue} className={styles.tokenRow}>
@@ -151,7 +150,7 @@ export default function SystemPage() {
                     <span className={styles.tokenLabel}>{t.label ?? 'Untitled'}</span>
                     <div className={styles.tokenMeta}>
                       <span className={styles.badge}>
-                        {t.minBucketSortOrder === -1 ? 'Front Only' : bucketName(t.minBucketSortOrder, buckets as PrivacyBucket[])}
+                        {t.minBucketSortOrder === -1 ? 'Front Only' : bucketName(t.minBucketSortOrder, buckets)}
                       </span>
                       {t.expiresAt && <span className={styles.metaItem}>expires {fmtDate(t.expiresAt)}</span>}
                       {!t.expiresAt && <span className={styles.metaItem}>no expiry</span>}
@@ -176,7 +175,7 @@ export default function SystemPage() {
                   </div>
                 </div>
               ))}
-            {(tokens as AccessToken[])
+            {tokens
               .filter(t => t.revokedAt)
               .slice(0, 10)
               .map(t => (
@@ -206,7 +205,7 @@ export default function SystemPage() {
         onClose={() => { setRevokeTarget(null); setRevokePin('') }}
         title="Confirm Revoke"
       >
-        <p style={{ color: 'var(--color-text-muted)', fontSize: 14, marginBottom: 12 }}>
+        <p className={styles.revokeHint}>
           Enter your Gatekeeper PIN to revoke this link.
         </p>
         <input
@@ -217,12 +216,12 @@ export default function SystemPage() {
           onChange={e => setRevokePin(e.target.value)}
           aria-label="Gatekeeper PIN"
         />
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+        <div className={styles.revokeActions}>
           <button onClick={() => { setRevokeTarget(null); setRevokePin('') }}>Cancel</button>
           <button
             onClick={() => revokeMutation.mutate()}
             disabled={!revokePin.trim() || revokeMutation.isPending}
-            style={{ color: 'var(--color-danger)' }}
+            className={styles.revokeBtn}
             aria-label="Confirm revoke"
           >
             {revokeMutation.isPending ? 'Revoking…' : 'Revoke'}

@@ -39,11 +39,6 @@ vi.mock('../components/TokenSheet', () => ({
 
 Object.assign(navigator, { clipboard: { writeText: vi.fn() } })
 
-function wrap(ui: React.ReactElement) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
-}
-
 function wrapWithRoute(path: string, ui: React.ReactElement) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
