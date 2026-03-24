@@ -2,8 +2,8 @@
   position: fixed;
   bottom: 0; left: 0; right: 0;
   display: flex;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  background: #111;
+  border-top: 1px solid #1e1e1e;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: var(--z-base);
 }
@@ -16,19 +16,32 @@
   justify-content: center;
   min-height: var(--touch-min);
   gap: var(--space-1);
-  color: var(--color-muted);
+  color: #333;
   font-size: var(--text-xs);
   transition: color 150ms;
   padding: var(--space-2) 0;
   text-decoration: none;
+  position: relative;
 }
 
 .tab:hover {
-  color: var(--color-text);
+  color: #666;
 }
 
 .active {
   color: var(--color-primary);
+}
+
+.active::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-primary);
 }
 
 .icon {
