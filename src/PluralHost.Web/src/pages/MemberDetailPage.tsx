@@ -58,7 +58,7 @@ export default function MemberDetailPage() {
         </div>
       </div>
 
-      <TabBar tabs={[...TABS]} activeTab={activeTab} onChange={tab => setActiveTab(tab as TabId)} />
+      <TabBar tabs={[...TABS]} activeTab={activeTab} onChange={tab => setActiveTab(tab as TabId)} activeColor={member.color} />
 
       {activeTab === 'essence'  && <EssenceTab  member={member} groups={groups} />}
       {activeTab === 'specs'    && <SpecsTab    member={member} />}

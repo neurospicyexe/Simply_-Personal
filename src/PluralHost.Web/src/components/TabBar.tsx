@@ -9,11 +9,16 @@ interface TabBarProps {
   tabs: Tab[]
   activeTab: string
   onChange: (id: string) => void
+  activeColor?: string
 }
 
-export default function TabBar({ tabs, activeTab, onChange }: TabBarProps) {
+export default function TabBar({ tabs, activeTab, onChange, activeColor }: TabBarProps) {
   return (
-    <div className={styles.bar} role="tablist">
+    <div
+      className={styles.bar}
+      role="tablist"
+      style={activeColor ? ({ '--tab-active-color': activeColor } as React.CSSProperties) : undefined}
+    >
       {tabs.map(tab => (
         <button
           key={tab.id}
