@@ -14,7 +14,13 @@ export default function MemberCard({ member, isFronting = false, compact = false
     return (
       <Link to={`/members/${member.id}`} className={styles.compactItem}>
         <span className={styles.compactName}>{member.name}</span>
-        {isFronting && <span className={styles.frontDot} aria-label="Fronting" />}
+        {isFronting && (
+        <span
+          className={styles.frontDot}
+          style={{ background: member.color ?? 'var(--color-cyan)' }}
+          aria-label="Fronting"
+        />
+      )}
       </Link>
     )
   }

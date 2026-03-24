@@ -7,11 +7,27 @@
   color: var(--color-text);
   min-height: var(--touch-min);
   border-radius: 8px;
+  border: 1px solid #252525;
+  background: var(--color-surface);
+  position: relative;
+  overflow: hidden;
   transition: background 150ms ease;
 }
 
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--member-color, var(--color-muted)) 0%,
+    transparent 100%
+  );
+}
+
 .card:hover, .card:focus-visible {
-  background: var(--color-surface);
+  filter: brightness(1.08);
 }
 
 .info {
@@ -54,8 +70,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-cyan);
   flex-shrink: 0;
+  /* background set via inline style from member.color */
 }
 
 @media (prefers-reduced-motion: reduce) {
