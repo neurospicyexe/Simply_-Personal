@@ -137,3 +137,42 @@
   width: 100%;
   box-sizing: border-box;
 }
+
+/* Status cards */
+.statusRow {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  transition: opacity 0.2s;
+}
+.statusRow.hiddenStatus { opacity: 0.38; }
+
+.defaultBadge {
+  font-size: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.statusLabel { flex: 1; font-size: 0.9375rem; font-weight: 500; }
+.statusLabel.strikethrough { text-decoration: line-through; }
+
+.statusEditBtn {
+  background: none; border: none;
+  color: var(--color-text-muted); cursor: pointer;
+  padding: 4px; font-size: 14px; flex-shrink: 0;
+}
+.statusEditBtn:hover { color: var(--color-text); }
+
+.statusDeleteBtn {
+  background: none; border: none;
+  color: var(--color-danger); cursor: pointer;
+  padding: 4px; font-size: 14px; flex-shrink: 0;
+  opacity: 0.7;
+}
+.statusDeleteBtn:hover { opacity: 1; }
