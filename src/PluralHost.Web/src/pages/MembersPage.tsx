@@ -65,6 +65,13 @@ export default function MembersPage() {
 
   return (
     <div className={styles.page}>
+      <div>
+        <span className="eyebrow">Your system</span>
+        <h1 className="pageTitle">
+          <span className="accentWord">Members</span>
+        </h1>
+      </div>
+
       {/* Search */}
       <div className={styles.searchRow}>
         <input

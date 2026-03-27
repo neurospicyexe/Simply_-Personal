@@ -55,9 +55,12 @@ export default function FrontPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>
-          {fronters.length} fronting now
-        </h1>
+        <div>
+          <span className="eyebrow">Right now</span>
+          <h1 className="pageTitle">
+            <span className="accentWord">Fronting</span>
+          </h1>
+        </div>
         <button
           className={styles.addBtn}
           onClick={() => setShowPicker(s => !s)}

@@ -68,7 +68,10 @@ export default function LogsPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Logs</h1>
+        <div>
+          <span className="eyebrow">Recent activity</span>
+          <h1 className="pageTitle"><span className="accentWord">Logs</span></h1>
+        </div>
         {activeTab === 'Journal' && (
           <button className={styles.addBtn} onClick={openNew} aria-label="New entry">
             <Plus size={18} />

@@ -35,6 +35,19 @@
   cursor: pointer;
 }
 
+.selectRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tierDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .bucketSelect {
   padding: 0.5rem 0.75rem;
   background: var(--color-surface);

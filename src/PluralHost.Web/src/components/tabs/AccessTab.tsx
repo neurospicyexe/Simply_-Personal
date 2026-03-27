@@ -3,17 +3,27 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { membersApi } from '../../api/members'
 import { secureApi } from '../../api/secure'
-import { bucketsApi } from '../../api/buckets'
+import { bucketsApi, PUBLIC_BUCKET_ID, FRIEND_BUCKET_ID, TRUSTED_BUCKET_ID, PRIVATE_BUCKET_ID } from '../../api/buckets'
 import BottomSheet from '../BottomSheet'
 import type { Member, MemberUpdatePayload } from '../../types'
 import styles from './AccessTab.module.css'
 
 interface Props { member: Member }
 
+const TIER_COLORS: Record<string, string> = {
+  [PUBLIC_BUCKET_ID]:  'var(--color-primary)',
+  [FRIEND_BUCKET_ID]:  'var(--color-cyan)',
+  [TRUSTED_BUCKET_ID]: 'var(--color-purple)',
+  [PRIVATE_BUCKET_ID]: 'var(--color-pink)',
+}
+
 export default function AccessTab({ member }: Props) {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const { data: buckets = [] } = useQuery({ queryKey: ['buckets'], queryFn: bucketsApi.list })
+  const tierColor = buckets.find(b => b.id === member.bucketId)?.color
+    ?? TIER_COLORS[member.bucketId]
+    ?? 'var(--color-muted)'
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [pin, setPin] = useState('')
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -87,6 +97,8 @@ export default function AccessTab({ member }: Props) {
     <div className={styles.tab} role="tabpanel">
       <div className={styles.field}>
         <span className={styles.fieldLabel}>Privacy</span>
+        <div className={styles.selectRow}>
+        <span className={styles.tierDot} style={{ background: tierColor }} aria-hidden="true" />
         <select
           className={styles.bucketSelect}
           value={member.bucketId}
@@ -99,6 +111,7 @@ export default function AccessTab({ member }: Props) {
             </option>
           ))}
         </select>
+        </div>
       </div>
 
       <div className={styles.checkboxField}>

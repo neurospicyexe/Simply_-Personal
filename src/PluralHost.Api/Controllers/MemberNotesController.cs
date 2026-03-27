@@ -5,16 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using PluralHost.Api.Data;
 using PluralHost.Api.Domain;
 using PluralHost.Api.Dto;
-using PluralHost.Api.Services;
 
 namespace PluralHost.Api.Controllers;
 
 [ApiController]
 [Authorize]
 [Route("api/members/{memberId:guid}/notes")]
-public class MemberNotesController(
-    PluralHostContext context,
-    IGatekeeperService gatekeeper) : ControllerBase
+public class MemberNotesController(PluralHostContext context) : ControllerBase
 {
     private static MemberNoteResponse ToResponse(MemberNote n) =>
         new(n.Id, n.MemberId, n.Title, n.Content, n.IsPinned, n.IsLocked,
@@ -83,15 +80,14 @@ public class MemberNotesController(
     }
 
     [HttpDelete("{noteId:guid}")]
-    public async Task<IActionResult> DeleteAsync(Guid memberId, Guid noteId,
-        [FromQuery] string pin)
+    public async Task<IActionResult> DeleteAsync(Guid memberId, Guid noteId)
     {
-        if (!await gatekeeper.ValidatePinAsync(pin))
-            return Forbid();
-
         var note = await context.MemberNotes
             .FirstOrDefaultAsync(n => n.Id == noteId && n.MemberId == memberId);
         if (note is null) return NotFound();
+
+        if (note.IsLocked)
+            return BadRequest(new { error = "Note is locked. Unlock it before deleting." });
 
         note.SoftDelete();
         await context.SaveChangesAsync();

@@ -22,11 +22,26 @@
 
 .name {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
   color: var(--color-text);
   margin: 0;
+}
+
+.frontingBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-pink);
+  background: rgba(255, 77, 184, 0.12);
+  border: 1px solid rgba(255, 77, 184, 0.25);
+  border-radius: 20px;
+  padding: 3px 10px;
 }
 
 .pronouns {

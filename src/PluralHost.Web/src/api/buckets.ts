@@ -1,8 +1,11 @@
 import { apiFetch } from './client'
 import type { PrivacyBucket } from '../types'
 
-// Fixed GUID for the Public default bucket -- used when removing a member from a custom bucket
-export const PUBLIC_BUCKET_ID = '00000000-0000-0000-0000-000000000001'
+// Fixed GUIDs for the four seeded default buckets
+export const PUBLIC_BUCKET_ID  = '00000000-0000-0000-0000-000000000001'
+export const FRIEND_BUCKET_ID  = '00000000-0000-0000-0000-000000000002'
+export const TRUSTED_BUCKET_ID = '00000000-0000-0000-0000-000000000003'
+export const PRIVATE_BUCKET_ID = '00000000-0000-0000-0000-000000000004'
 
 export const bucketsApi = {
   list: () =>

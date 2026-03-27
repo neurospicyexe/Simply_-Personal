@@ -100,7 +100,7 @@ export default function SettingsPage() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Settings</h1>
+      <h1 className={`pageTitle ${styles.pageTitle}`}><span className="accentWord">Settings</span></h1>
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Account</h2>

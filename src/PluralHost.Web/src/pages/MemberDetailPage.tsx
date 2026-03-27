@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { membersApi } from '../api/members'
 import { groupsApi } from '../api/groups'
+import { frontApi } from '../api/front'
+import type { SpEnvelope, FrontContent } from '../types'
 import Avatar from '../components/Avatar'
 import TabBar from '../components/TabBar'
 import EssenceTab from '../components/tabs/EssenceTab'
@@ -39,6 +41,13 @@ export default function MemberDetailPage() {
     queryFn: groupsApi.list,
   })
 
+  const { data: fronters = [] } = useQuery<SpEnvelope<FrontContent>[]>({
+    queryKey: ['fronters'],
+    queryFn: frontApi.getCurrent,
+  })
+
+  const isFronting = id ? fronters.some(f => f.content.member === id) : false
+
   if (isLoading || !member) {
     return <div className={styles.loading} role="status" aria-live="polite">Loading…</div>
   }
@@ -53,8 +62,11 @@ export default function MemberDetailPage() {
           size="lg"
         />
         <div className={styles.headerInfo}>
-          <h1 className={styles.name}>{member.name}</h1>
+          <h1 className={styles.name}>
+            <span style={{ color: member.color ?? 'var(--color-primary)' }}>{member.name[0]}</span>{member.name.slice(1)}
+          </h1>
           {member.pronouns && <p className={styles.pronouns}>{member.pronouns}</p>}
+          {isFronting && <span className={styles.frontingBadge}>Fronting now</span>}
         </div>
       </div>
 

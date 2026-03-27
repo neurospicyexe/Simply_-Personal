@@ -69,7 +69,10 @@ export default function SystemPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>System</h1>
+        <div>
+          <span className="eyebrow">Manage</span>
+          <h1 className={`pageTitle ${styles.pageTitle}`}><span className="accentWord">System</span></h1>
+        </div>
         {tab !== 'Tokens' && (
           <button
             className={styles.addBtn}

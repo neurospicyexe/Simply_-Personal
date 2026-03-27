@@ -4,14 +4,8 @@
   margin: 0 auto;
 }
 
-.title {
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-text);
-  margin: 0 0 24px;
-}
+/* pageTitle margin override -- global default is 18px, Settings needs 24px */
+.pageTitle { margin: 0 0 24px; }
 
 .section {
   margin-bottom: 32px;
