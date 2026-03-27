@@ -22,4 +22,13 @@ export const fieldsApi = {
 
   deleteMemberField: (memberId: string, fieldId: string) =>
     apiFetch<void>(`/api/members/${memberId}/fields/${fieldId}`, { method: 'DELETE' }),
+
+  updateDef: (id: string, label: string) =>
+    apiFetch<FieldDef>(`/api/fields/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ label }),
+    }),
+
+  deleteDef: (id: string) =>
+    apiFetch<void>(`/api/fields/${id}`, { method: 'DELETE' }),
 }
