@@ -22,7 +22,6 @@ public class FrontStatusController(
     public async Task<IActionResult> ListAsync()
     {
         var statuses = await context.FrontStatuses
-            .Where(s => !s.IsHidden)
             .OrderBy(s => s.IsDefault ? 0 : 1)
             .ThenBy(s => s.Label)
             .ToListAsync();

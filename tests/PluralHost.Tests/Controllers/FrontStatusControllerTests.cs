@@ -39,7 +39,7 @@ public class FrontStatusControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAll_ExcludesHiddenStatuses()
+    public async Task GetAll_IncludesHiddenStatuses()
     {
         var status = new FrontStatus { Label = "Test", IsDefault = false };
         status.IsHidden = true;
@@ -48,7 +48,7 @@ public class FrontStatusControllerTests : IDisposable
 
         var result = await _controller.ListAsync() as OkObjectResult;
         var statuses = result!.Value as IEnumerable<FrontStatusResponse>;
-        Assert.DoesNotContain(statuses!, s => s.Label == "Test");
+        Assert.Contains(statuses!, s => s.Label == "Test" && s.IsHidden);
     }
 
     [Fact]
