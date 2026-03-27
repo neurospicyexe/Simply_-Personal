@@ -30,5 +30,5 @@ test('authenticated user at / is redirected to /front', () => {
       </AuthContext.Provider>
     </QueryClientProvider>
   )
-  expect(screen.getByText(/fronting now/i)).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: /fronting/i })).toBeInTheDocument()
 })
