@@ -55,9 +55,9 @@ public class FrontStatusController(
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> DeleteAsync(Guid id, [FromQuery] string pin)
+    public async Task<IActionResult> DeleteAsync(Guid id, [FromBody] PinRequest body)
     {
-        if (!await gatekeeper.ValidatePinAsync(pin))
+        if (!await gatekeeper.ValidatePinAsync(body.Pin))
             return Forbid();
 
         var status = await context.FrontStatuses.FirstOrDefaultAsync(s => s.Id == id);

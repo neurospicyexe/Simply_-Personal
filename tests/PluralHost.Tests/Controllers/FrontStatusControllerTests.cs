@@ -68,7 +68,7 @@ public class FrontStatusControllerTests : IDisposable
         _gatekeeper.Setup(g => g.ValidatePinAsync("1234")).ReturnsAsync(true);
         var defaultId = FrontStatus.SeedIds.CoCon;
 
-        var result = await _controller.DeleteAsync(defaultId, "1234");
+        var result = await _controller.DeleteAsync(defaultId, new PinRequest("1234"));
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
@@ -80,7 +80,7 @@ public class FrontStatusControllerTests : IDisposable
         _context.FrontStatuses.Add(status);
         await _context.SaveChangesAsync();
 
-        var result = await _controller.DeleteAsync(status.Id, "1234");
+        var result = await _controller.DeleteAsync(status.Id, new PinRequest("1234"));
         Assert.IsType<OkResult>(result);
 
         var inDb = await _context.FrontStatuses
@@ -97,7 +97,7 @@ public class FrontStatusControllerTests : IDisposable
         _context.FrontStatuses.Add(status);
         await _context.SaveChangesAsync();
 
-        var result = await _controller.DeleteAsync(status.Id, "wrong");
+        var result = await _controller.DeleteAsync(status.Id, new PinRequest("wrong"));
         Assert.IsType<ForbidResult>(result);
     }
 
