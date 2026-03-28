@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { frontApi } from '../api/front'
@@ -12,17 +12,30 @@ interface Span { left: number; width: number }
 
 export default function HeatmapStrip() {
   const navigate = useNavigate()
-  const now = useMemo(() => Date.now(), [])
-  const windowStart = now - WINDOW_MS
+
+  // Stable mount-time reference used only for the query's from/to params.
+  // This prevents the queryFn from changing on every render while still
+  // anchoring the fetch to the correct 24h window.
+  const mountRef = useRef(Date.now())
 
   const { data: history = [] } = useQuery({
     queryKey: ['front-history-24h'],
-    queryFn: () => frontApi.historyInRange(
-      new Date(windowStart).toISOString(),
-      new Date(now).toISOString()
-    ),
+    queryFn: () => {
+      const to = Date.now()
+      const from = to - WINDOW_MS
+      mountRef.current = to
+      return frontApi.historyInRange(
+        new Date(from).toISOString(),
+        new Date(to).toISOString()
+      )
+    },
     refetchInterval: 30_000,
   })
+
+  // `now` updates whenever history refetches so ongoing spans aren't truncated
+  // over long sessions.
+  const now = useMemo(() => mountRef.current, [history]) // eslint-disable-line react-hooks/exhaustive-deps
+  const windowStart = now - WINDOW_MS
 
   const { data: members = [] } = useQuery({
     queryKey: ['members'],
