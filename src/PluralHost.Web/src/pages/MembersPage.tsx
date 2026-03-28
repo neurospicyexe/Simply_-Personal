@@ -5,10 +5,11 @@ import { groupsApi } from '../api/groups'
 import { frontApi } from '../api/front'
 import MemberCard from '../components/MemberCard'
 import CreateMemberSheet from '../components/CreateMemberSheet'
+import { SystemMap } from '../components/SystemMap/SystemMap'
 import styles from './MembersPage.module.css'
 import type { Member, SpEnvelope } from '../types'
 
-type ViewMode = 'list' | 'folder'
+type ViewMode = 'list' | 'folder' | 'map'
 type Density = 'card' | 'compact'
 
 export default function MembersPage() {
@@ -100,6 +101,13 @@ export default function MembersPage() {
           >
             Folder
           </button>
+          <button
+            className={[styles.toggleBtn, mode === 'map' && styles.active].filter(Boolean).join(' ')}
+            onClick={() => setMode('map')}
+            aria-pressed={mode === 'map'}
+          >
+            Map
+          </button>
         </div>
         <div className={styles.toggleGroup} role="group" aria-label="Display density">
           <button
@@ -127,7 +135,11 @@ export default function MembersPage() {
       </div>
 
       {/* Content */}
-      {mode === 'list' ? (
+      {mode === 'map' ? (
+        <div className={styles.mapContent}>
+          <SystemMap />
+        </div>
+      ) : mode === 'list' ? (
         <div className={styles.listContent}>
           {Array.from(alphabetGroups.entries()).map(([letter, letterMembers]) => (
             <div key={letter}>

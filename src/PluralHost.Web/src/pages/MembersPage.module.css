@@ -87,9 +87,16 @@
   letter-spacing: 0.08em;
 }
 
-.listContent, .folderContent {
+.listContent, .folderContent, .mapContent {
   display: flex;
   flex-direction: column;
+}
+
+.mapContent {
+  height: 600px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-surface);
 }
 
 .empty {
