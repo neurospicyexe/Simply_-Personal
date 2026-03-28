@@ -11,12 +11,14 @@ public interface IImportService
     Task<ImportResult> ImportPkAsync(PkImportRequest request, CancellationToken ct = default);
 }
 
-public class ImportService(PluralHostContext context, IAvatarDownloadService avatars) : IImportService
+public class ImportService(PluralHostContext context, IAvatarDownloadService avatars, IPluralKitClient pkClient) : IImportService
 {
     public async Task<ImportResult> ImportSpAsync(SpImportRequest request, CancellationToken ct = default)
     {
+        var strategy = ParseStrategy(request.ConflictStrategy);
         var created = 0; var updated = 0; var skipped = 0;
         var avatarsOk = 0; var avatarsFail = 0;
+        var frontImported = 0;
         var errors = new List<ImportMemberError>();
 
         // Upsert custom field definitions first (needed for Info mapping)
@@ -25,7 +27,7 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
         {
             foreach (var spField in request.CustomFields)
             {
-                if (spField.Content == null) continue;
+                if (string.IsNullOrWhiteSpace(spField.Name)) continue;
                 var existing = await context.CustomFields
                     .IgnoreQueryFilters()
                     .FirstOrDefaultAsync(f => f.SpFieldId == spField.Id, ct);
@@ -33,9 +35,9 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 {
                     existing = new CustomField
                     {
-                        Label = spField.Content.Name ?? spField.Id,
+                        Label = spField.Name,
                         SpFieldId = spField.Id,
-                        SortOrder = spField.Content.Order
+                        SortOrder = int.TryParse(spField.Order, out var ord) ? ord : 0
                     };
                     context.CustomFields.Add(existing);
                 }
@@ -50,17 +52,15 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
 
         foreach (var spMember in request.Members)
         {
-            var c = spMember.Content;
-            if (c == null || string.IsNullOrWhiteSpace(c.Name))
+            if (string.IsNullOrWhiteSpace(spMember.Name))
             {
-                errors.Add(new ImportMemberError(spMember.Id, c?.Name, "Name is blank."));
+                errors.Add(new ImportMemberError(spMember.Id, spMember.Name, "Name is blank."));
                 continue;
             }
 
-            // Find existing match
             var isNew = false;
             Member? member = null;
-            if (request.ConflictStrategy != ImportConflictStrategy.Duplicate)
+            if (strategy != ImportConflictStrategy.Duplicate)
             {
                 member = await context.Members
                     .Include(m => m.CustomFieldValues)
@@ -71,11 +71,11 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
             if (member == null)
             {
                 isNew = true;
-                member = new Member { Name = c.Name!, SpMemberId = spMember.Id };
+                member = new Member { Name = spMember.Name!, SpMemberId = spMember.Id };
                 context.Members.Add(member);
                 created++;
             }
-            else if (request.ConflictStrategy == ImportConflictStrategy.Skip)
+            else if (strategy == ImportConflictStrategy.Skip)
             {
                 skipped++;
                 continue;
@@ -85,21 +85,20 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 updated++;
             }
 
-            ApplySpFields(member, c, request.ConflictStrategy, isNew);
+            ApplySpFields(member, spMember, strategy, isNew);
 
-            // Avatar
-            if (request.IncludeAvatars && !string.IsNullOrWhiteSpace(c.AvatarUrl))
+            if (request.IncludeAvatars && !string.IsNullOrWhiteSpace(spMember.AvatarUrl))
             {
-                var path = await avatars.DownloadAvatarAsync(c.AvatarUrl, ct);
+                var path = await avatars.DownloadAvatarAsync(spMember.AvatarUrl, ct);
                 if (path != null) { member.AvatarPath = path; avatarsOk++; }
                 else avatarsFail++;
             }
 
             // Custom field values (from SP's Info dict)
-            if (request.IncludeCustomFields && c.Info != null)
+            if (request.IncludeCustomFields && spMember.Info != null)
             {
                 await context.SaveChangesAsync(ct); // ensure member.Id is set for new members
-                foreach (var (spFieldId, value) in c.Info)
+                foreach (var (spFieldId, value) in spMember.Info)
                 {
                     if (!fieldMap.TryGetValue(spFieldId, out var field)) continue;
                     var cfv = await context.CustomFieldValues
@@ -119,24 +118,63 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                     else
                     {
                         if (cfv.DeletedAt != null) cfv.Restore();
-                        if (ShouldApply(cfv.Value, value, request.ConflictStrategy, false))
+                        if (ShouldApply(cfv.Value, value, strategy, false))
                             cfv.Value = value;
                     }
                 }
             }
         }
 
+        // Front history
+        if (request.IncludeFrontHistory && request.FrontHistory != null)
+        {
+            // Build a lookup of SpMemberId → Member.Id for the imported members
+            var spIdToMemberId = await context.Members
+                .IgnoreQueryFilters()
+                .Where(m => m.DeletedAt == null && m.SpMemberId != null)
+                .Select(m => new { m.SpMemberId, m.Id })
+                .ToDictionaryAsync(x => x.SpMemberId!, x => x.Id, ct);
+
+            foreach (var entry in request.FrontHistory)
+            {
+                if (entry.Member == null || !spIdToMemberId.TryGetValue(entry.Member, out var memberId))
+                    continue;
+
+                var start = DateTimeOffset.FromUnixTimeMilliseconds(entry.StartTime).UtcDateTime;
+                var end = entry.EndTime.HasValue
+                    ? DateTimeOffset.FromUnixTimeMilliseconds(entry.EndTime.Value).UtcDateTime
+                    : (DateTime?)null;
+
+                var alreadyExists = await context.FrontHistory
+                    .IgnoreQueryFilters()
+                    .AnyAsync(f => f.MemberId == memberId && f.FrontStart == start, ct);
+                if (alreadyExists) continue;
+
+                context.FrontHistory.Add(new FrontHistory
+                {
+                    MemberId = memberId,
+                    FrontStart = start,
+                    FrontEnd = end
+                });
+                frontImported++;
+            }
+        }
+
         await context.SaveChangesAsync(ct);
-        return new ImportResult(created, updated, skipped, avatarsOk, avatarsFail, errors);
+        return new ImportResult(created, updated, skipped, errors, avatarsOk, avatarsFail, frontImported);
     }
 
     public async Task<ImportResult> ImportPkAsync(PkImportRequest request, CancellationToken ct = default)
     {
+        var strategy = ParseStrategy(request.ConflictStrategy);
         var created = 0; var updated = 0; var skipped = 0;
         var avatarsOk = 0; var avatarsFail = 0;
+        var frontImported = 0;
         var errors = new List<ImportMemberError>();
 
-        foreach (var pkMember in request.Members)
+        var pkMembers = await pkClient.GetMembersAsync(request.Token, ct);
+
+        foreach (var pkMember in pkMembers)
         {
             if (string.IsNullOrWhiteSpace(pkMember.Uuid))
             {
@@ -152,7 +190,7 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
 
             var isNew = false;
             Member? member = null;
-            if (request.ConflictStrategy != ImportConflictStrategy.Duplicate && pkMember.Uuid != null)
+            if (strategy != ImportConflictStrategy.Duplicate)
             {
                 member = await context.Members
                     .IgnoreQueryFilters()
@@ -166,7 +204,7 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 context.Members.Add(member);
                 created++;
             }
-            else if (request.ConflictStrategy == ImportConflictStrategy.Skip)
+            else if (strategy == ImportConflictStrategy.Skip)
             {
                 skipped++;
                 continue;
@@ -176,7 +214,7 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 updated++;
             }
 
-            ApplyPkFields(member, pkMember, request.ConflictStrategy, isNew);
+            ApplyPkFields(member, pkMember, strategy, isNew);
 
             if (request.IncludeAvatars && !string.IsNullOrWhiteSpace(pkMember.AvatarUrl))
             {
@@ -186,12 +224,50 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
             }
         }
 
+        if (request.IncludeFrontHistory)
+        {
+            var switches = await pkClient.GetSwitchesAsync(request.Token, ct);
+            var pkIdToMemberId = await context.Members
+                .IgnoreQueryFilters()
+                .Where(m => m.DeletedAt == null && m.PkId != null)
+                .Select(m => new { m.PkId, m.Id })
+                .ToDictionaryAsync(x => x.PkId!, x => x.Id, ct);
+
+            for (var i = 0; i < switches.Count; i++)
+            {
+                var sw = switches[i];
+                if (!DateTimeOffset.TryParse(sw.Timestamp, out var startOffset)) continue;
+                var start = startOffset.UtcDateTime;
+                var end = i + 1 < switches.Count && DateTimeOffset.TryParse(switches[i + 1].Timestamp, out var nextOffset)
+                    ? nextOffset.UtcDateTime
+                    : (DateTime?)null;
+
+                foreach (var pkUuid in sw.Members)
+                {
+                    if (!pkIdToMemberId.TryGetValue(pkUuid, out var memberId)) continue;
+
+                    var alreadyExists = await context.FrontHistory
+                        .IgnoreQueryFilters()
+                        .AnyAsync(f => f.MemberId == memberId && f.FrontStart == start, ct);
+                    if (alreadyExists) continue;
+
+                    context.FrontHistory.Add(new FrontHistory
+                    {
+                        MemberId = memberId,
+                        FrontStart = start,
+                        FrontEnd = end
+                    });
+                    frontImported++;
+                }
+            }
+        }
+
         await context.SaveChangesAsync(ct);
-        return new ImportResult(created, updated, skipped, avatarsOk, avatarsFail, errors);
+        return new ImportResult(created, updated, skipped, errors, avatarsOk, avatarsFail, frontImported);
     }
 
     private static void ApplyPkFields(
-        Member m, PkMemberEntry pk, ImportConflictStrategy strategy, bool isNew)
+        Member m, PkApiMember pk, ImportConflictStrategy strategy, bool isNew)
     {
         if (ShouldApply(m.Name, pk.Name!, strategy, isNew)) m.Name = pk.Name!;
         if (ShouldApply(m.DisplayName, pk.DisplayName, strategy, isNew)) m.DisplayName = pk.DisplayName;
@@ -209,19 +285,19 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
     }
 
     private static void ApplySpFields(
-        Member m, SpImportMemberContent c, ImportConflictStrategy strategy, bool isNew)
+        Member m, SpMemberEntry sp, ImportConflictStrategy strategy, bool isNew)
     {
-        if (ShouldApply(m.Name, c.Name!, strategy, isNew)) m.Name = c.Name!;
-        if (ShouldApply(m.Description, c.Desc, strategy, isNew)) m.Description = c.Desc;
-        if (ShouldApply(m.Pronouns, c.Pronouns, strategy, isNew)) m.Pronouns = c.Pronouns;
-        if (ShouldApply(m.Color, NormalizeColor(c.Color), strategy, isNew)) m.Color = NormalizeColor(c.Color);
-        if (c.PkId != null) m.PkId = c.PkId; // cross-link always when present
-        m.IsArchived = c.Archived;
-        m.PreventFrontNotification = c.PreventsFrontNotifs;
-        m.ReceiveBoardNotifications = c.ReceiveMessageBoardNotifs;
-        if (c.Private)
+        if (ShouldApply(m.Name, sp.Name!, strategy, isNew)) m.Name = sp.Name!;
+        if (ShouldApply(m.Description, sp.Desc, strategy, isNew)) m.Description = sp.Desc;
+        if (ShouldApply(m.Pronouns, sp.Pronouns, strategy, isNew)) m.Pronouns = sp.Pronouns;
+        if (ShouldApply(m.Color, NormalizeColor(sp.Color), strategy, isNew)) m.Color = NormalizeColor(sp.Color);
+        if (sp.PkId != null) m.PkId = sp.PkId; // cross-link always when present
+        m.IsArchived = sp.Archived ?? false;
+        m.PreventFrontNotification = sp.PreventsFrontNotifs ?? false;
+        m.ReceiveBoardNotifications = sp.ReceiveMessageBoardNotifs ?? false;
+        if (sp.Private == true)
             m.BucketId = PrivacyBucket.PrivateId;
-        else if (m.BucketId == PrivacyBucket.PrivateId)
+        else if (sp.Private == false && m.BucketId == PrivacyBucket.PrivateId)
             m.BucketId = PrivacyBucket.PublicId; // SP false only upgrades if currently Private
     }
 
@@ -238,6 +314,9 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
             _ => false
         };
     }
+
+    private static ImportConflictStrategy ParseStrategy(string raw) =>
+        Enum.TryParse<ImportConflictStrategy>(raw, ignoreCase: true, out var s) ? s : ImportConflictStrategy.MergePreferExisting;
 
     private static string? NormalizeColor(string? color)
     {
