@@ -13,6 +13,19 @@ vi.mock('../api/notes', () => ({
   },
 }))
 
+vi.mock('../api/relationships', () => ({
+  relationshipsApi: {
+    list: vi.fn().mockResolvedValue([]),
+    remove: vi.fn(),
+  },
+}))
+
+vi.mock('../api/members', () => ({
+  membersApi: {
+    list: vi.fn().mockResolvedValue([]),
+  },
+}))
+
 import { notesApi } from '../api/notes'
 
 const mockMember: Member = {

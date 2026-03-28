@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notesApi } from '../../api/notes'
+import { relationshipsApi } from '../../api/relationships'
+import { membersApi } from '../../api/members'
+import { NewRelationshipSheet } from '../SystemMap/NewRelationshipSheet'
 import BottomSheet from '../BottomSheet'
-import type { Member, MemberNote } from '../../types'
+import type { Member, MemberNote, MemberRelationship } from '../../types'
 import styles from './DossierTab.module.css'
 
 interface Props { member: Member }
@@ -23,6 +26,40 @@ export default function DossierTab({ member }: Props) {
   const [titleVal, setTitleVal] = useState('')
   const [contentVal, setContentVal] = useState('')
   const [sheetError, setSheetError] = useState('')
+
+  // Relationships
+  const { data: allRelationships = [] } = useQuery({
+    queryKey: ['relationships'],
+    queryFn: relationshipsApi.list,
+  })
+  const { data: allMembers = [] } = useQuery({
+    queryKey: ['members'],
+    queryFn: membersApi.list,
+  })
+
+  const connections = (allRelationships as MemberRelationship[]).filter(
+    r => r.fromMemberId === member.id || r.toMemberId === member.id
+  )
+
+  const [pickingTarget, setPickingTarget] = useState(false)
+  const [targetMemberId, setTargetMemberId] = useState<string | null>(null)
+  const [connectSheetOpen, setConnectSheetOpen] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+
+  const deleteRelMutation = useMutation({
+    mutationFn: (id: string) => relationshipsApi.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['relationships'] }),
+  })
+
+  function getOtherMember(r: MemberRelationship) {
+    const otherId = r.fromMemberId === member.id ? r.toMemberId : r.fromMemberId
+    return (allMembers as any[]).find(m => m.id === otherId)
+  }
+
+  function directionLabel(r: MemberRelationship) {
+    if (!r.isDirected) return '↔'
+    return r.fromMemberId === member.id ? '→' : '←'
+  }
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['member-notes', member.id],
@@ -91,6 +128,103 @@ export default function DossierTab({ member }: Props) {
           <p className={styles.meta}>{relativeTime(note.updatedAt)}</p>
         </div>
       ))}
+
+      {/* Connections */}
+      <div className={styles.card} style={{ cursor: 'default' }}>
+        <div className={styles.cardHeader}>
+          <span className={styles.noteTitle}>Connections</span>
+          <button className={styles.addBtn} style={{ width: 28, height: 28, fontSize: '0.85rem' }} onClick={() => setPickingTarget(true)}>
+            <Plus size={16} />
+          </button>
+        </div>
+
+        {pickingTarget && (
+          <div style={{ marginBottom: 8 }}>
+            <select
+              autoFocus
+              style={{
+                width: '100%',
+                background: '#111',
+                border: '1px solid #333',
+                color: '#fff',
+                borderRadius: 6,
+                padding: '5px 8px',
+                fontSize: 11,
+                fontFamily: 'inherit',
+              }}
+              defaultValue=""
+              onChange={e => {
+                if (e.target.value) {
+                  setTargetMemberId(e.target.value)
+                  setPickingTarget(false)
+                  setConnectSheetOpen(true)
+                }
+              }}
+              onBlur={() => setPickingTarget(false)}
+            >
+              <option value="" disabled>Pick a member…</option>
+              {(allMembers as any[])
+                .filter(m => m.id !== member.id)
+                .map(m => (
+                  <option key={m.id} value={m.id}>{m.displayName || m.name}</option>
+                ))}
+            </select>
+          </div>
+        )}
+
+        {connections.length === 0 ? (
+          <p className={styles.empty} style={{ padding: '12px 0' }}>No connections yet</p>
+        ) : (
+          <ul className={styles.connectionList}>
+            {connections.map(r => {
+              const other = getOtherMember(r)
+              return (
+                <li key={r.id} className={styles.connectionRow}>
+                  <span className={styles.connectionDir}>{directionLabel(r)}</span>
+                  <span className={styles.connectionName}>{other?.displayName || other?.name || 'Unknown'}</span>
+                  <span className={styles.connectionLabel}>{r.label}</span>
+                  {deleteConfirmId === r.id ? (
+                    <div className={styles.confirmRow}>
+                      <span style={{ fontSize: 10, color: '#888' }}>Delete?</span>
+                      <button
+                        className={styles.dangerBtn}
+                        onClick={() => { deleteRelMutation.mutate(r.id); setDeleteConfirmId(null) }}
+                      >Yes</button>
+                      <button className={styles.cancelBtn} onClick={() => setDeleteConfirmId(null)}>No</button>
+                    </div>
+                  ) : (
+                    <button
+                      className={styles.deleteConnectionBtn}
+                      onClick={() => setDeleteConfirmId(r.id)}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      {connectSheetOpen && targetMemberId && (() => {
+        const currentMember = (allMembers as any[]).find(m => m.id === member.id)
+        const targetMember = (allMembers as any[]).find(m => m.id === targetMemberId)
+        return (
+          <NewRelationshipSheet
+            isOpen
+            fromMember={{
+              id: member.id,
+              name: currentMember?.displayName || currentMember?.name || 'You',
+            }}
+            toMember={{
+              id: targetMemberId,
+              name: targetMember?.displayName || targetMember?.name || '',
+            }}
+            onClose={() => { setConnectSheetOpen(false); setTargetMemberId(null) }}
+          />
+        )
+      })()}
 
       <BottomSheet
         isOpen={sheetNote !== undefined}
