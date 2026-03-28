@@ -1,8 +1,41 @@
 import { useEffect, useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { secureApi } from '../api/secure'
 import { apiFetch } from '../api/client'
+import { importApi, type ImportResult, type SpImportPayload, type PkImportPayload } from '../api/import'
 import styles from './SettingsPage.module.css'
+
+function ImportResultCard({ result }: { result: ImportResult }) {
+  return (
+    <div className={styles.resultCard}>
+      <div className={styles.resultRow}>
+        <span className={styles.resultStat}>{result.created} created</span>
+        <span className={styles.resultStat}>{result.updated} updated</span>
+        <span className={styles.resultStat}>{result.skipped} skipped</span>
+      </div>
+      {result.frontHistoryImported > 0 && (
+        <p className={styles.resultMeta}>{result.frontHistoryImported} front entries imported</p>
+      )}
+      {(result.avatarsDownloaded > 0 || result.avatarsFailed > 0) && (
+        <p className={styles.resultMeta}>
+          {result.avatarsDownloaded} avatars downloaded
+          {result.avatarsFailed > 0 && `, ${result.avatarsFailed} failed`}
+        </p>
+      )}
+      {result.errors.length > 0 && (
+        <details className={styles.errorDetails}>
+          <summary>{result.errors.length} error{result.errors.length !== 1 ? 's' : ''}</summary>
+          <ul className={styles.errorList}>
+            {result.errors.map((e, i) => (
+              <li key={i}>{e.name ?? e.sourceId}: {e.reason}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  )
+}
 
 function CollapsibleSection({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -98,6 +131,57 @@ export default function SettingsPage() {
     }
   }
 
+  // ── Import ─────────────────────────────────────────────────────────
+  // SP
+  const [spJson, setSpJson] = useState('')
+  const [spConflict, setSpConflict] = useState('merge_prefer_existing')
+  const [spAdvanced, setSpAdvanced] = useState(false)
+  const [spIncludeFields, setSpIncludeFields] = useState(true)
+  const [spIncludeHistory, setSpIncludeHistory] = useState(true)
+  const [spIncludeAvatars, setSpIncludeAvatars] = useState(true)
+  const [spResult, setSpResult] = useState<ImportResult | null>(null)
+
+  const spMutation = useMutation({
+    mutationFn: (payload: SpImportPayload) => importApi.importSp(payload),
+    onSuccess: (data) => setSpResult(data),
+  })
+
+  function handleSpFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => setSpJson((ev.target?.result as string) ?? '')
+    reader.readAsText(file)
+  }
+
+  function handleSpImport() {
+    let parsed: unknown
+    try { parsed = JSON.parse(spJson) } catch { return }
+    const p = parsed as Record<string, unknown>
+    spMutation.mutate({
+      conflictStrategy: spConflict,
+      includeCustomFields: spIncludeFields,
+      includeFrontHistory: spIncludeHistory,
+      includeAvatars: spIncludeAvatars,
+      members: (p.members as SpImportPayload['members']) ?? [],
+      customFields: (p.customFields as SpImportPayload['customFields']) ?? [],
+      frontHistory: (p.frontHistory as SpImportPayload['frontHistory']) ?? [],
+    })
+  }
+
+  // PK
+  const [pkToken, setPkToken] = useState('')
+  const [pkConflict, setPkConflict] = useState('merge_prefer_existing')
+  const [pkAdvanced, setPkAdvanced] = useState(false)
+  const [pkIncludeHistory, setPkIncludeHistory] = useState(true)
+  const [pkIncludeAvatars, setPkIncludeAvatars] = useState(true)
+  const [pkResult, setPkResult] = useState<ImportResult | null>(null)
+
+  const pkMutation = useMutation({
+    mutationFn: (payload: PkImportPayload) => importApi.importPk(payload),
+    onSuccess: (data) => setPkResult(data),
+  })
+
   return (
     <div className={styles.page}>
       <h1 className={`pageTitle ${styles.pageTitle}`}><span className="accentWord">Settings</span></h1>
@@ -108,6 +192,126 @@ export default function SettingsPage() {
           Log out
         </button>
       </section>
+
+      <CollapsibleSection title="Import">
+        <div className={styles.importGrid}>
+
+          {/* SP card */}
+          <div className={styles.importCard}>
+            <h3 className={styles.importCardTitle}>Simply Plural</h3>
+            <div className={styles.importFileRow}>
+              <label className={styles.fileBtn}>
+                Choose file
+                <input type="file" accept=".json" hidden onChange={handleSpFile} />
+              </label>
+              <span className={styles.fileHint}>{spJson ? 'JSON loaded ✓' : 'or paste below'}</span>
+            </div>
+            <textarea
+              className={styles.jsonTextarea}
+              placeholder="Paste SP export JSON here…"
+              value={spJson}
+              onChange={e => setSpJson(e.target.value)}
+              rows={5}
+            />
+            <label className={styles.checkRow}>
+              <input type="checkbox" checked={spIncludeFields}
+                onChange={e => setSpIncludeFields(e.target.checked)} />
+              Import custom fields
+            </label>
+            <label className={styles.checkRow}>
+              <input type="checkbox" checked={spIncludeHistory}
+                onChange={e => setSpIncludeHistory(e.target.checked)} />
+              Import front history
+            </label>
+            <label className={styles.checkRow}>
+              <input type="checkbox" checked={spIncludeAvatars}
+                onChange={e => setSpIncludeAvatars(e.target.checked)} />
+              Download avatars
+            </label>
+            <div className={styles.conflictRow}>
+              <span className={styles.conflictPill}>Safe merge</span>
+              <button className={styles.advancedToggle} type="button" onClick={() => setSpAdvanced(v => !v)}>
+                Advanced {spAdvanced ? '▲' : '▾'}
+              </button>
+            </div>
+            {spAdvanced && (
+              <select className={styles.conflictSelect} value={spConflict}
+                onChange={e => setSpConflict(e.target.value)}>
+                <option value="merge_prefer_existing">Safe merge (keep existing)</option>
+                <option value="merge_prefer_imported">Prefer imported</option>
+                <option value="overwrite">Overwrite all</option>
+                <option value="skip">Skip existing</option>
+                <option value="duplicate">Always duplicate</option>
+              </select>
+            )}
+            <button
+              className={styles.importBtn}
+              type="button"
+              disabled={!spJson.trim() || spMutation.isPending}
+              onClick={handleSpImport}
+            >
+              {spMutation.isPending ? 'Importing…' : 'Import from Simply Plural'}
+            </button>
+            {spMutation.isError && <p className={styles.importError}>Import failed. Check JSON format.</p>}
+            {spResult && <ImportResultCard result={spResult} />}
+          </div>
+
+          {/* PK card */}
+          <div className={styles.importCard}>
+            <h3 className={styles.importCardTitle}>PluralKit</h3>
+            <p className={styles.importHint}>Token is used once and never stored.</p>
+            <input
+              type="password"
+              className={styles.tokenInput}
+              placeholder="PluralKit token"
+              value={pkToken}
+              onChange={e => setPkToken(e.target.value)}
+            />
+            <label className={styles.checkRow}>
+              <input type="checkbox" checked={pkIncludeHistory}
+                onChange={e => setPkIncludeHistory(e.target.checked)} />
+              Import front history
+            </label>
+            <label className={styles.checkRow}>
+              <input type="checkbox" checked={pkIncludeAvatars}
+                onChange={e => setPkIncludeAvatars(e.target.checked)} />
+              Download avatars
+            </label>
+            <div className={styles.conflictRow}>
+              <span className={styles.conflictPill}>Safe merge</span>
+              <button className={styles.advancedToggle} type="button" onClick={() => setPkAdvanced(v => !v)}>
+                Advanced {pkAdvanced ? '▲' : '▾'}
+              </button>
+            </div>
+            {pkAdvanced && (
+              <select className={styles.conflictSelect} value={pkConflict}
+                onChange={e => setPkConflict(e.target.value)}>
+                <option value="merge_prefer_existing">Safe merge (keep existing)</option>
+                <option value="merge_prefer_imported">Prefer imported</option>
+                <option value="overwrite">Overwrite all</option>
+                <option value="skip">Skip existing</option>
+                <option value="duplicate">Always duplicate</option>
+              </select>
+            )}
+            <button
+              className={styles.importBtn}
+              type="button"
+              disabled={!pkToken.trim() || pkMutation.isPending}
+              onClick={() => pkMutation.mutate({
+                token: pkToken,
+                conflictStrategy: pkConflict,
+                includeFrontHistory: pkIncludeHistory,
+                includeAvatars: pkIncludeAvatars,
+              })}
+            >
+              {pkMutation.isPending ? 'Importing…' : 'Import from PluralKit'}
+            </button>
+            {pkMutation.isError && <p className={styles.importError}>Import failed. Check token.</p>}
+            {pkResult && <ImportResultCard result={pkResult} />}
+          </div>
+
+        </div>
+      </CollapsibleSection>
 
       <CollapsibleSection title="Security" defaultOpen>
         <div className={styles.subSection}>
