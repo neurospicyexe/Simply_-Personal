@@ -1,0 +1,103 @@
+.canvas {
+  width: 100%;
+  height: calc(100vh - 180px);
+  background: #0d0d0d;
+  border-radius: 10px;
+  position: relative;
+}
+
+/* MemberNode */
+.memberNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.memberCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  border: 2px solid var(--node-color, var(--color-primary));
+}
+
+.memberNode.isolated .memberCircle {
+  border-style: dashed;
+  opacity: 0.5;
+}
+
+.memberNode.fronting .memberCircle {
+  box-shadow: 0 0 0 3px var(--node-color, var(--color-primary));
+  animation: frontingPulse 2s ease-in-out infinite;
+}
+
+@keyframes frontingPulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--node-color, var(--color-primary)); }
+  50% { box-shadow: 0 0 0 5px var(--node-color, var(--color-primary)); }
+}
+
+.memberLabel {
+  font-size: 10px;
+  color: #ccc;
+  text-align: center;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.handle {
+  opacity: 0;
+  pointer-events: all;
+}
+
+/* GroupNode */
+.groupNode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 12px;
+  border-radius: 13px;
+  height: 26px;
+  border: 1.5px solid var(--node-color, #666);
+  background: color-mix(in srgb, var(--node-color, #666) 12%, transparent);
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.groupNode:hover {
+  filter: brightness(1.2);
+}
+
+.groupLabel {
+  font-size: 10px;
+  color: var(--node-color, #666);
+  font-weight: 600;
+}
+
+/* Mode chips */
+.modeChips {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.chip {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #666;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chip.active {
+  background: var(--color-primary);
+  color: #000;
+  border-color: var(--color-primary);
+}
