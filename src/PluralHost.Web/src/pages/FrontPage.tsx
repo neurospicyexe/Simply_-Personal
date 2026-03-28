@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { frontApi } from '../api/front'
 import { membersApi } from '../api/members'
 import FrontCard from '../components/FrontCard'
+import HeatmapStrip from '../components/HeatmapStrip'
 import styles from './FrontPage.module.css'
 import type { Member } from '../types'
 
@@ -117,6 +118,9 @@ export default function FrontPage() {
           <p className={styles.empty}>Nobody is fronting right now.</p>
         )}
       </div>
+
+      {/* 24h history strip */}
+      <HeatmapStrip />
     </div>
   )
 }
