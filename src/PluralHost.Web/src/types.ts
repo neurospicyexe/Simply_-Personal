@@ -156,3 +156,13 @@ export interface TokenCreatePayload {
   allowsBoardPosting: boolean
   expiresAt?: string           // ISO 8601 UTC string, omit for "never"
 }
+
+export interface MemberRelationship {
+  id: string
+  fromMemberId: string
+  toMemberId: string
+  label: string
+  isDirected: boolean
+  createdAt: string
+  updatedAt: string
+}
