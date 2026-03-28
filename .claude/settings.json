@@ -1,5 +1,29 @@
 {
   "enabledPlugins": {
     "vercel@claude-plugins-official": false
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$CLAUDE_TOOL_INPUT\" | grep -qE '\"file_path\".*\\.(ts|tsx)' && cd /c/dev/simply-personal/src/PluralHost.Web && npx tsc -b --noEmit 2>&1 | tail -20 || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$CLAUDE_TOOL_INPUT\" | grep -qE '\"file_path\".*(\\.env|appsettings\\.json)' && echo 'BLOCK: Sensitive config file detected — confirm intent before editing' && exit 1 || true"
+          }
+        ]
+      }
+    ]
   }
 }
