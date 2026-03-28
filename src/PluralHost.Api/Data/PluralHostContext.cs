@@ -21,6 +21,7 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
     public DbSet<CustomFieldValue> CustomFieldValues => Set<CustomFieldValue>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<PrivacyBucket> PrivacyBuckets => Set<PrivacyBucket>();
+    public DbSet<MemberRelationship> MemberRelationships => Set<MemberRelationship>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -174,6 +175,29 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
             .WithMany(b => b.Members)
             .HasForeignKey(m => m.BucketId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // MemberRelationship: soft-delete + Ghost Mode
+        modelBuilder.Entity<MemberRelationship>()
+            .HasQueryFilter(r =>
+                r.DeletedAt == null &&
+                !Set<SystemSettings>().Where(s => s.Id == 1).Select(s => s.IsFrozen).FirstOrDefault());
+
+        modelBuilder.Entity<MemberRelationship>()
+            .Property(r => r.Label)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        modelBuilder.Entity<MemberRelationship>()
+            .HasOne(r => r.FromMember)
+            .WithMany()
+            .HasForeignKey(r => r.FromMemberId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<MemberRelationship>()
+            .HasOne(r => r.ToMember)
+            .WithMany()
+            .HasForeignKey(r => r.ToMemberId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 
     private static FrontStatus Seed(Guid id, string label) => new()

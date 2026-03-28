@@ -152,3 +152,23 @@ public record SecureStatusResponse(bool PinIsSet, DateTime? DeletionCooldownEnd)
 // ── Media upload ───────────────────────────────────────────────────────
 public record UploadResponse(string Id);
 
+// ── MemberRelationship ────────────────────────────────────────────────
+public record MemberRelationshipResponse(
+    Guid Id,
+    Guid FromMemberId,
+    Guid ToMemberId,
+    string Label,
+    bool IsDirected,
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
+
+public record MemberRelationshipCreateRequest(
+    Guid FromMemberId,
+    Guid ToMemberId,
+    string Label,
+    bool IsDirected = false);
+
+public record MemberRelationshipUpdateRequest(
+    string? Label,
+    bool? IsDirected);
+
