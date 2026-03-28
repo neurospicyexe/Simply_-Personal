@@ -1,0 +1,98 @@
+.heatmap {
+  padding: 0;
+}
+
+.toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.rangeBtn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: none;
+  background: #1a1a1a;
+  color: #666;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.rangeBtn.active {
+  background: var(--color-primary);
+  color: #000;
+  font-weight: 700;
+}
+
+.axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #444;
+  margin-bottom: 8px;
+  padding-left: 24px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row.dimmed {
+  opacity: 0.35;
+}
+
+.dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.track {
+  flex: 1;
+  height: 16px;
+  background: #1a1a1a;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.span {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.spanFill {
+  position: absolute;
+  inset: 0;
+  background: var(--span-color);
+  opacity: 0.13;
+}
+
+.spanBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--span-color);
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--color-text-muted, #666);
+  padding: 24px 0;
+  margin: 0;
+  text-align: center;
+}
