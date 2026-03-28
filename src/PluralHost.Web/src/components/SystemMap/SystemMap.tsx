@@ -28,7 +28,7 @@ import { GroupNode, type GroupNodeData } from './GroupNode'
 import { RelationshipEdge, type RelationshipEdgeData } from './RelationshipEdge'
 import { NewRelationshipSheet } from './NewRelationshipSheet'
 import styles from './SystemMap.module.css'
-import type { Member, Group, MemberRelationship } from '../../types'
+import type { Member, Group, MemberRelationship, FrontContent } from '../../types'
 
 type MapMode = 'groups' | 'relationships' | 'both'
 
@@ -66,7 +66,7 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
   const { data: front = [] } = useQuery({ queryKey: ['front-current'], queryFn: frontApi.getCurrent })
 
   const frontingIds = useMemo(
-    () => new Set((front as any[]).map((f: any) => f.member)),
+    () => new Set((front as FrontContent[]).map(f => f.member)),
     [front]
   )
 
@@ -160,8 +160,8 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges)
 
-  useEffect(() => { setNodes(rfNodes) }, [rfNodes])
-  useEffect(() => { setEdges(rfEdges) }, [rfEdges])
+  useEffect(() => { setNodes(rfNodes) }, [rfNodes, setNodes])
+  useEffect(() => { setEdges(rfEdges) }, [rfEdges, setEdges])
 
   const onConnect: OnConnect = useCallback((connection) => {
     if (connection.source && connection.target) {
