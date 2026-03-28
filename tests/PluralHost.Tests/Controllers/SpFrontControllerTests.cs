@@ -241,5 +241,19 @@ public class SpFrontControllerTests : IDisposable
         Assert.Equal(2, items.Count);
     }
 
+    [Fact]
+    public async Task GetHistory_WithOnlyToParam_ReturnsAllEntries()
+    {
+        var m = await AddMemberAsync();
+        var now = DateTime.UtcNow;
+        _context.FrontHistory.Add(new FrontHistory { MemberId = m.Id, FrontStart = now.AddDays(-60) });
+        await _context.SaveChangesAsync();
+
+        // to param alone should be ignored — no filtering applied without from
+        var result = await _controller.GetHistoryAsync(null, now) as OkObjectResult;
+        var items = Assert.IsAssignableFrom<IEnumerable<object>>(result!.Value).ToList();
+        Assert.Single(items);
+    }
+
     public void Dispose() => _context.Dispose();
 }

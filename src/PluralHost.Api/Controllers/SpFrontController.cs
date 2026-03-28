@@ -47,7 +47,7 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
 
         if (from.HasValue)
         {
-            var ceiling = to ?? DateTime.UtcNow.AddSeconds(1);
+            var ceiling = to ?? DateTime.UtcNow;
             query = query.Where(f =>
                 f.FrontStart < ceiling &&
                 (f.FrontEnd == null || f.FrontEnd > from.Value));
