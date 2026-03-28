@@ -35,13 +35,25 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
         return Ok(fronters.Select(ToEnvelope));
     }
 
-    // GET /v1/frontHistory — all entries
+    // GET /v1/frontHistory — all entries, optionally filtered by ?from=&to= (ISO 8601)
     [HttpGet("v1/frontHistory")]
-    public async Task<IActionResult> GetHistoryAsync()
+    public async Task<IActionResult> GetHistoryAsync(
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null)
     {
-        var history = await context.FrontHistory
+        var query = context.FrontHistory
             .Include(f => f.CustomStatus)
-            .ToListAsync();
+            .AsQueryable();
+
+        if (from.HasValue)
+        {
+            var ceiling = to ?? DateTime.UtcNow.AddSeconds(1);
+            query = query.Where(f =>
+                f.FrontStart < ceiling &&
+                (f.FrontEnd == null || f.FrontEnd > from.Value));
+        }
+
+        var history = await query.ToListAsync();
         return Ok(history.Select(ToEnvelope));
     }
 

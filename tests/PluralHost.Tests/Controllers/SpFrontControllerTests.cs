@@ -180,5 +180,66 @@ public class SpFrontControllerTests : IDisposable
         Assert.Equal(Epoch.FromMs(newStart), updated!.FrontStart);
     }
 
+    [Fact]
+    public async Task GetHistory_WithFromParam_ReturnsOverlappingEntries()
+    {
+        var m = await AddMemberAsync();
+        var now = DateTime.UtcNow;
+        // Entry inside window
+        _context.FrontHistory.Add(new FrontHistory
+        {
+            MemberId = m.Id,
+            FrontStart = now.AddHours(-12),
+            FrontEnd = now.AddHours(-6)
+        });
+        // Entry outside window (too old)
+        _context.FrontHistory.Add(new FrontHistory
+        {
+            MemberId = m.Id,
+            FrontStart = now.AddHours(-30),
+            FrontEnd = now.AddHours(-26)
+        });
+        await _context.SaveChangesAsync();
+
+        var from = now.AddHours(-24);
+        var result = await _controller.GetHistoryAsync(from, null) as OkObjectResult;
+        var items = Assert.IsAssignableFrom<IEnumerable<object>>(result!.Value).ToList();
+        Assert.Single(items);
+    }
+
+    [Fact]
+    public async Task GetHistory_OngoingEntry_IncludedWhenFromProvided()
+    {
+        var m = await AddMemberAsync();
+        var now = DateTime.UtcNow;
+        // Ongoing entry started within window
+        _context.FrontHistory.Add(new FrontHistory
+        {
+            MemberId = m.Id,
+            FrontStart = now.AddHours(-2)
+            // FrontEnd = null (ongoing)
+        });
+        await _context.SaveChangesAsync();
+
+        var from = now.AddHours(-24);
+        var result = await _controller.GetHistoryAsync(from, null) as OkObjectResult;
+        var items = Assert.IsAssignableFrom<IEnumerable<object>>(result!.Value).ToList();
+        Assert.Single(items);
+    }
+
+    [Fact]
+    public async Task GetHistory_NoParams_ReturnsAllEntries()
+    {
+        var m = await AddMemberAsync();
+        var now = DateTime.UtcNow;
+        _context.FrontHistory.Add(new FrontHistory { MemberId = m.Id, FrontStart = now.AddDays(-60), FrontEnd = now.AddDays(-59) });
+        _context.FrontHistory.Add(new FrontHistory { MemberId = m.Id, FrontStart = now.AddHours(-1) });
+        await _context.SaveChangesAsync();
+
+        var result = await _controller.GetHistoryAsync(null, null) as OkObjectResult;
+        var items = Assert.IsAssignableFrom<IEnumerable<object>>(result!.Value).ToList();
+        Assert.Equal(2, items.Count);
+    }
+
     public void Dispose() => _context.Dispose();
 }
