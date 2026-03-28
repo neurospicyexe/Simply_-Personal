@@ -8,6 +8,11 @@ export const frontApi = {
   history: () =>
     apiFetch<SpEnvelope<FrontContent>[]>('/v1/frontHistory'),
 
+  historyInRange: (from: string, to: string) =>
+    apiFetch<SpEnvelope<FrontContent>[]>(
+      `/v1/frontHistory?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+    ),
+
   create: (payload: FrontCreatePayload) =>
     apiFetch<string>('/v1/frontHistory', {
       method: 'POST',
