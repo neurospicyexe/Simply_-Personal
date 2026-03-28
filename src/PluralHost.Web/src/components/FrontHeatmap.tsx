@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { frontApi } from '../api/front'
 import { membersApi } from '../api/members'
@@ -28,16 +28,21 @@ interface Span { left: number; width: number }
 export default function FrontHeatmap() {
   const [range, setRange] = useState<TimeRange>('24h')
   const windowMs = RANGE_MS[range]
-  const now = useMemo(() => Date.now(), [range])
-  const windowStart = now - windowMs
+  const mountRef = useRef(Date.now())
 
   const { data: history = [] } = useQuery({
     queryKey: ['front-history-range', range],
-    queryFn: () => frontApi.historyInRange(
-      new Date(windowStart).toISOString(),
-      new Date(now).toISOString()
-    ),
+    queryFn: () => {
+      const to = Date.now()
+      mountRef.current = to
+      const from = to - windowMs
+      return frontApi.historyInRange(new Date(from).toISOString(), new Date(to).toISOString())
+    },
+    refetchInterval: 30_000,
   })
+
+  const now = useMemo(() => mountRef.current, [history])
+  const windowStart = now - windowMs
 
   const { data: members = [] } = useQuery({
     queryKey: ['members'],
