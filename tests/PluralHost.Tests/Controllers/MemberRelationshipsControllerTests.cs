@@ -106,6 +106,28 @@ public class MemberRelationshipsControllerTests
     }
 
     [Fact]
+    public async Task Create_WithSelfRelationship_Returns400()
+    {
+        var (ctx, ctrl) = Setup(nameof(Create_WithSelfRelationship_Returns400));
+        var memberId = SeedMember(ctx);
+
+        var result = await ctrl.CreateAsync(new MemberRelationshipCreateRequest(memberId, memberId, "self", false));
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Create_WithLabelTooLong_Returns400()
+    {
+        var (ctx, ctrl) = Setup(nameof(Create_WithLabelTooLong_Returns400));
+        var fromId = SeedMember(ctx);
+        var toId = SeedMember(ctx);
+        var longLabel = new string('x', 101);
+
+        var result = await ctrl.CreateAsync(new MemberRelationshipCreateRequest(fromId, toId, longLabel, false));
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
     public async Task Patch_UpdatesLabelAndDirection()
     {
         var (ctx, ctrl) = Setup(nameof(Patch_UpdatesLabelAndDirection));

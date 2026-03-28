@@ -30,6 +30,12 @@ public class MemberRelationshipsController(PluralHostContext context) : Controll
         if (string.IsNullOrWhiteSpace(body.Label))
             return BadRequest(new { error = "Label is required" });
 
+        if (body.Label.Trim().Length > 100)
+            return BadRequest(new { error = "Label must be 100 characters or fewer" });
+
+        if (body.FromMemberId == body.ToMemberId)
+            return BadRequest(new { error = "A member cannot have a relationship with themselves" });
+
         var fromExists = await context.Members.AnyAsync(m => m.Id == body.FromMemberId);
         if (!fromExists) return BadRequest(new { error = "FromMember not found or deleted" });
 
@@ -58,6 +64,8 @@ public class MemberRelationshipsController(PluralHostContext context) : Controll
         {
             if (string.IsNullOrWhiteSpace(body.Label))
                 return BadRequest(new { error = "Label is required" });
+            if (body.Label.Trim().Length > 100)
+                return BadRequest(new { error = "Label must be 100 characters or fewer" });
             rel.Label = body.Label.Trim();
         }
         if (body.IsDirected is not null) rel.IsDirected = body.IsDirected.Value;
