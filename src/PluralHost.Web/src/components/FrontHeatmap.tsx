@@ -13,8 +13,7 @@ const RANGE_MS: Record<TimeRange, number> = {
   '30d':  30 * 24 * 60 * 60 * 1000,
 }
 
-function axisLabels(windowMs: number): string[] {
-  const now = Date.now()
+function axisLabels(windowMs: number, now: number): string[] {
   return [0, 0.25, 0.5, 0.75, 1].map(t => {
     if (t === 1) return 'now'
     const ts = new Date(now - windowMs * (1 - t))
@@ -47,7 +46,7 @@ export default function FrontHeatmap() {
 
   const memberList = members as Member[]
 
-  const { activeMemberIds, inactiveMemberIds, totals } = useMemo(() => {
+  const { activeMemberIds, inactiveMemberIds } = useMemo(() => {
     const totals: Record<string, number> = {}
     for (const e of history as SpEnvelope<FrontContent>[]) {
       const start = Math.max(e.content.startTime, windowStart)
@@ -65,7 +64,7 @@ export default function FrontHeatmap() {
       .filter(m => !activeSet.has(m.id))
       .sort((a, b) => a.name.localeCompare(b.name))
       .map(m => m.id)
-    return { activeMemberIds, inactiveMemberIds, totals }
+    return { activeMemberIds, inactiveMemberIds }
   }, [history, memberList, windowStart, now])
 
   const spansByMember = useMemo(() => {
@@ -87,11 +86,8 @@ export default function FrontHeatmap() {
     [memberList]
   )
 
-  const labels = useMemo(() => axisLabels(windowMs), [windowMs])
+  const labels = useMemo(() => axisLabels(windowMs, now), [windowMs, now])
   const allEmpty = activeMemberIds.length === 0
-
-  // totals is used in the sort above; suppress unused warning
-  void totals
 
   function renderRow(memberId: string, dimmed = false) {
     const member = memberMap[memberId]
