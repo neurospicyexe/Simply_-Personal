@@ -59,6 +59,7 @@ builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<ITokenVisibilityService, TokenVisibilityService>();
 builder.Services.AddScoped<IImportService, ImportService>();
 builder.Services.AddHttpClient<IAvatarDownloadService, AvatarDownloadService>();
+builder.Services.AddHttpClient<IPluralKitClient, PluralKitClient>();
 builder.Services.AddHostedService<AutoUnfreezeService>();
 
 var app = builder.Build();

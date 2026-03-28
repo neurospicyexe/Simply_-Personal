@@ -17,24 +17,24 @@ public class ImportControllerTests
         _importService = new Mock<IImportService>();
         _importService
             .Setup(s => s.ImportSpAsync(It.IsAny<SpImportRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImportResult(1, 0, 0, 0, 0, []));
+            .ReturnsAsync(new ImportResult(1, 0, 0, [], 0, 0, 0));
         _importService
             .Setup(s => s.ImportPkAsync(It.IsAny<PkImportRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImportResult(1, 0, 0, 0, 0, []));
+            .ReturnsAsync(new ImportResult(1, 0, 0, [], 0, 0, 0));
         _controller = new ImportController(_importService.Object);
     }
 
     [Fact]
-    public async Task ImportSp_ValidRequest_Returns200WithResult()
+    public async Task PostSp_ReturnsOkWithResult()
     {
         var req = new SpImportRequest(
-            Members: [new SpMemberEntry("sp-001", new SpImportMemberContent(
-                Name: "Ember", Desc: null, Pronouns: null,
-                PkId: null, Color: null, AvatarUrl: null,
-                Private: false,
-                PreventsFrontNotifs: false, ReceiveMessageBoardNotifs: true,
-                Archived: false, Info: null))],
-            IncludeAvatars: false);
+            ConflictStrategy: "MergePreferExisting",
+            IncludeCustomFields: false,
+            IncludeFrontHistory: false,
+            IncludeAvatars: false,
+            Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, null, false, false, null, false, true, null)],
+            CustomFields: null,
+            FrontHistory: null);
 
         var result = await _controller.ImportSpAsync(req, CancellationToken.None) as OkObjectResult;
 
@@ -44,14 +44,12 @@ public class ImportControllerTests
     }
 
     [Fact]
-    public async Task ImportPk_ValidRequest_Returns200WithResult()
+    public async Task PostPk_ReturnsOkWithResult()
     {
         var req = new PkImportRequest(
-            Members: [new PkMemberEntry(
-                Uuid: "pk-uuid-001", Name: "Ember",
-                DisplayName: null, Pronouns: null,
-                Color: null, AvatarUrl: null, Description: null,
-                Birthday: null, Privacy: null)],
+            Token: "my-token",
+            ConflictStrategy: "MergePreferExisting",
+            IncludeFrontHistory: false,
             IncludeAvatars: false);
 
         var result = await _controller.ImportPkAsync(req, CancellationToken.None) as OkObjectResult;
@@ -62,9 +60,16 @@ public class ImportControllerTests
     }
 
     [Fact]
-    public async Task ImportSp_EmptyMembers_Returns200()
+    public async Task PostSp_EmptyMembers_ReturnsOk()
     {
-        var req = new SpImportRequest(Members: [], IncludeAvatars: false);
+        var req = new SpImportRequest(
+            ConflictStrategy: "MergePreferExisting",
+            IncludeCustomFields: false,
+            IncludeFrontHistory: false,
+            IncludeAvatars: false,
+            Members: [],
+            CustomFields: null,
+            FrontHistory: null);
 
         var result = await _controller.ImportSpAsync(req, CancellationToken.None) as OkObjectResult;
 
