@@ -48,12 +48,23 @@ Both require `[Authorize]`.
   "includeCustomFields": true,
   "includeFrontHistory": true,
   "includeAvatars": true,
-  "members": [ { "id": "sp-mongo-id", "content": { ... } } ],
-  "customFields": [ { "id": "sp-mongo-id", "content": { "name": "Role", "order": 0 } } ],
-  "frontHistory": [ { "id": "...", "content": { "startTime": 1710000000000, "endTime": 1710003600000, "member": "sp-mongo-id" } } ]
+  "members": [
+    { "_id": "gcgoe", "name": "Jude Vega", "desc": "...", "pronouns": "he/him",
+      "color": "#000000", "avatarUrl": "https://...", "private": false,
+      "archived": false, "pkId": "haatsa", "preventsFrontNotifs": false,
+      "receiveMessageBoardNotifs": false,
+      "info": { "670bc64404b62bbe2b56bfaa": "21" } }
+  ],
+  "customFields": [
+    { "_id": "670bc64404b62bbe2b56bfaf", "name": "System Relationship", "order": "0|z72kkj:", "type": 0 }
+  ],
+  "frontHistory": [
+    { "_id": "UymDA0nFgWOfDegaVfqi", "member": "gcgoe", "startTime": 1710000000000, "endTime": 1710003600000 }
+  ]
 }
 ```
 
+The payload is the raw SP export format — flat objects with `_id`, no `content` wrapper.
 `frontHistory` may be omitted or empty if `includeFrontHistory` is false.
 
 ### `POST /api/import/plural-kit`
@@ -106,7 +117,7 @@ Token is used for the outbound HTTP call only. It is **never written to the data
 
 ## Member Matching
 
-- **SP:** match by `Member.SpMemberId = import.id`
+- **SP:** match by `Member.SpMemberId = import._id`
 - **PK:** match by `Member.PkId = import.uuid`
 - No match → create new member
 - When SP export contains `content.pkId`, set `Member.PkId` as a free cross-link
@@ -119,19 +130,19 @@ Token is used for the outbound HTTP call only. It is **never written to the data
 
 | SP field | PluralHost field | Notes |
 |---|---|---|
-| `id` | `SpMemberId` | Match key |
-| `content.pkId` | `PkId` | Cross-link if present |
-| `content.name` | `Name` | Required — skip member if blank |
-| `content.desc` | `Description` | |
-| `content.pronouns` | `Pronouns` | |
-| `content.color` | `Color` | Prepend `#` if missing |
-| `content.avatarUrl` | `AvatarPath` | Download → `secure_uploads/` if `includeAvatars` |
-| `content.private: true` | `BucketId = PrivacyBucket.PrivateId` | |
-| `content.private: false` | `BucketId = PrivacyBucket.PublicId` | Only if currently Private; otherwise leave unchanged |
-| `content.archived` | `IsArchived` | |
-| `content.preventsFrontNotifs` | `PreventFrontNotification` | |
-| `content.receiveMessageBoardNotifs` | `ReceiveBoardNotifications` | |
-| `content.info` | `CustomFieldValue` entries | Only if `includeCustomFields: true` |
+| `_id` | `SpMemberId` | Match key |
+| `pkId` | `PkId` | Cross-link if present |
+| `name` | `Name` | Required — skip member if blank |
+| `desc` | `Description` | |
+| `pronouns` | `Pronouns` | |
+| `color` | `Color` | Prepend `#` if missing |
+| `avatarUrl` | `AvatarPath` | Download → `secure_uploads/` if `includeAvatars` |
+| `private: true` | `BucketId = PrivacyBucket.PrivateId` | |
+| `private: false` | `BucketId = PrivacyBucket.PublicId` | Only if currently Private; otherwise leave unchanged |
+| `archived` | `IsArchived` | |
+| `preventsFrontNotifs` | `PreventFrontNotification` | |
+| `receiveMessageBoardNotifs` | `ReceiveBoardNotifications` | |
+| `info` | `CustomFieldValue` entries | Dict keyed by field `_id`; only if `includeCustomFields: true` |
 
 ### PK → Member
 
@@ -152,13 +163,13 @@ Token is used for the outbound HTTP call only. It is **never written to the data
 
 ## SP Custom Fields (`includeCustomFields: true`)
 
-SP exports a `customFields` array:
+SP exports a `customFields` array of flat objects:
 ```json
-{ "id": "mongoObjectId", "content": { "name": "Role", "order": 0, "private": false } }
+{ "_id": "670bc64404b62bbe2b56bfaf", "name": "System Relationship", "order": "0|z72kkj:", "type": 0 }
 ```
 
 Logic:
-1. For each SP field definition: find `CustomField` by `SpFieldId` match, or create new (soft-deleted included via `IgnoreQueryFilters`).
+1. For each SP field definition: find `CustomField` by `SpFieldId` match (`SpFieldId = entry._id`), or create new (soft-deleted included via `IgnoreQueryFilters`).
 2. For each member's `content.info` dict: upsert `CustomFieldValue` with `BucketId = PrivacyBucket.PrivateId` (safest default).
 
 PK has no custom fields — not applicable.
@@ -169,18 +180,17 @@ PK has no custom fields — not applicable.
 
 ### SP front history
 
-SP exports a `frontHistory` array where each entry has:
-- `content.member` — SP member ID (string)
-- `content.startTime` — Unix timestamp ms
-- `content.endTime` — Unix timestamp ms (null/0 = ongoing)
+SP exports a `frontHistory` array of flat objects (confirmed against real export):
+- `_id` — entry ID (string, ignored after import)
+- `member` — SP member ID (string, matches member `_id`)
+- `startTime` — Unix timestamp ms
+- `endTime` — Unix timestamp ms (absent or null if ongoing)
 
 Import logic:
 1. Build a map `SpMemberId → Member.Id` from the current import batch + existing members.
-2. For each history entry: resolve member, create `FrontHistory` with the default `FrontStatus` (`IsDefault = true`). Convert `startTime`/`endTime` from Unix ms to `DateTime.UtcNow` equivalent.
+2. For each history entry: resolve member, create `FrontHistory` with the default `FrontStatus` (`IsDefault = true`). Convert `startTime`/`endTime` from Unix ms to `DateTime` (UTC).
 3. Skip entries where the SP member ID cannot be resolved — add to `errors` list.
 4. Skip duplicate entries where a `FrontHistory` record with the same `MemberId` + `StartTime` already exists (exact UTC match).
-
-> **Implementation note:** Verify SP export's exact field names for front history against a real export before implementing. The structure above (`content.startTime`, `content.endTime`, `content.member`) matches SP API v1 conventions but the file export may differ.
 
 ### PK switches
 
