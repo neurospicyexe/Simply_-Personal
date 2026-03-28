@@ -197,11 +197,35 @@ docker compose down
 - `AccessTab` privacy selector now fetches live buckets from API (replaces hardcoded 4-tier segmented control)
 - 291 backend / 52 frontend tests passing
 
+**Plan 8a `2026-03-28-plan8a-front-statuses-field-def-management.md` — COMPLETE (2026-03-28)**
+
+- `FrontStatusController` — GET/POST/PATCH/DELETE `/api/front/statuses`; `IsDefault` flag with unique-one-default enforcement
+- **Statuses tab** on SystemPage — list all front statuses, `FrontStatusSheet` bottom sheet for create/edit/hide/delete
+- **SpecsTab field def edit/delete** — `···` menu on each field row; inline rename via `PATCH /api/fields/:id`; delete via existing endpoint
+- `frontStatuses.ts` API module; `fields.ts` updated with `updateDef`/`deleteDef`
+- 295 backend / 87 frontend tests passing
+
+**Plan 9 `2026-03-28-plan9-import-pipeline.md` — COMPLETE (2026-03-28)**
+
+- `ImportController` — `POST /api/import/simply-plural` + `POST /api/import/plural-kit` (both `[Authorize]`)
+- `ImportService` — 5 conflict strategies (MergePreferExisting / Overwrite / Skip / MergePreferImported / Duplicate), custom field upsert, front history dedup
+- `AvatarDownloadService` — SSRF-safe download; private IP blocks; magic byte validation (JPEG/PNG/GIF/WebP); 5MB limit; saves to `secure_uploads/`
+- `PluralKitClient` — live pull from `https://api.pluralkit.me/v2`; paginated switches (cursor `?before=`, up to 10 pages); token never stored
+- `ImportDtos.cs` — flat SP format (`_id` at root, no `content` wrapper); all DTO types for SP + PK
+- SP JSON upload + PK token card in SettingsPage with conflict strategy selector + result card
+- 295 backend / 87 frontend tests passing
+
+**Plan 10 `2026-03-28-plan10-front-heatmap.md` — COMPLETE (2026-03-28)**
+
+- `GET /v1/frontHistory` gains optional `?from`/`?to` date-range filtering (overlap semantics)
+- `HeatmapStrip` — compact 24h swimlane on FrontPage, top 5 by front time, "Full view →" deep-links to `/logs?tab=heatmap`
+- `FrontHeatmap` — full view, 24h/7d/30d toggle, active members sorted by front time, inactive dimmed, auto-refetches 30s
+- LogsPage: Heatmap as 3rd tab, `useState` → `useSearchParams` deep-link
+- 299 backend / 92 frontend tests passing
+
 **Next — Future Work:**
 - React Flow mind map (system visualization)
-- 24h front heatmaps
 - Per-alter theming (background, accent color)
-- SP/PluralKit import pipeline (Plan 4 — auto-populate members from Simply Plural or PluralKit)
 
 **SP UI Alignment (reference: `docs/reference/simply-plural-ui.md`):**
 - Goal: all of SP's features, but actually beautiful and desktop-first-responsive
