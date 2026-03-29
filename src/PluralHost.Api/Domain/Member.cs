@@ -8,6 +8,7 @@ public class Member : BaseEntity
     public string? DisplayName { get; set; }
     public string? Pronouns { get; set; }
     public string? AvatarPath { get; set; }
+    public string? BackgroundImagePath { get; set; }
     public string? Color { get; set; }
     public string? Role { get; set; }
     public string? Description { get; set; }

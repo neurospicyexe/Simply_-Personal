@@ -18,7 +18,7 @@ public class MembersController(
 {
     private static MemberResponse ToResponse(Member m) => new(
         m.Id, m.Name, m.DisplayName, m.Pronouns, m.Color, m.Role,
-        m.Description, m.AvatarPath, m.BucketId, m.AllowsBoardPosting,
+        m.Description, m.AvatarPath, m.BackgroundImagePath, m.BucketId, m.AllowsBoardPosting,
         m.IsPinned, m.IsArchived, m.IsUntracked,
         m.PreventFrontNotification, m.ReceiveBoardNotifications,
         m.ExtraImages, m.SpMemberId, m.Status, m.ParentIds,
@@ -100,6 +100,8 @@ public class MembersController(
         if (body.SpMemberId is not null)                  member.SpMemberId = body.SpMemberId;
         if (body.Status is not null)                      member.Status = body.Status.Value;
         if (body.AvatarPath is not null)                  member.AvatarPath = body.AvatarPath;
+        if (body.BackgroundImagePath is not null)         member.BackgroundImagePath = body.BackgroundImagePath;
+        if (body.ClearBackgroundImage)                    member.BackgroundImagePath = null;
 
         await context.SaveChangesAsync();
         return Ok(ToResponse(member));

@@ -37,6 +37,7 @@ public record GroupUpdateRequest(string? Name, string? Color);
 public record MemberResponse(
     Guid Id, string Name, string? DisplayName, string? Pronouns,
     string? Color, string? Role, string? Description, string? AvatarPath,
+    string? BackgroundImagePath,
     Guid BucketId, bool AllowsBoardPosting,
     bool IsPinned, bool IsArchived, bool IsUntracked,
     bool PreventFrontNotification, bool ReceiveBoardNotifications,
@@ -59,7 +60,8 @@ public record MemberUpdateRequest(
     bool? IsUntracked = null, bool? PreventFrontNotification = null,
     bool? ReceiveBoardNotifications = null, List<string>? ExtraImages = null,
     string? SpMemberId = null, MemberStatus? Status = null,
-    List<Guid>? ParentIds = null, string? AvatarPath = null);
+    List<Guid>? ParentIds = null, string? AvatarPath = null,
+    string? BackgroundImagePath = null, bool ClearBackgroundImage = false);
 
 // ── BoardMessage ──────────────────────────────────────────────────────
 public record BoardMessageResponse(
