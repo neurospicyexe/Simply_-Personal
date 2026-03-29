@@ -18,6 +18,7 @@ export interface Member {
   pronouns?: string
   color?: string
   avatarPath?: string
+  backgroundImagePath?: string | null
   description?: string
   bucketId: string
   isArchived: boolean
@@ -46,6 +47,8 @@ export interface MemberUpdatePayload {
   pronouns?: string
   color?: string
   avatarPath?: string
+  backgroundImagePath?: string
+  clearBackgroundImage?: boolean
   description?: string
   bucketId?: string
   isArchived?: boolean
