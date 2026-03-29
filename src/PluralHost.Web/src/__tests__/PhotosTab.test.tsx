@@ -113,4 +113,14 @@ describe('PhotosTab', () => {
       expect(screen.getByText(/delete failed/i)).toBeInTheDocument()
     })
   })
+
+  it('shows sheet error when set background fails', async () => {
+    vi.spyOn(membersApiModule.membersApi, 'update').mockRejectedValue(new Error('fail'))
+    wrap(baseMember({ extraImages: ['uploads/photo1.jpg'] }))
+    fireEvent.click(screen.getAllByRole('img')[0])
+    fireEvent.click(screen.getByText('Set as background'))
+    await waitFor(() => {
+      expect(screen.getByText(/failed to set background/i)).toBeInTheDocument()
+    })
+  })
 })
