@@ -18,6 +18,7 @@ import styles from './MemberDetailPage.module.css'
 
 function hexToRgba(hex: string, alpha: number): string {
   const h = hex.replace('#', '')
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) return `rgba(136,136,136,${alpha})`
   const r = parseInt(h.slice(0, 2), 16)
   const g = parseInt(h.slice(2, 4), 16)
   const b = parseInt(h.slice(4, 6), 16)
