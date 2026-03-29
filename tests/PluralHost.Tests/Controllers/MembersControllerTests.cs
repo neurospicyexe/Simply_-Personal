@@ -209,5 +209,56 @@ public class MembersControllerTests : IDisposable
         Assert.IsType<NotFoundResult>(result);
     }
 
+    [Fact]
+    public async Task PatchMember_SetsBackgroundImagePath()
+    {
+        // Arrange
+        var member = new Member { Name = "Test" };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        // Act
+        await _controller.UpdateAsync(member.Id,
+            new MemberUpdateRequest(BackgroundImagePath: "uploads/bg123.jpg"));
+
+        // Assert
+        var updated = await _context.Members.FindAsync(member.Id);
+        Assert.Equal("uploads/bg123.jpg", updated!.BackgroundImagePath);
+    }
+
+    [Fact]
+    public async Task PatchMember_ClearBackgroundImage_SetsNull()
+    {
+        // Arrange
+        var member = new Member { Name = "Test", BackgroundImagePath = "uploads/existing.jpg" };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        // Act
+        await _controller.UpdateAsync(member.Id,
+            new MemberUpdateRequest(ClearBackgroundImage: true));
+
+        // Assert
+        var updated = await _context.Members.FindAsync(member.Id);
+        Assert.Null(updated!.BackgroundImagePath);
+    }
+
+    [Fact]
+    public async Task PatchMember_NullBackgroundImagePath_DoesNotClear()
+    {
+        // Arrange
+        var member = new Member { Name = "Test", BackgroundImagePath = "uploads/existing.jpg" };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        // Act — send a PATCH with no BackgroundImagePath (default null) and ClearBackgroundImage false
+        await _controller.UpdateAsync(member.Id,
+            new MemberUpdateRequest(Name: "Updated"));
+
+        // Assert — bg path unchanged
+        var updated = await _context.Members.FindAsync(member.Id);
+        Assert.Equal("uploads/existing.jpg", updated!.BackgroundImagePath);
+    }
+
     public void Dispose() => _context.Dispose();
 }
