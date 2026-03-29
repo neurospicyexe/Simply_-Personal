@@ -42,7 +42,7 @@ public class TokensController(
         return Ok(ToResponse(token));
     }
 
-    [HttpDelete("{tokenValue}")]
+    [HttpPost("{tokenValue}/revoke")]
     public async Task<IActionResult> RevokeAsync(string tokenValue, [FromBody][Required] PinRequest body)
     {
         if (string.IsNullOrWhiteSpace(body.Pin))

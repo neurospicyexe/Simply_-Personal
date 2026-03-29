@@ -318,40 +318,61 @@ Stored as comma-separated GUIDs in SQLite. Has a `ValueComparer<List<Guid>>` con
 - Connection string override via env var: `ConnectionStrings__Default=Data Source=/app/data/pluralhost.db`
 - API port: `8080`
 
-## Known Security Issues (Pending Fix)
+## Known Security Issues
 
-Reviewed 2026-03-15. Items ordered by severity.
+Last reviewed 2026-03-29.
 
-### HIGH — Gatekeeper PIN in Query String
-`DELETE /api/tokens/{tokenValue}?pin=...` passes the PIN in the URL. Query strings appear in server access logs, nginx logs, browser history, and `Referer` headers.
-**Fix:** Move to request body using the existing `PinRequest` record (`[FromBody] PinRequest body`).
-**Location:** `TokensController.cs:45`
+### ✅ FIXED — Token revocation used HTTP DELETE with body
+`DELETE /api/tokens/{tokenValue}` with `[FromBody] PinRequest` — many CDNs/proxies strip DELETE request bodies silently, causing silent revocation failures.
+**Fixed 2026-03-29:** Changed to `POST /api/tokens/{tokenValue}/revoke`. Frontend `tokens.ts` updated to match.
+
+### ✅ FIXED — Unauthenticated Freeze Endpoint Had No Rate Limit
+`POST /api/secure/freeze` is `[AllowAnonymous]` (intentional — crisis safety). Without rate limiting, any IP could call it repeatedly to keep the system permanently frozen.
+**Fixed 2026-03-29:** Rate limited to 5 requests/min per IP via ASP.NET Core `AddRateLimiter` fixed-window policy. Returns 429 when exceeded.
+
+### ✅ FIXED — SSRF Bypass in AvatarDownloadService
+`IsPrivateAddress()` only checked raw IP literals — hostnames passed `TryParse` unvalidated, enabling DNS rebinding attacks. `HttpClient` also followed redirects, allowing open-redirect bypass of the check.
+**Fixed 2026-03-29:** Hostname now resolved via `Dns.GetHostAddressesAsync` before IP check. `AllowAutoRedirect = false` set on the typed HttpClient handler.
+
+---
+
+### BEFORE MULTI-USER — Configurable CORS Origins
+`Program.cs` hardcodes `.WithOrigins("http://localhost:5173")`. For single-user VPS with Caddy (same-origin setup), CORS is irrelevant. For multi-user hosting with separate frontend/backend domains, this will block all API calls.
+**Fix:** Move to `appsettings.json` → `Cors:AllowedOrigins` string array, read via `builder.Configuration.GetSection(...)`.
+
+### BEFORE MULTI-USER — Password Complexity
+`AuthController` only requires `Length >= 8`. No complexity requirements. Acceptable for personal use; matters when strangers create accounts.
+**Fix:** Add basic complexity check (uppercase + number + special char) or minimum entropy check.
+
+### BEFORE MULTI-USER — No JWT Blacklist
+Logout removes the cookie client-side but the JWT remains valid for 24 hours server-side. Intercepted cookies retain access until expiry. Low risk for personal use on a trusted device.
+**Fix:** Store a token blacklist in the database (or use short-lived JWTs + refresh tokens). Worth designing properly as part of multi-user auth, not as a patch.
+
+### BEFORE MULTI-USER — UUID Enumeration via 404 vs 403
+`POST /share/{token}/board/{memberId}` returns 404 for missing members and 403 for existing-but-private members. Token holders can infer whether a GUID is a real member. **Intentional per spec design — acceptable for single-user threat model.** Revisit when opening to strangers.
+
+---
 
 ### MEDIUM — No HTTPS Enforcement in Application
-`Program.cs` does not call `UseHttpsRedirection()`. JWT tokens, passwords, and the PIN query string travel plaintext if a client connects over HTTP. Relies entirely on the reverse proxy being correctly configured.
-**Fix:** Add `app.UseHttpsRedirection()` before `UseAuthentication()`. Document TLS requirement in docker-compose comments.
-
-### MEDIUM — Unauthenticated Freeze Endpoint Has No Rate Limit
-`POST /api/secure/freeze` is `[AllowAnonymous]` (intentional — crisis safety). Without rate limiting, any IP can call it repeatedly to keep the system permanently frozen (DoS against the owner).
-**Fix:** Apply a rate limiter (e.g. 5 req/min per IP) via ASP.NET Core rate limiting middleware.
-**Location:** `SecureActionController.cs:20`
+`Program.cs` does not call `UseHttpsRedirection()`. Relies entirely on the reverse proxy (Caddy) for TLS. Acceptable when Caddy is always in front.
+**Fix if needed:** Add `app.UseHttpsRedirection()` before `UseAuthentication()`.
 
 ### MEDIUM — No Brute-Force Protection on Login
-`POST /api/auth/login` has no rate limiting. BCrypt wf=12 alone (~250ms/check) is insufficient — sustained dictionary attacks can proceed at ~240 attempts/minute.
-**Fix:** Apply rate limiting (10 attempts/min per IP with back-off).
+`POST /api/auth/login` has no rate limiting. BCrypt wf=12 (~250ms/check) limits to ~240 attempts/minute under sustained attack.
+**Fix:** Apply rate limiting (10 attempts/min per IP with back-off) — same pattern as freeze endpoint.
 
 ### LOW — `IsFrozenAsync` Ignores `FreezeEndDate` Expiry
-`GhostModeService.IsFrozenAsync()` returns `settings.IsFrozen` without checking if `FreezeEndDate` has already passed. The `AutoUnfreezeService` polls every 5 minutes, so data can stay hidden up to 5 minutes after a timed freeze should have lifted.
+`GhostModeService.IsFrozenAsync()` returns `settings.IsFrozen` without checking if `FreezeEndDate` has already passed. `AutoUnfreezeService` polls every 5 minutes, so data can stay hidden up to 5 minutes after a timed freeze should have lifted.
 **Fix:** `return settings.IsFrozen && (settings.FreezeEndDate == null || settings.FreezeEndDate > DateTime.UtcNow);`
-**Location:** `GhostModeService.cs:37`
+**Location:** `GhostModeService.cs`
 
 ### LOW — Integer Overflow on Extreme `DurationHours`
-`TimeSpan.FromHours(int.MaxValue)` throws `OverflowException` → HTTP 500. `POST /api/secure/freeze` is `[AllowAnonymous]`, so this requires no auth to trigger.
+`TimeSpan.FromHours(int.MaxValue)` throws `OverflowException` → HTTP 500. `POST /api/secure/freeze` is `[AllowAnonymous]`, so no auth needed to trigger.
 **Fix:** Validate `DurationHours` is between 1 and 8760 before use.
-**Location:** `SecureActionController.cs:23`
+**Location:** `SecureActionController.cs`
 
 ### MEDIUM — No Security Response Headers
-`Program.cs` configures no security headers. Every response is missing HSTS, CSP, X-Frame-Options, X-Content-Type-Options, and Referrer-Policy.
+Responses are missing HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy.
 **Fix:** Add middleware to `Program.cs` before `UseAuthentication()`:
 ```csharp
 app.Use(async (ctx, next) => {
@@ -362,29 +383,9 @@ app.Use(async (ctx, next) => {
     await next();
 });
 ```
-Or install `NWebsec.AspNetCore.Middleware` for a cleaner API.
-
-### LOW — MediaController Serves Files Without `Content-Disposition: attachment`
-`PhysicalFile(resolved, contentType)` lets the browser render the file inline. Once a file-upload endpoint exists (Plan 3/5), an attacker who uploads an HTML or SVG file to `secure_uploads` could achieve stored XSS — the file renders in the owner's authenticated browser session.
-**Fix:** Always force download:
-```csharp
-return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
-// or explicitly:
-Response.Headers["Content-Disposition"] = "attachment";
-```
-**Location:** `MediaController.cs:37`
-
-### INFO — File Upload (Plan 3/5): Must Validate Magic Bytes + Use UUID Filenames
-When adding file upload, the original filename must be discarded (use UUID + preserved extension). Validate both file extension (allowlist: jpg/png/gif/webp) AND magic bytes (first 4–8 bytes). Never rely on extension alone — rename + validate at the content level.
-
-### INFO — JWT Must Go in httpOnly Cookies When Frontend is Added (Plan 5)
-The current API returns JWT as a response body value. When the React PWA is built, do NOT store the JWT in `localStorage` (vulnerable to any XSS). Use `httpOnly + Secure + SameSite=Strict` cookies. If cookies are used, add CSRF protection (double-submit cookie pattern or synchronizer token) to all state-changing owner endpoints.
-
-### INFO — Board Post Content Not Sanitized for HTML
-`AuthorName` and `Content` are stored as-is (trimmed, length-bounded). Safe for the current JSON-only API. When the frontend (Plan 5) renders board messages, HTML-escape both fields to prevent stored XSS.
 
 ### INFO — `POST /share/{token}/board/{memberId}` Leaks Member Existence
-Returns 403 when a member exists but is above the token's permission tier. Token holders can confirm whether any GUID corresponds to a real (non-deleted) member, even if they can't see it. Intentional per spec design — acceptable for this threat model.
+Returns 403 when a member exists but is above the token's permission tier. Token holders can confirm whether any GUID corresponds to a real (non-deleted) member. Intentional per spec design — acceptable for this threat model.
 
 ## Frontend Patterns
 

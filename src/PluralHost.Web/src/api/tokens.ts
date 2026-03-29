@@ -12,8 +12,8 @@ export const tokensApi = {
     }),
 
   revoke: (tokenValue: string, pin: string): Promise<void> =>
-    apiFetch<void>(`/api/tokens/${tokenValue}`, {
-      method: 'DELETE',
+    apiFetch<void>(`/api/tokens/${tokenValue}/revoke`, {
+      method: 'POST',
       body: JSON.stringify({ pin }),
     }),
 }

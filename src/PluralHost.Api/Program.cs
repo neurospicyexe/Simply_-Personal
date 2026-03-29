@@ -1,5 +1,7 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PluralHost.Api.BackgroundServices;
@@ -58,9 +60,25 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<ITokenVisibilityService, TokenVisibilityService>();
 builder.Services.AddScoped<IImportService, ImportService>();
-builder.Services.AddHttpClient<IAvatarDownloadService, AvatarDownloadService>();
+builder.Services.AddHttpClient<IAvatarDownloadService, AvatarDownloadService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddHttpClient<IPluralKitClient, PluralKitClient>();
 builder.Services.AddHostedService<AutoUnfreezeService>();
+
+// Rate limiting — 5 freeze requests per minute per IP (DoS protection on anonymous endpoint)
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("freeze", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 var app = builder.Build();
 
@@ -72,6 +90,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

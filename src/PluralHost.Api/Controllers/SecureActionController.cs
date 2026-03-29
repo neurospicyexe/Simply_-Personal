@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using PluralHost.Api.Data;
 using PluralHost.Api.Dto;
@@ -18,6 +19,8 @@ public class SecureActionController(
     IGatekeeperService gatekeeper) : ControllerBase
 {
     // POST /api/secure/freeze — Anyone can freeze (crisis safety — zero friction)
+    // Rate-limited to 5/min per IP to prevent DoS via repeated freeze calls
+    [EnableRateLimiting("freeze")]
     [AllowAnonymous]
     [HttpPost("freeze")]
     public async Task<IActionResult> FreezeAsync([FromBody] FreezeRequest request)

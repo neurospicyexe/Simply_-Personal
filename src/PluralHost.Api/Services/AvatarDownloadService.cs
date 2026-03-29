@@ -32,7 +32,7 @@ public class AvatarDownloadService(HttpClient http, IConfiguration config) : IAv
         {
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
             if (uri.Scheme != "http" && uri.Scheme != "https") return null;
-            if (IsPrivateAddress(uri)) return null;
+            if (await IsPrivateAddressAsync(uri)) return null;
 
             using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
             if (!response.IsSuccessStatusCode) return null;
@@ -84,18 +84,33 @@ public class AvatarDownloadService(HttpClient http, IConfiguration config) : IAv
         }
     }
 
-    // Returns true if IP is private/loopback/link-local (SSRF protection)
-    private static bool IsPrivateAddress(Uri uri)
+    // Returns true if the URI resolves to a private/loopback/link-local address (SSRF protection).
+    // Resolves hostnames via DNS before checking — prevents DNS rebinding and hostname bypass.
+    private static async Task<bool> IsPrivateAddressAsync(Uri uri)
     {
         var host = uri.Host.ToLowerInvariant();
         if (host == "localhost") return true;
 
-        if (!System.Net.IPAddress.TryParse(host, out var ip))
+        System.Net.IPAddress[] addresses;
+        try
         {
-            // Hostname — allow (public DNS resolves it). Only raw IPs need SSRF checking.
-            return false;
+            // Resolve hostname to IPs first so a public-looking hostname that maps
+            // to a private IP (e.g. 169.254.169.254.xip.io) is caught correctly.
+            if (System.Net.IPAddress.TryParse(host, out var directIp))
+                addresses = [directIp];
+            else
+                addresses = await System.Net.Dns.GetHostAddressesAsync(host);
+        }
+        catch
+        {
+            return true; // DNS failure → treat as unsafe, fail closed
         }
 
+        return addresses.Any(IsPrivateIp);
+    }
+
+    private static bool IsPrivateIp(System.Net.IPAddress ip)
+    {
         var bytes = ip.GetAddressBytes();
         if (bytes.Length != 4) return true; // IPv6 not supported — block, fail closed
 
