@@ -16,7 +16,7 @@ vi.mock('../api/members', () => ({
       isArchived: false, groupIds: [], parentIds: [], avatarPath: undefined, backgroundImagePath: undefined,
       isPinned: false, isUntracked: false,
       preventFrontNotification: false, receiveBoardNotifications: false,
-      createdAt: '', updatedAt: '',
+      createdAt: '', updatedAt: '', extraImages: [],
     }),
     update: vi.fn().mockResolvedValue({
       id: 'm1', name: 'Sage Updated', color: '#b6ff00', pronouns: 'they/them',
@@ -24,7 +24,7 @@ vi.mock('../api/members', () => ({
       isArchived: false, groupIds: [], parentIds: [], avatarPath: undefined, backgroundImagePath: undefined,
       isPinned: false, isUntracked: false,
       preventFrontNotification: false, receiveBoardNotifications: false,
-      createdAt: '', updatedAt: '',
+      createdAt: '', updatedAt: '', extraImages: [],
     }),
     list: vi.fn().mockResolvedValue([]),
   },
@@ -162,6 +162,7 @@ function buildMember(overrides = {}) {
     parentIds: [],
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
+    extraImages: [],
     ...overrides,
   }
 }
