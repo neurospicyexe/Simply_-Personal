@@ -27,18 +27,19 @@ Built as a Simply Plural replacement with "Privacy by Design" and "Crisis Manage
 PluralHost.sln
 src/
   PluralHost.Api/
-    Domain/             # ISoftDeletable, BaseEntity, Member (PrivacyTier), SystemSettings, AccessToken, FrontHistory, Group, BoardMessage, MemberNote, FrontStatus, CustomField, CustomFieldValue, JournalEntry
+    Domain/             # ISoftDeletable, BaseEntity, Member (PrivacyTier), SystemSettings, AccessToken, FrontHistory, Group, BoardMessage, MemberNote, FrontStatus, CustomField, CustomFieldValue, JournalEntry, MemberRelationship
     Data/               # PluralHostContext (EF Core DbContext with global filters)
       Migrations/       # EF Core migration files (committed to repo)
     Services/           # IGhostModeService, IGatekeeperService, IShareTokenService, ITokenVisibilityService, IAuthService, IMemberService
-    Controllers/        # SecureActionController, ShareController, TokensController, MembersController, BoardController, MemberNotesController, FrontStatusController, SpMembersController, SpFrontController, SpGroupsController, MediaController, FieldsController, MemberFieldsController, JournalsController
+    Controllers/        # SecureActionController, ShareController, TokensController, MembersController, BoardController, MemberNotesController, FrontStatusController, SpMembersController, SpFrontController, SpGroupsController, MediaController, FieldsController, MemberFieldsController, JournalsController, MemberRelationshipsController, ImportController
                         # SecureActionController also has GET /api/secure/status + PUT /api/secure/pin
     BackgroundServices/ # AutoUnfreezeService
     Dto/                # NativeDtos.cs, SpDtos.cs
   PluralHost.Web/       # React PWA (Vite + TypeScript, port 5173 in dev)
     src/
-      api/              # apiFetch client + per-domain modules (auth, members, front, groups, notes, board, fields, media, secure)
-      components/       # Avatar, BottomNav, FrontCard, MemberCard, TabBar, CreateMemberSheet, BottomSheet
+      api/              # apiFetch client + per-domain modules (auth, members, front, groups, notes, board, fields, media, secure, relationships, frontStatuses, tokens, journals, buckets, import)
+      components/       # Avatar, BottomNav, FrontCard, MemberCard, TabBar, CreateMemberSheet, BottomSheet, HeatmapStrip, FrontHeatmap
+        SystemMap/      # SystemMap, MemberNode, GroupNode, RelationshipEdge, NewRelationshipSheet (+ CSS modules)
         tabs/           # EssenceTab, SpecsTab, DossierTab, CommsTab, LogsTab, AccessTab (+ CSS modules)
       context/          # AuthContext (isAuthenticated, logout)
       pages/            # LoginPage, FrontPage, MembersPage, MemberDetailPage, HistoryStubPage, SettingsPage
@@ -223,8 +224,18 @@ docker compose down
 - LogsPage: Heatmap as 3rd tab, `useState` → `useSearchParams` deep-link
 - 299 backend / 92 frontend tests passing
 
+**System Map `2026-03-28` — COMPLETE**
+
+- `MemberRelationship` entity — soft-delete + Ghost Mode filter, self-relationship guard, label max 100, FK both sides `NoAction`
+- `MemberRelationshipsController` — GET/POST/PATCH/DELETE `/api/members/relationships`, all `[Authorize]`
+- `@xyflow/react` v12 + `d3-force` installed
+- `MemberNode` / `GroupNode` / `RelationshipEdge` / `NewRelationshipSheet` / `SystemMap` components
+- `SystemMap` — d3-force sync layout, Groups/Relationships/Both mode chips, drag-to-connect via `onConnect`
+- `MembersPage` — 'map' ViewMode added, List/Folder/Map toggle
+- `DossierTab` — Connections section (list, member picker → NewRelationshipSheet, delete with confirm)
+- 309 backend / 107 frontend tests passing
+
 **Next — Future Work:**
-- React Flow mind map (system visualization)
 - Per-alter theming (background, accent color)
 
 **SP UI Alignment (reference: `docs/reference/simply-plural-ui.md`):**
@@ -254,6 +265,8 @@ This means Ghost Mode works automatically on every LINQ query without touching c
 - `FieldsController.GetAllAsync` — owner needs to see soft-deleted field definitions
 - `FieldsController.DeleteAsync` / `MemberFieldsController.UpsertAsync` — must find soft-deleted rows due to unique constraint on `(FieldId, MemberId)` covering deleted rows
 - Tests
+
+**`MemberRelationship` also has Ghost Mode filter** — combined single `HasQueryFilter` (same pattern as `MemberNote`). Relationships return empty when system is frozen.
 
 ### Soft Delete
 All entities inheriting `BaseEntity` have `SoftDelete()` / `Restore()` methods. Both update `UpdatedAt`. The global filter enforces `deleted_at IS NULL` on every query automatically.
@@ -385,6 +398,18 @@ Returns 403 when a member exists but is above the token's permission tier. Token
 - EssenceTab group chips are read-only display using `member.parentIds.includes(group.id)`
 - No "set all groups for one member" endpoint — direction is group → members, not member → groups
 - `Group.memberCount` is computed server-side in the SELECT projection; `Group.members[]` does not exist
+
+### React Flow (SystemMap)
+- Package is `@xyflow/react` (v12) — not the old `reactflow`
+- Custom node types: `Node<Data, 'type'>`, `NodeProps<MyNodeType>`; needs `Handle` + `Position` imports
+- Custom edge types: `BaseEdge` + `EdgeLabelRenderer` + `getStraightPath`; directed edges use `MarkerType.ArrowClosed`
+- d3-force layout runs synchronously: `simulation.stop().tick(300)` inside `useMemo` — stable positions before first render, no animation
+- `useNodesState`/`useEdgesState` return `setNodes`/`setEdges` that must be in `useEffect` dependency arrays
+- `BottomSheet` is a **default export** — `import BottomSheet from '../BottomSheet'` (not named `{ BottomSheet }`)
+- ResizeObserver mock for tests must be a **class constructor**, not `vi.fn()` — React Flow calls `new ResizeObserver(...)`
+- `--legacy-peer-deps` needed for npm install due to `vite-plugin-pwa` peer conflict with Vite 8
+- Test button selectors: `/→ directed/i` not `/directed/i` — "Undirected" also matches the looser pattern
+- `onConnect` handler filters to `member-*` prefixed node IDs to block group-to-group connections
 
 ### Test Fixture Maintenance
 - `npx vitest run` skips TypeScript type-checking — run `npm run build` (tsc -b) to catch fixture type errors after type migrations
