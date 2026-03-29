@@ -108,6 +108,37 @@ export default function EssenceTab({ member, groups }: Props) {
     }
   }
 
+  const bgInputRef = useRef<HTMLInputElement>(null)
+  const [bgUploading, setBgUploading] = useState(false)
+  const [bgUploadError, setBgUploadError] = useState<string | null>(null)
+
+  const handleBgFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const previous = member.backgroundImagePath ?? null
+    setBgUploading(true)
+    setBgUploadError(null)
+    try {
+      const { id } = await mediaApi.upload(file)
+      await membersApi.update(member.id, { backgroundImagePath: id })
+      qc.invalidateQueries({ queryKey: ['member', member.id] })
+    } catch {
+      if (previous) {
+        await membersApi.update(member.id, { backgroundImagePath: previous }).catch(() => {})
+      }
+      setBgUploadError('Upload failed. Please try again.')
+    } finally {
+      setBgUploading(false)
+      if (bgInputRef.current) bgInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveBg = async () => {
+    setBgUploadError(null)
+    await membersApi.update(member.id, { clearBackgroundImage: true })
+    qc.invalidateQueries({ queryKey: ['member', member.id] })
+  }
+
   const startEdit = (field: string, current: string) => {
     setEditField(field)
     setEditValues(v => ({ ...v, [field]: current }))
@@ -121,36 +152,101 @@ export default function EssenceTab({ member, groups }: Props) {
 
   return (
     <div className={styles.tab} role="tabpanel">
-      <div className={styles.avatarSection}>
-        <div className={styles.avatarWrap}>
-          <div
-            className={styles.avatarCircle}
-            style={{ background: member.color ?? '#555' }}
-          >
-            {member.avatarPath
-              ? <img src={`/api/media/${member.avatarPath}`} alt={member.name} className={styles.avatarImg} />
-              : <span className={styles.avatarInitial}>{member.name[0]?.toUpperCase()}</span>
-            }
+      <div className={styles.appearanceSection}>
+        <span className={styles.appearanceLabel}>Appearance</span>
+        <div className={styles.appearanceRow}>
+
+          {/* Avatar */}
+          <div className={styles.avatarWrap}>
+            <div
+              className={styles.avatarCircle}
+              style={{ background: member.color ?? '#555' }}
+            >
+              {member.avatarPath
+                ? <img src={`/api/media/${member.avatarPath}`} alt={member.name} className={styles.avatarImg} />
+                : <span className={styles.avatarInitial}>{member.name[0]?.toUpperCase()}</span>
+              }
+            </div>
+            {uploading && <div className={styles.avatarSpinner} aria-label="Uploading…" />}
+            <button
+              className={styles.avatarPencil}
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Change avatar"
+              disabled={uploading}
+              type="button"
+            >
+              <Pencil size={14} strokeWidth={2.5} />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className={styles.avatarInput}
+              onChange={handleFileChange}
+            />
           </div>
-          {uploading && <div className={styles.avatarSpinner} aria-label="Uploading…" />}
-          <button
-            className={styles.avatarPencil}
-            onClick={() => fileInputRef.current?.click()}
-            aria-label="Change avatar"
-            disabled={uploading}
-            type="button"
-          >
-            <Pencil size={14} strokeWidth={2.5} />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className={styles.avatarInput}
-            onChange={handleFileChange}
-          />
+
+          {/* Background image slot */}
+          <div className={styles.bgImageSlot}>
+            {member.backgroundImagePath ? (
+              <>
+                <img
+                  src={`/api/media/${member.backgroundImagePath}`}
+                  alt="Background"
+                  className={styles.bgThumb}
+                />
+                <button
+                  className={styles.bgRemoveBtn}
+                  onClick={handleRemoveBg}
+                  aria-label="Remove background image"
+                  type="button"
+                  disabled={bgUploading}
+                >
+                  ✕
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className={styles.bgAddBtn}
+                  onClick={() => bgInputRef.current?.click()}
+                  aria-label="Add background image"
+                  type="button"
+                  disabled={bgUploading}
+                >
+                  {bgUploading ? '…' : '+ bg'}
+                </button>
+                <input
+                  ref={bgInputRef}
+                  type="file"
+                  accept="image/*"
+                  className={styles.avatarInput}
+                  onChange={handleBgFileChange}
+                />
+              </>
+            )}
+          </div>
+
+          {/* Color swatch */}
+          <div className={styles.colorRow}>
+            <span
+              className={styles.colorSwatch}
+              style={{ background: member.color ?? '#888' }}
+              aria-label={`Color: ${member.color ?? 'none'}`}
+            />
+            <input
+              type="color"
+              className={styles.colorInput}
+              value={member.color ?? '#888888'}
+              onChange={e => updateMutation.mutate({ color: e.target.value })}
+              aria-label="Pick member color"
+            />
+          </div>
+
         </div>
-        {uploadError && <p className={styles.uploadError} role="alert">{uploadError}</p>}
+
+        {uploadError   && <p className={styles.uploadError} role="alert">{uploadError}</p>}
+        {bgUploadError && <p className={styles.uploadError} role="alert">{bgUploadError}</p>}
       </div>
       <EditableField
         label="Name"
@@ -200,24 +296,6 @@ export default function EssenceTab({ member, groups }: Props) {
         onEditChange={(v) => setEditValues(ev => ({ ...ev, description: v }))}
         multiline
       />
-
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>Color</span>
-        <div className={styles.colorRow}>
-          <span
-            className={styles.colorSwatch}
-            style={{ background: member.color ?? '#888' }}
-            aria-label={`Color: ${member.color ?? 'none'}`}
-          />
-          <input
-            type="color"
-            className={styles.colorInput}
-            value={member.color ?? '#888888'}
-            onChange={e => updateMutation.mutate({ color: e.target.value })}
-            aria-label="Pick member color"
-          />
-        </div>
-      </div>
 
       <div className={styles.field}>
         <span className={styles.fieldLabel}>Groups</span>

@@ -115,6 +115,74 @@
   .chip { transition: none; }
 }
 
+.appearanceSection {
+  padding: 16px 0 8px;
+  border-bottom: 1px solid var(--color-surface);
+}
+
+.appearanceLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.appearanceRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bgImageSlot {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.bgThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bgAddBtn {
+  width: 100%;
+  height: 100%;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: none;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bgRemoveBtn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 .avatarSection {
   display: flex;
   flex-direction: column;
