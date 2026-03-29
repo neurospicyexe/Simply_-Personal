@@ -135,8 +135,12 @@ export default function EssenceTab({ member, groups }: Props) {
 
   const handleRemoveBg = async () => {
     setBgUploadError(null)
-    await membersApi.update(member.id, { clearBackgroundImage: true })
-    qc.invalidateQueries({ queryKey: ['member', member.id] })
+    try {
+      await membersApi.update(member.id, { clearBackgroundImage: true })
+      qc.invalidateQueries({ queryKey: ['member', member.id] })
+    } catch {
+      setBgUploadError('Remove failed. Please try again.')
+    }
   }
 
   const startEdit = (field: string, current: string) => {
