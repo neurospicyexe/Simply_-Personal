@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Personal setup notes (private, not for the public repo)
+docs/my-vps-setup.md
+
 # SQLite database files (generated at runtime)
 *.db
 *.db-shm
