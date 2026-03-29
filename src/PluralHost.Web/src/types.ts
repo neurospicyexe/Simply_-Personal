@@ -19,6 +19,7 @@ export interface Member {
   color?: string
   avatarPath?: string
   backgroundImagePath?: string | null
+  extraImages?: string[]
   description?: string
   bucketId: string
   isArchived: boolean
@@ -49,6 +50,7 @@ export interface MemberUpdatePayload {
   avatarPath?: string
   backgroundImagePath?: string
   clearBackgroundImage?: boolean
+  extraImages?: string[]
   description?: string
   bucketId?: string
   isArchived?: boolean
