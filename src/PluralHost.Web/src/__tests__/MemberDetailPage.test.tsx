@@ -88,6 +88,9 @@ vi.mock('../api/relationships', () => ({
     remove: vi.fn(),
   },
 }))
+vi.mock('../api/media', () => ({
+  mediaApi: { upload: vi.fn().mockResolvedValue({ id: 'uploads/new.jpg' }) },
+}))
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -122,7 +125,7 @@ test('switching to Access tab shows privacy controls', async () => {
   expect(screen.getByText(/privacy/i)).toBeInTheDocument()
 })
 
-test('all six tabs are rendered', async () => {
+test('all seven tabs are rendered', async () => {
   render(<MemberDetailPage />, { wrapper: Wrapper })
   await screen.findByRole('heading', { name: 'Sage' })
   expect(screen.getByRole('tab', { name: /essence/i })).toBeInTheDocument()
@@ -131,6 +134,14 @@ test('all six tabs are rendered', async () => {
   expect(screen.getByRole('tab', { name: /comms/i })).toBeInTheDocument()
   expect(screen.getByRole('tab', { name: /logs/i })).toBeInTheDocument()
   expect(screen.getByRole('tab', { name: /access/i })).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: /photos/i })).toBeInTheDocument()
+})
+
+test('switching to Photos tab shows empty state', async () => {
+  render(<MemberDetailPage />, { wrapper: Wrapper })
+  await screen.findByRole('heading', { name: 'Sage' })
+  await userEvent.click(screen.getByRole('tab', { name: /photos/i }))
+  expect(screen.getByText(/no photos yet/i)).toBeInTheDocument()
 })
 
 function buildMember(overrides = {}) {

@@ -14,6 +14,7 @@ import DossierTab from '../components/tabs/DossierTab'
 import CommsTab from '../components/tabs/CommsTab'
 import LogsTab from '../components/tabs/LogsTab'
 import AccessTab from '../components/tabs/AccessTab'
+import PhotosTab from '../components/tabs/PhotosTab'
 import styles from './MemberDetailPage.module.css'
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -32,6 +33,7 @@ const TABS = [
   { id: 'comms',   label: 'Comms'   },
   { id: 'logs',    label: 'Logs'    },
   { id: 'access',  label: 'Access'  },
+  { id: 'photos',  label: 'Photos'  },
 ] as const
 
 type TabId = typeof TABS[number]['id']
@@ -114,6 +116,7 @@ export default function MemberDetailPage() {
         {activeTab === 'comms'    && <CommsTab    member={member} />}
         {activeTab === 'logs'     && <LogsTab     member={member} />}
         {activeTab === 'access'   && <AccessTab   member={member} />}
+        {activeTab === 'photos'   && <PhotosTab   member={member} />}
       </div>
     </div>
   )
