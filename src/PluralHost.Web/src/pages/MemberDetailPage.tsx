@@ -86,7 +86,7 @@ export default function MemberDetailPage() {
           : { background: `linear-gradient(135deg, ${hexToRgba(memberColor, 0.27)} 0%, ${hexToRgba(memberColor, 0.13)} 50%, transparent 100%)` }
         }
       >
-        <div className={styles.heroOverlay} />
+        {hasImage && <div className={styles.heroOverlay} />}
         <div className={styles.heroContent}>
           <Avatar
             name={member.name}

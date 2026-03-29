@@ -183,14 +183,6 @@
   line-height: 1;
 }
 
-.avatarSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px 0 8px;
-  gap: 8px;
-}
-
 .avatarWrap {
   position: relative;
   width: 80px;
