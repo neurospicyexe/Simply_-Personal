@@ -1,0 +1,132 @@
+<h2>Full Design Preview</h2>
+<p class="subtitle">Two changes: Statuses tab on SystemPage + field def actions on SpecsTab</p>
+
+<div class="section">
+  <h3>1 — SystemPage: new Statuses tab</h3>
+
+  <div class="mockup">
+    <div class="mockup-header">SystemPage → Statuses tab</div>
+    <div class="mockup-body" style="background:#0d0d0d;padding:16px;border-radius:0 0 8px 8px;font-size:13px;font-family:sans-serif">
+
+      <!-- Tab bar -->
+      <div style="display:flex;gap:0;border-bottom:1px solid #222;margin-bottom:16px">
+        <div style="padding:8px 14px;color:#555;font-size:12px;font-weight:600">Groups</div>
+        <div style="padding:8px 14px;color:#555;font-size:12px;font-weight:600">Buckets</div>
+        <div style="padding:8px 14px;color:#555;font-size:12px;font-weight:600">Tokens</div>
+        <div style="padding:8px 14px;color:#b6ff00;font-size:12px;font-weight:600;border-bottom:2px solid #b6ff00;margin-bottom:-1px">Statuses</div>
+      </div>
+
+      <!-- Header row -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="color:#666;font-size:11px;text-transform:uppercase;letter-spacing:0.8px">Front Statuses</span>
+        <div style="width:26px;height:26px;border-radius:50%;background:#b6ff00;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:15px;cursor:pointer">+</div>
+      </div>
+
+      <!-- Status list -->
+      <div style="display:flex;flex-direction:column;gap:6px">
+
+        <!-- Visible default -->
+        <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#7c3aed;flex-shrink:0"></div>
+          <span style="color:#e8e8e8;flex:1">Co-Con</span>
+          <span style="background:#1f1f1f;border:1px solid #333;color:#666;font-size:10px;padding:2px 6px;border-radius:4px;margin-right:4px">default</span>
+          <span style="color:#555;font-size:16px;cursor:pointer;padding:2px 4px">✏️</span>
+        </div>
+
+        <!-- Hidden default — dimmed + struck -->
+        <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;opacity:0.38">
+          <div style="width:10px;height:10px;border-radius:50%;background:#0ea5e9;flex-shrink:0"></div>
+          <span style="color:#888;flex:1;text-decoration:line-through">Blending</span>
+          <span style="background:#1f1f1f;border:1px solid #333;color:#555;font-size:10px;padding:2px 6px;border-radius:4px;margin-right:4px">default · hidden</span>
+          <span style="color:#444;font-size:16px;cursor:pointer;padding:2px 4px">✏️</span>
+        </div>
+
+        <!-- Visible default 2 -->
+        <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;flex-shrink:0"></div>
+          <span style="color:#e8e8e8;flex:1">Switching</span>
+          <span style="background:#1f1f1f;border:1px solid #333;color:#666;font-size:10px;padding:2px 6px;border-radius:4px;margin-right:4px">default</span>
+          <span style="color:#555;font-size:16px;cursor:pointer;padding:2px 4px">✏️</span>
+        </div>
+
+        <!-- Custom visible -->
+        <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#f87171;flex-shrink:0"></div>
+          <span style="color:#e8e8e8;flex:1">My Custom Status</span>
+          <span style="color:#555;font-size:16px;cursor:pointer;padding:2px 4px">✏️</span>
+          <span style="color:#f87171;font-size:14px;cursor:pointer;padding:2px 4px;opacity:0.7">🗑</span>
+        </div>
+
+      </div>
+
+      <!-- Edit sheet (shown below as context) -->
+      <div style="margin-top:20px;background:#181818;border:1px solid #333;border-radius:10px;padding:14px">
+        <div style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Edit Status sheet (opens on ✏️)</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="width:28px;height:28px;border-radius:50%;background:#7c3aed;flex-shrink:0"></div>
+            <div style="flex:1;background:#222;border-radius:6px;padding:8px 10px;color:#e8e8e8;font-size:13px">Co-Con</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="color:#aaa;font-size:13px">Hidden</span>
+            <div style="width:36px;height:20px;background:#333;border-radius:10px;position:relative">
+              <div style="width:16px;height:16px;background:#666;border-radius:50%;position:absolute;top:2px;left:2px"></div>
+            </div>
+          </div>
+          <div style="color:#666;font-size:11px;font-style:italic">Default statuses cannot be deleted — only hidden</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2 — SpecsTab: field def ••• menu</h3>
+
+  <div class="mockup">
+    <div class="mockup-header">MemberDetail → Specs tab</div>
+    <div class="mockup-body" style="background:#0d0d0d;padding:16px;border-radius:0 0 8px 8px;font-size:13px;font-family:sans-serif">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+
+        <!-- Field def row with value + menu -->
+        <div style="background:#1a1a1a;border-radius:8px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #222">
+            <span style="color:#888;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;flex:1">Role</span>
+            <span style="color:#b6ff00;font-size:18px;cursor:pointer;line-height:1;padding:0 2px;letter-spacing:1px">···</span>
+          </div>
+          <div style="padding:8px 12px;color:#e8e8e8;cursor:pointer;font-size:13px">Protector</div>
+        </div>
+
+        <!-- Field def row — no value yet -->
+        <div style="background:#1a1a1a;border-radius:8px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #222">
+            <span style="color:#888;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;flex:1">Age</span>
+            <span style="color:#b6ff00;font-size:18px;cursor:pointer;line-height:1;padding:0 2px;letter-spacing:1px">···</span>
+          </div>
+          <div style="padding:8px 12px;color:#555;cursor:pointer;font-size:13px;font-style:italic">Add value…</div>
+        </div>
+
+      </div>
+
+      <!-- ••• popover -->
+      <div style="margin-top:20px;background:#181818;border:1px solid #333;border-radius:10px;padding:14px">
+        <div style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">··· menu (opens on tap)</div>
+        <div style="display:flex;flex-direction:column;gap:0;background:#222;border-radius:8px;overflow:hidden">
+          <div style="padding:12px 14px;color:#e8e8e8;border-bottom:1px solid #2a2a2a;cursor:pointer;display:flex;align-items:center;gap:10px">
+            <span>✏️</span><span>Edit definition</span>
+            <span style="color:#555;font-size:11px;margin-left:auto">rename label, change type</span>
+          </div>
+          <div style="padding:12px 14px;color:#f87171;cursor:pointer;display:flex;align-items:center;gap:10px">
+            <span>🗑</span><span>Delete definition</span>
+            <span style="color:#555;font-size:11px;margin-left:auto">removes from all members</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this match what you had in mind? Any changes?</p>

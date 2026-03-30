@@ -1,5 +1,7 @@
 # Journal UI Implementation Plan
 
+**Status: COMPLETE (2026-03-29)**
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the History stub with a "Logs" page containing a Journal tab (full CRUD with markdown rendering) and a Front History tab (read-only system-wide view).

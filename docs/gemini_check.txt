@@ -1,0 +1,70 @@
+Security & Code Review Report: PluralHost
+Overview: A thorough code-level audit was performed on the PluralHost backend application. The review focused on identifying security vulnerabilities, logic bugs, architectural missed wires, and general best-practice violations.
+
+The audit identified two high-severity security vulnerabilities, along with several structural API design issues that should be addressed prior to finalizing the release.
+
+1. High Severity: Unauthenticated Denial of Service (DoS)
+Location: SecureActionController.cs
+Endpoint: POST /api/secure/freeze
+
+Issue:
+The FreezeAsync method is decorated with the [AllowAnonymous] attribute, meaning it does not require authentication or authorization. Because it invokes the "Ghost Mode" freeze functionality without frictionless checks to ensure the initiator is the application owner, an unauthenticated attacker could repeatedly query this endpoint to perpetually lock down the instance, essentially causing a persistent Denial of Service.
+
+csharp
+// POST /api/secure/freeze — Anyone can freeze (crisis safety — zero friction)
+[AllowAnonymous]
+[HttpPost("freeze")]
+public async Task<IActionResult> FreezeAsync([FromBody] FreezeRequest request)
+Recommendation:
+While the concept of "crisis safety — zero friction" aims to allow rapid lockdown, leaving it entirely unauthenticated exposes the service to malicious actors.
+
+Implement an unauthenticated but hard-to-guess mechanism (e.g., a pre-shared secret query parameter or a specific "panic key" stored client-side) to trigger the freeze.
+Alternatively, require standard authorization but ensure the frontend has a rapidly accessible "panic button" that uses the existing JWT.
+2. High Severity: SSRF Bypass in Avatar URL Downloading
+Location: AvatarDownloadService.cs
+Method: IsPrivateAddress() & DownloadAvatarAsync()
+
+Issue:
+The service attempts to validate avatar URLs to prevent Server-Side Request Forgery (SSRF) using IsPrivateAddress(). However, the implementation is critically flawed in two different ways:
+
+DNS Rebinding & Hostname Bypass: The code performs System.Net.IPAddress.TryParse(host, out var ip). If the host is "localhost", it's blocked. If it's an IP address, it proceeds to check the bytes to see if it belongs to private blocks (e.g. 10.x.x.x). However, if an attacker provides a hostname (e.g., http://localtest.me or an attacker-controlled domain like http://169.254.169.254.xip.io), TryParse() fails, and the function returns false, erroneously marking the address as "public/safe". The HttpClient then subsequently queries the attacker-provided domain, which cleanly resolves to restricted local networks.
+Open Redirect Bypass: HttpClient uses the default HttpClientHandler, which automatically follows HTTP 30X redirects. An attacker could host a legitimate-looking server on the public internet, pass the SSRF check, and respond with an HTTP 302 Found redirecting the application's daemon to http://127.0.0.1/admin-panel. The application will follow the redirect unaware, bypassing the IsPrivateAddress check entirely.
+Recommendation:
+Set AllowAutoRedirect = false on the HttpClientHandler configuration to stop it from silently following redirects.
+Resolve the DNS hostname to an IP address before allowing the download request, then pass the resolved IP through the IsPrivateAddress check.
+3. Medium Severity: Information Disclosure (UUID Enumeration)
+Location: ShareController.cs
+Endpoint: POST /share/{token}/board/{memberId}
+
+Issue:
+The API endpoint evaluates if a targeted memberId exists before running the visibility.CanPostToBoard() checks. If a member does not exist (or was deleted), the API returns 404 Not Found. However, if the member does exist but is in the Private privacy bucket or the requesting token has a mismatched sort order, the handler returns 403 Forbidden.
+
+Since this endpoint is [AllowAnonymous] (technically constrained only by having a valid token), an attacker can brute-force or enumerate GUIDs and observe the difference in status codes—404 vs 403—to map out the exact internal identities of private, hidden members.
+
+Recommendation:
+To align with the developer notes ("don't leak existence"), the controller must return 404 Not Found for any entity that the user shouldn't be able to query. Do not return 403 Forbidden if it implies the member exists.
+
+4. Medium Severity: Improper Protocol Usage (HTTP DELETE with Request Body)
+Location: TokensController.cs
+Endpoint: DELETE /api/tokens/{tokenValue}
+
+Issue:
+The RevokeAsync method handles DELETE requests but expects the body to contain a [FromBody][Required] PinRequest. According to the HTTP/1.1 specification (RFC 7231) and modern HTTP patterns, a payload within a DELETE request has no defined semantics. Many CDNs, transparent proxies, WAFs, and client libraries (like specific versions of fetch() or older browsers) will drop the request body entirely before it even reaches Kestrel. In production, this would silently corrupt token revocation requests for select clients.
+
+Recommendation:
+Refactor the endpoint. If you need to transmit a payload like a Pin alongside a destructive action, usually it is better to model it as a POST (e.g., POST /api/tokens/{tokenValue}/revoke with a body) or transmit the PIN using a custom HTTP Header (X-Gatekeeper-Pin) rather than utilizing the body of an HTTP DELETE.
+
+5. Low Severity / Missed Wire: Hardcoded CORS Origins
+Location: Program.cs
+Line: 22
+
+Issue:
+The CORS configuration explicitly sets .WithOrigins("http://localhost:5173"). While acceptable for local development via Vite, deploying the backend to a cloud provider and changing domains will inherently block all frontend API calls.
+
+Recommendation:
+Pull the allowed CORS origins dynamically from the appsettings.json configuration block (e.g., builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()), allowing flexible deployment.
+
+6. General Code Quality / Defensive Programming Notes
+Password Validation Weakness: AuthController.cs only asserts that passwords Length >= 8. There are no complexity requirements (letters, numbers, special characters), nor are passwords checked against common dictionary lists.
+Tokens Lack Client-Side Revocation Mechanisms: Because LoginAsync directly returns a signed, 24-hour expiration JWT in an HttpOnly cookie without saving session information, the POST /api/auth/logout endpoint merely removes the cookie locally. If the cookie is intercepted, the attacker wields total control until it organically expires; the server is stateless and lacks a JWT blacklist to enforce pre-expiration revocation.
+Summary Statement: Fixing the unauthenticated freeze DoS, rectifying the SSRF DNS validation bypass, and moving the DELETE body to a POST or a Header are paramount before releasing to a live environment.

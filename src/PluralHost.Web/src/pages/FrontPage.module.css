@@ -1,5 +1,6 @@
 .page {
   padding: 16px;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   max-width: 600px;
   margin: 0 auto;
 }

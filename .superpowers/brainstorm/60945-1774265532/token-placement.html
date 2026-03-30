@@ -1,0 +1,63 @@
+<h2>Where should share token management live?</h2>
+<p class="subtitle">Tokens control who can view your system via a share link. Where should you create and manage them?</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#111;border-radius:6px;font-size:12px;font-family:monospace">
+      <div style="color:#b6ff00;margin-bottom:8px;font-weight:700">⚙ System Page</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="background:#222;border-radius:4px;padding:4px 8px;color:#aaa">Groups</div>
+        <div style="background:#222;border-radius:4px;padding:4px 8px;color:#aaa">Buckets</div>
+        <div style="background:#b6ff00;border-radius:4px;padding:4px 8px;color:#000;font-weight:700">Tokens ←</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:4px;padding:8px;color:#888">
+        <div style="color:#ccc;margin-bottom:4px">📎 Friend Link</div>
+        <div style="color:#555;font-size:11px">expires never · Friend tier</div>
+        <div style="color:#ccc;margin-top:6px">📎 Public Link</div>
+        <div style="color:#555;font-size:11px">expires Jan 2027 · Public tier</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — System Page (new tab)</h3>
+      <p>Add a "Tokens" tab alongside Groups and Buckets. All tokens in one place, sortable, full management.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#111;border-radius:6px;font-size:12px;font-family:monospace">
+      <div style="color:#b6ff00;margin-bottom:8px;font-weight:700">◎ Bucket Sheet — Friend</div>
+      <div style="color:#888;margin-bottom:6px">Members: Alex, Sam (+3)</div>
+      <div style="background:#1a1a1a;border-radius:4px;padding:8px">
+        <div style="color:#aaa;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Share Links for this bucket</div>
+        <div style="color:#ccc;font-size:11px;margin-bottom:4px">📎 Friend Link — copy</div>
+        <div style="color:#555;font-size:10px">+ New link</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Inside BucketSheet only</h3>
+      <p>Each bucket sheet shows tokens scoped to that bucket. Create links directly from the bucket you're configuring.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#111;border-radius:6px;font-size:12px;font-family:monospace">
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <div style="flex:1;background:#1a1a1a;border-radius:4px;padding:8px">
+          <div style="color:#b6ff00;font-size:11px;margin-bottom:4px">System → Tokens tab</div>
+          <div style="color:#888;font-size:10px">All 3 tokens listed</div>
+          <div style="color:#555;font-size:10px">+ create new</div>
+        </div>
+        <div style="flex:1;background:#1a1a1a;border-radius:4px;padding:8px">
+          <div style="color:#b6ff00;font-size:11px;margin-bottom:4px">BucketSheet</div>
+          <div style="color:#888;font-size:10px">2 links for Friend</div>
+          <div style="color:#555;font-size:10px">tap to manage →</div>
+        </div>
+      </div>
+      <div style="color:#555;font-size:10px;text-align:center">both surfaces, linked</div>
+    </div>
+    <div class="card-body">
+      <h3>C — Both (recommended)</h3>
+      <p>System page for the full token list + create. BucketSheet shows a read-only count/preview with a link to the Tokens tab. No duplication of create/edit UI.</p>
+    </div>
+  </div>
+</div>

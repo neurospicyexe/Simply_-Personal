@@ -1,0 +1,124 @@
+<style>
+  .previews { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+  .preview-card {
+    border: 2px solid #2a2a2a;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .preview-card:hover { border-color: #555; }
+  .preview-card.selected { border-color: #b6ff00; box-shadow: 0 0 0 1px #b6ff00; }
+  .preview-label {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: #1a1a1a;
+    color: #888;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .preview-label span { color: #f2f2f2; }
+  .preview-body { padding: 12px 16px; background: #121212; }
+  .preview-desc { padding: 8px 16px 12px; background: #1a1a1a; font-size: 0.83rem; color: #aaa; }
+
+  /* SUBTLE: color only on avatar ring */
+  .s-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .s-avatar { width: 44px; height: 44px; border-radius: 50%; background: #2a2a2a; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; color: #ff4db8; border: 2px solid #ff4db8; }
+  .s-name { font-size: 1rem; font-weight: 600; color: #f2f2f2; }
+  .s-pro { font-size: 0.78rem; color: #555; }
+  .s-timer { font-size: 1.1rem; font-weight: 700; color: #00d4ff; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  /* MEDIUM: top border + avatar fill */
+  .m-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; position: relative; }
+  .m-card-bar { height: 3px; background: linear-gradient(90deg, #ff4db8 0%, #b400ff 100%); }
+  .m-card-inner { padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .m-avatar { width: 44px; height: 44px; border-radius: 50%; background: #ff4db8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; color: #121212; }
+  .m-name { font-size: 1rem; font-weight: 600; color: #f2f2f2; }
+  .m-pro { font-size: 0.78rem; color: #555; }
+  .m-timer { font-size: 1.1rem; font-weight: 700; color: #ff4db8; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .m-tags { display: flex; gap: 6px; padding: 0 16px 14px; }
+  .m-tag { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; background: rgba(255,77,184,0.12); color: #ff4db8; border: 1px solid rgba(255,77,184,0.25); }
+
+  /* BOLD: card background tinted by member color */
+  .b-card {
+    background: linear-gradient(135deg, rgba(255,77,184,0.12) 0%, #161616 60%);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255,77,184,0.2);
+    position: relative;
+  }
+  .b-card-bar { height: 3px; background: #ff4db8; }
+  .b-card-inner { padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .b-avatar { width: 44px; height: 44px; border-radius: 50%; background: #ff4db8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; color: #121212; box-shadow: 0 0 14px rgba(255,77,184,0.4); }
+  .b-name { font-size: 1rem; font-weight: 700; color: #f2f2f2; }
+  .b-pro { font-size: 0.78rem; color: #888; }
+  .b-timer { font-size: 1.2rem; font-weight: 800; color: #ff4db8; margin-left: auto; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .b-tags { display: flex; gap: 6px; padding: 0 16px 14px; }
+  .b-tag { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; background: rgba(255,77,184,0.15); color: #ff4db8; border: 1px solid rgba(255,77,184,0.3); }
+
+  .two-up { display: flex; gap: 10px; }
+  .two-up .s-card, .two-up .m-card, .two-up .b-card { flex: 1; }
+  .mini-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #444; margin-bottom: 6px; font-weight: 700; }
+</style>
+
+<h2>How hard does member color hit?</h2>
+<p class="subtitle">These all use the same pink member — a lime or cyan member would look different. How much should their color own the card?</p>
+
+<div class="previews">
+
+  <div class="preview-card" data-choice="subtle" onclick="toggleSelect(this)">
+    <div class="preview-label">A &nbsp;·&nbsp; <span>Subtle — color on avatar ring only</span></div>
+    <div class="preview-body">
+      <div class="s-card">
+        <div class="s-avatar">R</div>
+        <div>
+          <div class="s-name">Riven</div>
+          <div class="s-pro">she/her</div>
+        </div>
+        <div class="s-timer">2:14</div>
+      </div>
+    </div>
+    <div class="preview-desc">Card stays flat dark surface. Member color only appears as the avatar border and text initial. Clean, restrained — won't feel chaotic with 6+ fronters.</div>
+  </div>
+
+  <div class="preview-card" data-choice="medium" onclick="toggleSelect(this)">
+    <div class="preview-label">B &nbsp;·&nbsp; <span>Medium — filled avatar + accent bar + tinted tags</span></div>
+    <div class="preview-body">
+      <div class="m-card">
+        <div class="m-card-bar"></div>
+        <div class="m-card-inner">
+          <div class="m-avatar">R</div>
+          <div>
+            <div class="m-name">Riven</div>
+            <div class="m-pro">she/her</div>
+          </div>
+          <div class="m-timer">2:14</div>
+        </div>
+        <div class="m-tags"><span class="m-tag">Co-fronting</span><span class="m-tag">Protective</span></div>
+      </div>
+    </div>
+    <div class="preview-desc">Avatar filled with member color, thin gradient bar at top of card, timer and tags tinted to match. Card background stays dark. Color is present but not overwhelming.</div>
+  </div>
+
+  <div class="preview-card" data-choice="bold" onclick="toggleSelect(this)">
+    <div class="preview-label">C &nbsp;·&nbsp; <span>Bold — tinted card background + glow on avatar</span></div>
+    <div class="preview-body">
+      <div class="b-card">
+        <div class="b-card-bar"></div>
+        <div class="b-card-inner">
+          <div class="b-avatar">R</div>
+          <div>
+            <div class="b-name">Riven</div>
+            <div class="b-pro">she/her</div>
+          </div>
+          <div class="b-timer">2:14</div>
+        </div>
+        <div class="b-tags"><span class="b-tag">Co-fronting</span><span class="b-tag">Protective</span></div>
+      </div>
+    </div>
+    <div class="preview-desc">Card background gets a color gradient bleed, avatar glows, border is tinted. Each card feels like it belongs to that alter. Most expressive — can feel busy with multiple cards.</div>
+  </div>
+
+</div>

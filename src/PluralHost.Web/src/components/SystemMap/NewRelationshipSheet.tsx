@@ -103,7 +103,7 @@ export function NewRelationshipSheet({ isOpen, fromMember, toMember, onClose }: 
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button
-            onClick={() => mutate()}
+            onClick={() => { reset(); mutate(); }}
             disabled={!label.trim() || isPending}
             style={{
               flex: 1,

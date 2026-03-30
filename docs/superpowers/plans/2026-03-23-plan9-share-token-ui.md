@@ -1,5 +1,7 @@
 # Share Token UI Implementation Plan
 
+**Status: COMPLETE (2026-03-29)**
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a full-featured share token management UI (create, copy, revoke) plus fix the HIGH-severity Gatekeeper PIN query-string security issue.

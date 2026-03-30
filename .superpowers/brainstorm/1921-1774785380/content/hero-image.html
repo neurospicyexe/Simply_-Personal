@@ -1,0 +1,99 @@
+<h2>Hero area — when a background image is set</h2>
+<p class="subtitle">member.color tint is always the fallback. These show the image variants.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="border-radius:8px;overflow:hidden;font-size:12px">
+        <div style="height:90px;position:relative;background:linear-gradient(135deg,#2a1a3e,#1a2a1a);overflow:hidden">
+          <!-- Simulated photo bg -->
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,#1a2a3a 0px,#2a1a3a 20px,#1a3a2a 40px);opacity:0.6"></div>
+          <!-- Dark overlay for readability -->
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.2) 100%)"></div>
+          <!-- Content -->
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 12px;display:flex;align-items:flex-end;gap:8px">
+            <div style="width:40px;height:40px;border-radius:50%;background:#b6ff00;border:2px solid rgba(255,255,255,0.4);flex-shrink:0"></div>
+            <div>
+              <div style="color:#fff;font-weight:700;font-size:13px;text-shadow:0 1px 6px #000a">Alter Name</div>
+              <div style="color:#ffffffaa;font-size:10px">they/them</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;border-bottom:1px solid #2a2a2a;background:#1a1a1a">
+          <div style="padding:6px 10px;color:#b6ff00;border-bottom:2px solid #b6ff00;font-size:10px">Essence</div>
+          <div style="padding:6px 10px;color:#555;font-size:10px">Specs</div>
+          <div style="padding:6px 10px;color:#555;font-size:10px">Dossier</div>
+        </div>
+        <div style="background:linear-gradient(180deg,#b6ff0008 0%,#121212 40%);padding:10px;color:#666;font-size:10px">
+          <div style="background:#1e1e1e;border-radius:4px;padding:8px;margin-bottom:5px">bio...</div>
+          <div style="background:#1e1e1e;border-radius:4px;padding:8px">pronouns...</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Full bleed hero</h3>
+      <p>Image fills the entire hero strip with a dark gradient overlay for text. Most cinematic.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="border-radius:8px;overflow:hidden;font-size:12px">
+        <!-- Color strip header, image as banner below avatar -->
+        <div style="height:90px;background:linear-gradient(135deg,#b6ff0033,#b6ff0011);border-bottom:2px solid #b6ff00;display:flex;align-items:flex-end;padding:8px 12px;gap:8px;position:relative">
+          <!-- Small banner strip -->
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,#1a2a3a 0px,#2a1a3a 20px,#1a3a2a 40px);opacity:0.25"></div>
+          <div style="width:40px;height:40px;border-radius:50%;background:#b6ff00;border:2px solid #b6ff00;flex-shrink:0;position:relative;z-index:1"></div>
+          <div style="position:relative;z-index:1">
+            <div style="color:#b6ff00;font-weight:700;font-size:13px">Alter Name</div>
+            <div style="color:#888;font-size:10px">they/them</div>
+          </div>
+        </div>
+        <div style="display:flex;border-bottom:1px solid #2a2a2a;background:#1a1a1a">
+          <div style="padding:6px 10px;color:#b6ff00;border-bottom:2px solid #b6ff00;font-size:10px">Essence</div>
+          <div style="padding:6px 10px;color:#555;font-size:10px">Specs</div>
+        </div>
+        <div style="background:linear-gradient(180deg,#b6ff0008 0%,#121212 40%);padding:10px;color:#666;font-size:10px">
+          <div style="background:#1e1e1e;border-radius:4px;padding:8px;margin-bottom:5px">bio...</div>
+          <div style="background:#1e1e1e;border-radius:4px;padding:8px">pronouns...</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Tinted hero, image as texture</h3>
+      <p>Image shows at low opacity as a texture behind the color tint. Subtler — color stays dominant.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="border-radius:8px;overflow:hidden;font-size:12px">
+        <!-- Wide banner above avatar row -->
+        <div style="height:50px;background:repeating-linear-gradient(45deg,#1a2a3a 0px,#2a1a3a 20px,#1a3a2a 40px);position:relative">
+          <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(0,0,0,0.5))"></div>
+        </div>
+        <!-- Avatar row overlapping the banner -->
+        <div style="background:#1a1a1a;border-bottom:2px solid #b6ff00;padding:6px 12px;display:flex;align-items:center;gap:8px;margin-top:-16px;position:relative">
+          <div style="width:40px;height:40px;border-radius:50%;background:#b6ff00;border:2px solid #1a1a1a;flex-shrink:0"></div>
+          <div>
+            <div style="color:#b6ff00;font-weight:700;font-size:13px">Alter Name</div>
+            <div style="color:#888;font-size:10px">they/them</div>
+          </div>
+        </div>
+        <div style="display:flex;border-bottom:1px solid #2a2a2a;background:#1a1a1a">
+          <div style="padding:6px 10px;color:#b6ff00;border-bottom:2px solid #b6ff00;font-size:10px">Essence</div>
+          <div style="padding:6px 10px;color:#555;font-size:10px">Specs</div>
+        </div>
+        <div style="background:linear-gradient(180deg,#b6ff0008 0%,#121212 40%);padding:10px;color:#666;font-size:10px">
+          <div style="background:#1e1e1e;border-radius:4px;padding:8px;margin-bottom:5px">bio...</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Banner + floating avatar</h3>
+      <p>Dedicated image banner above the name row. Avatar overlaps the banner edge. Like a social profile header.</p>
+    </div>
+  </div>
+
+</div>

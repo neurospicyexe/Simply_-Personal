@@ -1,0 +1,133 @@
+<h2>Tokens tab — System page</h2>
+<p class="subtitle">Does this layout feel right? Click either panel to select it, or tell me what to change.</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Token List (System → Tokens tab)</div>
+    <div class="mockup-body" style="font-size:12px;font-family:monospace">
+
+      <!-- Tab bar -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:8px">
+        <div style="color:#888;padding:4px 8px">Groups</div>
+        <div style="color:#888;padding:4px 8px">Buckets</div>
+        <div style="color:#b6ff00;padding:4px 8px;border-bottom:2px solid #b6ff00;margin-bottom:-9px">Tokens</div>
+      </div>
+
+      <!-- Header row -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="color:#ccc;font-weight:700;font-size:13px">Share Links</div>
+        <div style="background:#b6ff00;color:#000;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700">+ New</div>
+      </div>
+
+      <!-- Token rows -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+
+        <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;border:1px solid #2a2a2a">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="color:#ccc;font-weight:600">Friend Link</div>
+              <div style="display:flex;gap:6px;margin-top:3px;align-items:center">
+                <div style="background:#333;border-radius:3px;padding:1px 5px;color:#b6ff00;font-size:10px">Friend</div>
+                <div style="color:#555;font-size:10px">no expiry</div>
+                <div style="color:#555;font-size:10px">· board ✓</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="color:#b6ff00;font-size:11px;cursor:pointer">📋 copy</div>
+              <div style="color:#f87171;font-size:11px;cursor:pointer">revoke</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;border:1px solid #2a2a2a">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="color:#ccc;font-weight:600">Public Widget</div>
+              <div style="display:flex;gap:6px;margin-top:3px;align-items:center">
+                <div style="background:#333;border-radius:3px;padding:1px 5px;color:#aaa;font-size:10px">Front Only</div>
+                <div style="color:#555;font-size:10px">expires Jan 2027</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="color:#b6ff00;font-size:11px">📋 copy</div>
+              <div style="color:#f87171;font-size:11px">revoke</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#111;border-radius:8px;padding:10px 12px;border:1px solid #222;opacity:0.5">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="color:#666;font-weight:600;text-decoration:line-through">Old Link</div>
+              <div style="display:flex;gap:6px;margin-top:3px">
+                <div style="background:#1a1a1a;border-radius:3px;padding:1px 5px;color:#555;font-size:10px">Public</div>
+                <div style="color:#444;font-size:10px">revoked</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Create Token Sheet (bottom sheet)</div>
+    <div class="mockup-body" style="font-size:12px;font-family:monospace">
+
+      <div style="color:#ccc;font-weight:700;font-size:13px;margin-bottom:14px">New Share Link</div>
+
+      <!-- Label -->
+      <div style="margin-bottom:12px">
+        <div style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Label</div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:7px 10px;color:#666">Friend Link</div>
+      </div>
+
+      <!-- Type selector -->
+      <div style="margin-bottom:12px">
+        <div style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Access Level</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:6px 10px;color:#888">
+            👁 Front Only — who's fronting, no member list
+          </div>
+          <div style="background:#1a1a1a;border:2px solid #b6ff00;border-radius:6px;padding:6px 10px;color:#ccc">
+            ◎ Friend — Public + Friend members ✓
+          </div>
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:6px 10px;color:#888">
+            ◎ Public — Public members only
+          </div>
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:6px 10px;color:#888">
+            ◎ Trusted — Public + Friend + Trusted
+          </div>
+        </div>
+      </div>
+
+      <!-- Expiry -->
+      <div style="margin-bottom:12px">
+        <div style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Expires</div>
+        <div style="display:flex;gap:6px">
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:5px 8px;color:#888">7d</div>
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:5px 8px;color:#888">30d</div>
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:5px 8px;color:#888">90d</div>
+          <div style="background:#1a1a1a;border:2px solid #b6ff00;border-radius:6px;padding:5px 8px;color:#b6ff00">Never ✓</div>
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:5px 8px;color:#888">📅</div>
+        </div>
+      </div>
+
+      <!-- Board posting toggle -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;background:#1a1a1a;border-radius:6px;padding:8px 10px">
+        <div style="width:28px;height:16px;background:#333;border-radius:8px;position:relative">
+          <div style="width:12px;height:12px;background:#555;border-radius:50%;position:absolute;top:2px;left:2px"></div>
+        </div>
+        <div style="color:#888;font-size:12px">Allow board posting</div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <div style="border:1px solid #333;border-radius:6px;padding:7px 14px;color:#888">Cancel</div>
+        <div style="background:#b6ff00;border-radius:6px;padding:7px 16px;color:#000;font-weight:700">Create</div>
+      </div>
+
+    </div>
+  </div>
+</div>

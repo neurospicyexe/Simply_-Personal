@@ -1,0 +1,136 @@
+<style>
+  .previews { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+  .preview-card {
+    border: 2px solid #2a2a2a;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .preview-card:hover { border-color: #555; }
+  .preview-card.selected { border-color: #b6ff00; box-shadow: 0 0 0 1px #b6ff00; }
+  .preview-label {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: #1a1a1a;
+    color: #888;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .preview-label span { color: #f2f2f2; }
+  .preview-body { padding: 14px 16px; background: #121212; }
+  .preview-desc { padding: 8px 16px 12px; background: #1a1a1a; font-size: 0.83rem; color: #aaa; }
+
+  /* A: Current (barely changed) */
+  .a-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .a-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 700; color: #00d4ff; letter-spacing: -0.01em; }
+  .a-btn { background: #b6ff00; color: #121212; border: none; border-radius: 8px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; height: 36px; cursor: pointer; }
+  .a-search { width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 10px 14px; color: #f2f2f2; font-size: 0.9rem; box-sizing: border-box; }
+
+  /* B: Eyebrow + big title */
+  .b-eyebrow { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #444; margin-bottom: 3px; }
+  .b-title { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 800; color: #f2f2f2; letter-spacing: -0.04em; line-height: 1; margin-bottom: 14px; }
+  .b-search { width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 10px 14px; color: #f2f2f2; font-size: 0.9rem; box-sizing: border-box; }
+  .b-header-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
+  .b-btn { background: #b6ff00; color: #121212; border: none; border-radius: 22px; padding: 0 16px; font-size: 0.82rem; font-weight: 700; height: 34px; cursor: pointer; letter-spacing: 0.02em; flex-shrink: 0; }
+
+  /* C: Colored accent word in title */
+  .c-header-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
+  .c-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+  .c-title-plain { color: #f2f2f2; }
+  .c-title-accent { color: #b6ff00; }
+  .c-btn { background: none; border: 1px solid #2a2a2a; color: #f2f2f2; border-radius: 22px; padding: 0 14px; font-size: 0.82rem; font-weight: 600; height: 34px; cursor: pointer; flex-shrink: 0; }
+  .c-search { width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 10px 14px; color: #f2f2f2; font-size: 0.9rem; box-sizing: border-box; }
+
+  .mock-card { background: #1a1a1a; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+  .mock-bar { height: 2px; background: linear-gradient(90deg, #ff4db8, #b400ff); }
+  .mock-card-inner { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+  .mock-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #121212; }
+  .mock-name { font-size: 0.9rem; font-weight: 600; color: #f2f2f2; }
+  .mock-pro { font-size: 0.72rem; color: #555; }
+</style>
+
+<h2>Page header style</h2>
+<p class="subtitle">How should the page titles present themselves? This sets the tone for every screen.</p>
+
+<div class="previews">
+
+  <div class="preview-card" data-choice="current" onclick="toggleSelect(this)">
+    <div class="preview-label">A &nbsp;·&nbsp; <span>Modest — current size, colored title</span></div>
+    <div class="preview-body">
+      <div class="a-header">
+        <h1 class="a-title">Members</h1>
+        <button class="a-btn">+ Add</button>
+      </div>
+      <input class="a-search" placeholder="Search members…" readonly />
+      <div class="mock-card" style="margin-top:10px;">
+        <div class="mock-bar"></div>
+        <div class="mock-card-inner">
+          <div class="mock-avatar" style="background:#ff4db8;">R</div>
+          <div><div class="mock-name">Riven</div><div class="mock-pro">she/her</div></div>
+        </div>
+      </div>
+      <div class="mock-card" style="margin-top:4px;">
+        <div class="mock-bar" style="background:linear-gradient(90deg,#00d4ff,#b400ff);"></div>
+        <div class="mock-card-inner">
+          <div class="mock-avatar" style="background:#00d4ff;">A</div>
+          <div><div class="mock-name">Ash</div><div class="mock-pro">they/them</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="preview-desc">Small colored title, same scale as now. Less vertical real estate used — more content visible above the fold. Feels like a standard mobile app.</div>
+  </div>
+
+  <div class="preview-card" data-choice="big" onclick="toggleSelect(this)">
+    <div class="preview-label">B &nbsp;·&nbsp; <span>Editorial — eyebrow label + oversized title</span></div>
+    <div class="preview-body">
+      <div>
+        <div class="b-eyebrow">Your system</div>
+        <div class="b-header-row">
+          <h1 class="b-title">Members</h1>
+          <button class="b-btn">+ Add</button>
+        </div>
+      </div>
+      <input class="b-search" placeholder="Search members…" readonly />
+      <div class="mock-card" style="margin-top:10px;">
+        <div class="mock-bar"></div>
+        <div class="mock-card-inner">
+          <div class="mock-avatar" style="background:#ff4db8;">R</div>
+          <div><div class="mock-name">Riven</div><div class="mock-pro">she/her</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="preview-desc">Big 2rem+ display heading with a small eyebrow label above it. Looks intentional, feels like you built it for yourself — not a generic SaaS template. Takes more vertical space.</div>
+  </div>
+
+  <div class="preview-card" data-choice="accent-word" onclick="toggleSelect(this)">
+    <div class="preview-label">C &nbsp;·&nbsp; <span>Accent word — one word in lime, rest in white</span></div>
+    <div class="preview-body">
+      <div class="c-header-row">
+        <h1 class="c-title">
+          <span class="c-title-plain">Your </span><span class="c-title-accent">Members</span>
+        </h1>
+        <button class="c-btn">+ Add</button>
+      </div>
+      <input class="c-search" placeholder="Search members…" readonly />
+      <div class="mock-card" style="margin-top:10px;">
+        <div class="mock-bar"></div>
+        <div class="mock-card-inner">
+          <div class="mock-avatar" style="background:#ff4db8;">R</div>
+          <div><div class="mock-name">Riven</div><div class="mock-pro">she/her</div></div>
+        </div>
+      </div>
+      <div class="mock-card" style="margin-top:4px;">
+        <div class="mock-bar" style="background:linear-gradient(90deg,#00d4ff,#b400ff);"></div>
+        <div class="mock-card-inner">
+          <div class="mock-avatar" style="background:#00d4ff;">A</div>
+          <div><div class="mock-name">Ash</div><div class="mock-pro">they/them</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="preview-desc">Medium-large heading, key noun highlighted in lime. "Your Members", "Fronting Now", "Your System". Personality without sacrificing vertical space.</div>
+  </div>
+
+</div>

@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import TabBar from '../components/TabBar'
 import EntrySheet from '../components/EntrySheet'
+import FrontHeatmap from '../components/FrontHeatmap'
 import { journalsApi } from '../api/journals'
 import { frontApi } from '../api/front'
 import { membersApi } from '../api/members'
@@ -12,6 +14,7 @@ import styles from './LogsPage.module.css'
 const TABS = [
   { id: 'Journal', label: 'Journal' },
   { id: 'History', label: 'Front History' },
+  { id: 'Heatmap', label: 'Heatmap' },
 ]
 
 function formatDate(isoOrMs: string | number) {
@@ -23,10 +26,12 @@ function formatDate(isoOrMs: string | number) {
 }
 
 export default function LogsPage() {
-  const [activeTab, setActiveTab] = useState('Journal')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const raw = searchParams.get('tab')
+  const activeTab = TABS.find(t => t.id.toLowerCase() === raw?.toLowerCase())?.id ?? 'Journal'
   const [sheetOpen, setSheetOpen] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const { data: journals = [] } = useQuery({
     queryKey: ['journals'],
@@ -79,7 +84,11 @@ export default function LogsPage() {
         )}
       </div>
 
-      <TabBar tabs={[...TABS]} activeTab={activeTab} onChange={setActiveTab} />
+      <TabBar
+        tabs={[...TABS]}
+        activeTab={activeTab}
+        onChange={tab => setSearchParams({ tab })}
+      />
 
       {activeTab === 'Journal' && (
         <>
@@ -128,6 +137,8 @@ export default function LogsPage() {
           )}
         </div>
       )}
+
+      {activeTab === 'Heatmap' && <FrontHeatmap />}
 
       <EntrySheet
         entry={selectedEntry}

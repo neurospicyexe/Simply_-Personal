@@ -1,0 +1,101 @@
+<h2>Mind Map — Layout Approach</h2>
+<p class="subtitle">Members + Groups as nodes. Which layout fits the vibe?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="dagre" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#111;border-radius:8px 8px 0 0;min-height:140px;position:relative">
+      <svg width="100%" height="120" viewBox="0 0 300 120">
+        <rect x="60" y="8" width="80" height="24" rx="12" fill="#b6ff00" opacity="0.15" stroke="#b6ff00" stroke-width="1.5"/>
+        <text x="100" y="24" text-anchor="middle" fill="#b6ff00" font-size="9">The Inner Circle</text>
+        <rect x="160" y="8" width="80" height="24" rx="12" fill="#ff4db8" opacity="0.15" stroke="#ff4db8" stroke-width="1.5"/>
+        <text x="200" y="24" text-anchor="middle" fill="#ff4db8" font-size="9">Protectors</text>
+        <line x1="100" y1="32" x2="60" y2="68" stroke="#444" stroke-width="1"/>
+        <line x1="100" y1="32" x2="130" y2="68" stroke="#444" stroke-width="1"/>
+        <line x1="100" y1="32" x2="200" y2="68" stroke="#444" stroke-width="1"/>
+        <line x1="200" y1="32" x2="200" y2="68" stroke="#444" stroke-width="1"/>
+        <line x1="200" y1="32" x2="250" y2="68" stroke="#444" stroke-width="1"/>
+        <circle cx="60" cy="78" r="14" fill="#1a1a1a" stroke="#b6ff00" stroke-width="1.5"/>
+        <text x="60" y="82" text-anchor="middle" fill="#b6ff00" font-size="8">Jude</text>
+        <circle cx="130" cy="78" r="14" fill="#1a1a1a" stroke="#00d4ff" stroke-width="1.5"/>
+        <text x="130" y="82" text-anchor="middle" fill="#00d4ff" font-size="8">Mira</text>
+        <circle cx="200" cy="78" r="14" fill="#1a1a1a" stroke="#ff4db8" stroke-width="1.5"/>
+        <text x="200" y="82" text-anchor="middle" fill="#ff4db8" font-size="8">Ash</text>
+        <circle cx="250" cy="78" r="14" fill="#1a1a1a" stroke="#b400ff" stroke-width="1.5"/>
+        <text x="250" y="82" text-anchor="middle" fill="#b400ff" font-size="8">Ren</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>A — Dagre (auto top-down)</h3>
+      <p>Groups at top, members branch below. Clean, structured, algorithmic. Read-only layout — no dragging. Simplest to implement.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="force" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#111;border-radius:8px 8px 0 0;min-height:140px">
+      <svg width="100%" height="120" viewBox="0 0 300 120">
+        <rect x="70" y="40" width="80" height="24" rx="12" fill="#b6ff00" opacity="0.15" stroke="#b6ff00" stroke-width="1.5"/>
+        <text x="110" y="56" text-anchor="middle" fill="#b6ff00" font-size="9">The Inner Circle</text>
+        <rect x="170" y="55" width="80" height="24" rx="12" fill="#ff4db8" opacity="0.15" stroke="#ff4db8" stroke-width="1.5"/>
+        <text x="210" y="71" text-anchor="middle" fill="#ff4db8" font-size="9">Protectors</text>
+        <line x1="110" y1="52" x2="40" y2="22" stroke="#333" stroke-width="1"/>
+        <line x1="110" y1="52" x2="50" y2="88" stroke="#333" stroke-width="1"/>
+        <line x1="110" y1="52" x2="155" y2="20" stroke="#333" stroke-width="1"/>
+        <line x1="210" y1="67" x2="155" y2="20" stroke="#333" stroke-width="1"/>
+        <line x1="210" y1="67" x2="265" y2="30" stroke="#333" stroke-width="1"/>
+        <line x1="210" y1="67" x2="270" y2="95" stroke="#333" stroke-width="1"/>
+        <circle cx="40" cy="16" r="13" fill="#1a1a1a" stroke="#b6ff00" stroke-width="1.5"/>
+        <text x="40" y="20" text-anchor="middle" fill="#b6ff00" font-size="8">Jude</text>
+        <circle cx="50" cy="92" r="13" fill="#1a1a1a" stroke="#00d4ff" stroke-width="1.5"/>
+        <text x="50" y="96" text-anchor="middle" fill="#00d4ff" font-size="8">Mira</text>
+        <circle cx="155" cy="14" r="13" fill="#1a1a1a" stroke="#ff4db8" stroke-width="1.5"/>
+        <text x="155" y="18" text-anchor="middle" fill="#ff4db8" font-size="8">Ash</text>
+        <circle cx="265" cy="24" r="13" fill="#1a1a1a" stroke="#b400ff" stroke-width="1.5"/>
+        <text x="265" y="28" text-anchor="middle" fill="#b400ff" font-size="8">Ren</text>
+        <circle cx="272" cy="99" r="13" fill="#1a1a1a" stroke="#f87171" stroke-width="1.5"/>
+        <text x="272" y="103" text-anchor="middle" fill="#f87171" font-size="8">Sol</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>B — Force-directed (organic)</h3>
+      <p>Spring simulation — connected nodes cluster naturally. Draggable. Feels alive. Matches the chaotic-ND brand. More complex to implement.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="radial" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#111;border-radius:8px 8px 0 0;min-height:140px">
+      <svg width="100%" height="120" viewBox="0 0 300 120">
+        <circle cx="150" cy="60" r="16" fill="#1a1a1a" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="150" y="63" text-anchor="middle" fill="#666" font-size="7">System</text>
+        <rect x="55" y="22" width="60" height="20" rx="10" fill="#b6ff00" opacity="0.15" stroke="#b6ff00" stroke-width="1.5"/>
+        <text x="85" y="36" text-anchor="middle" fill="#b6ff00" font-size="8">Inner Circle</text>
+        <rect x="190" y="22" width="60" height="20" rx="10" fill="#ff4db8" opacity="0.15" stroke="#ff4db8" stroke-width="1.5"/>
+        <text x="220" y="36" text-anchor="middle" fill="#ff4db8" font-size="8">Protectors</text>
+        <line x1="150" y1="44" x2="115" y2="36" stroke="#333" stroke-width="1"/>
+        <line x1="150" y1="44" x2="190" y2="36" stroke="#333" stroke-width="1"/>
+        <line x1="85" y1="32" x2="30" y2="10" stroke="#333" stroke-width="1"/>
+        <line x1="85" y1="32" x2="55" y2="95" stroke="#333" stroke-width="1"/>
+        <line x1="220" y1="32" x2="260" y2="10" stroke="#333" stroke-width="1"/>
+        <line x1="220" y1="32" x2="255" y2="95" stroke="#333" stroke-width="1"/>
+        <line x1="220" y1="32" x2="150" y2="105" stroke="#333" stroke-width="1"/>
+        <circle cx="28" cy="8" r="11" fill="#1a1a1a" stroke="#b6ff00" stroke-width="1.5"/>
+        <text x="28" y="12" text-anchor="middle" fill="#b6ff00" font-size="7">Jude</text>
+        <circle cx="54" cy="98" r="11" fill="#1a1a1a" stroke="#00d4ff" stroke-width="1.5"/>
+        <text x="54" y="102" text-anchor="middle" fill="#00d4ff" font-size="7">Mira</text>
+        <circle cx="262" cy="8" r="11" fill="#1a1a1a" stroke="#b400ff" stroke-width="1.5"/>
+        <text x="262" y="12" text-anchor="middle" fill="#b400ff" font-size="7">Ren</text>
+        <circle cx="256" cy="98" r="11" fill="#1a1a1a" stroke="#f87171" stroke-width="1.5"/>
+        <text x="256" y="102" text-anchor="middle" fill="#f87171" font-size="7">Sol</text>
+        <circle cx="150" cy="108" r="11" fill="#1a1a1a" stroke="#ff4db8" stroke-width="1.5"/>
+        <text x="150" y="112" text-anchor="middle" fill="#ff4db8" font-size="7">Ash</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>C — Radial (hub + spokes)</h3>
+      <p>System at center, groups on mid ring, members on outer ring. Very structured, symmetrical. Can feel mechanical for organic systems.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">My recommendation: <strong>B (force-directed)</strong> — matches the brand, clustering gives instant visual signal about group membership, and it's draggable.</p>

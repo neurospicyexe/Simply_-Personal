@@ -94,7 +94,23 @@
       "Bash(sed -i \"s/privacyTier: ''Public'' as const/bucketId: ''00000000-0000-0000-0000-000000000001''/g\" FrontCard.test.tsx)",
       "Bash(for f:*)",
       "Bash(do sed:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Skill(claude-md-management:revise-claude-md)",
+      "Bash(bash scripts/start-server.sh --project-dir \"C:/dev/simply-personal\")",
+      "Bash(/tmp/brainstorm/waiting-2.html:*)",
+      "Bash(bash scripts/start-server.sh --project-dir /c/dev/simply-personal 2>&1)",
+      "Bash(bash /c/Users/razse/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.4/skills/brainstorming/scripts/start-server.sh --project-dir /c/dev/simply-personal 2>&1)",
+      "Bash(bash \"C:/Users/razse/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.5/skills/brainstorming/scripts/start-server.sh\" --project-dir \"C:/dev/simply-personal\")",
+      "Bash(claude mcp:*)",
+      "mcp__plugin_serena_serena__get_symbols_overview",
+      "Bash(bash \"C:/Users/razse/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.5/skills/brainstorming/scripts/stop-server.sh\" \"C:/dev/simply-personal/.superpowers/brainstorm/1380-1774418961\")",
+      "Bash(gh repo:*)",
+      "Bash(C:/Users/razse/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh --project-dir /c/dev/simply-personal)",
+      "mcp__plugin_serena_serena__insert_before_symbol",
+      "mcp__plugin_context-mode_context-mode__ctx_index",
+      "Bash(bash scripts/start-server.sh --project-dir /c/dev/simply-personal)",
+      "Bash(bash /c/Users/razse/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh --project-dir /c/dev/simply-personal)",
+      "mcp__plugin_serena_serena__insert_after_symbol"
     ]
   }
 }

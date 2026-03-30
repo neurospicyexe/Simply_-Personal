@@ -1,0 +1,267 @@
+<style>
+  /* Phone frame containers */
+  .screens { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+  .phone {
+    width: 280px;
+    background: #0d0d0d;
+    border-radius: 32px;
+    overflow: hidden;
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+  }
+  .phone-label {
+    text-align: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #444;
+    margin-bottom: 10px;
+  }
+  .phone-screen { padding: 0; background: #121212; min-height: 520px; display: flex; flex-direction: column; }
+
+  /* Shared */
+  .eyebrow { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #444; }
+  .accent-word { color: #b6ff00; }
+  .page-pad { padding: 18px 16px 0; }
+
+  /* ── FRONT SCREEN ── */
+  .f-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.035em; line-height: 1; margin: 3px 0 18px; color: #f2f2f2; }
+  .f-now-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #444; margin-bottom: 8px; padding: 0 16px; }
+
+  .f-front-card {
+    margin: 0 10px 8px;
+    background: #1a1a1a;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #252525;
+  }
+  .f-bar { height: 3px; background: linear-gradient(90deg, #ff4db8 0%, #b400ff 100%); }
+  .f-inner { padding: 14px 14px 10px; display: flex; align-items: center; gap: 12px; }
+  .f-avatar { width: 46px; height: 46px; border-radius: 50%; background: #ff4db8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.05rem; color: #121212; }
+  .f-info { flex: 1; }
+  .f-name { font-size: 1rem; font-weight: 700; color: #f2f2f2; letter-spacing: -0.01em; }
+  .f-pro { font-size: 0.75rem; color: #555; margin-top: 1px; }
+  .f-timer { font-size: 1.25rem; font-weight: 800; color: #ff4db8; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+  .f-tags { display: flex; gap: 6px; padding: 0 14px 12px; }
+  .f-tag { padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; }
+  .f-tag-pink { background: rgba(255,77,184,0.12); color: #ff4db8; border: 1px solid rgba(255,77,184,0.25); }
+  .f-tag-purple { background: rgba(180,0,255,0.12); color: #b400ff; border: 1px solid rgba(180,0,255,0.25); }
+  .f-status { padding: 0 14px 14px; font-size: 0.83rem; color: #666; font-style: italic; }
+
+  .f-also-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #444; padding: 6px 16px 6px; }
+  .f-co-row { display: flex; align-items: center; gap: 10px; padding: 7px 16px; }
+  .f-co-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .f-co-name { font-size: 0.88rem; font-weight: 500; color: #f2f2f2; flex: 1; }
+  .f-co-timer { font-size: 0.78rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* ── MEMBERS SCREEN ── */
+  .m-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.035em; line-height: 1; margin: 3px 0 14px; }
+  .m-search { width: 100%; background: #1a1a1a; border: 1px solid #252525; border-radius: 10px; padding: 9px 12px; color: #666; font-size: 0.85rem; box-sizing: border-box; margin-bottom: 14px; }
+  .m-member { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #1a1a1a; border-radius: 10px; margin-bottom: 5px; overflow: hidden; position: relative; }
+  .m-member::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .m-member-pink::before { background: linear-gradient(90deg, #ff4db8, transparent); }
+  .m-member-cyan::before { background: linear-gradient(90deg, #00d4ff, transparent); }
+  .m-member-purple::before { background: linear-gradient(90deg, #b400ff, transparent); }
+  .m-member-lime::before { background: linear-gradient(90deg, #b6ff00, transparent); }
+  .m-av { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #121212; }
+  .m-mname { font-size: 0.9rem; font-weight: 600; color: #f2f2f2; }
+  .m-mpro { font-size: 0.7rem; color: #555; }
+  .m-front-dot { width: 7px; height: 7px; border-radius: 50%; margin-left: auto; }
+
+  /* ── MEMBER DETAIL ── */
+  .d-back { font-size: 0.75rem; color: #555; display: flex; align-items: center; gap: 4px; padding: 10px 16px 0; }
+  .d-hero { padding: 14px 16px 0; }
+  .d-avatar-wrap { position: relative; display: inline-block; margin-bottom: 10px; }
+  .d-avatar { width: 64px; height: 64px; border-radius: 50%; background: #ff4db8; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.4rem; color: #121212; }
+  .d-name-row { margin-bottom: 4px; }
+  .d-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; color: #f2f2f2; }
+  .d-name-accent { color: #ff4db8; }
+  .d-pro { font-size: 0.8rem; color: #555; }
+  .d-tags { display: flex; gap: 6px; margin: 10px 0 0; flex-wrap: wrap; }
+  .d-tag { padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; }
+  .d-tag-pink { background: rgba(255,77,184,0.12); color: #ff4db8; border: 1px solid rgba(255,77,184,0.25); }
+  .d-tag-purple { background: rgba(180,0,255,0.12); color: #b400ff; border: 1px solid rgba(180,0,255,0.25); }
+  .d-tabs { display: flex; gap: 0; margin-top: 14px; border-bottom: 1px solid #222; overflow-x: auto; }
+  .d-tab { padding: 8px 12px; font-size: 0.75rem; font-weight: 600; color: #444; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .d-tab.active { color: #ff4db8; border-bottom-color: #ff4db8; }
+  .d-field { padding: 12px 16px; border-bottom: 1px solid #1e1e1e; }
+  .d-fl { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #444; margin-bottom: 5px; }
+  .d-fv { font-size: 0.9rem; color: #f2f2f2; }
+  .d-fv-empty { font-size: 0.88rem; color: #3a3a3a; font-style: italic; }
+
+  /* ── SHARED NAV ── */
+  .nav { display: flex; background: #111; border-top: 1px solid #1e1e1e; padding: 4px 0 8px; margin-top: auto; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #333; }
+  .nav-item.act { color: #b6ff00; }
+  .nav-item.act .nav-icon { color: #b6ff00; }
+  .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: #b6ff00; margin-bottom: -2px; }
+  .nav-icon { font-size: 1rem; color: #333; }
+
+  .spacer { flex: 1; }
+</style>
+
+<h2>The new design system</h2>
+<p class="subtitle">Three key screens — same tokens, actually worn. Scroll right if needed.</p>
+
+<div class="screens">
+
+  <!-- FRONT -->
+  <div>
+    <div class="phone-label">Front / Now</div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="page-pad">
+          <div class="eyebrow">Right now</div>
+          <div class="f-title"><span class="accent-word">Fronting</span></div>
+        </div>
+
+        <div class="f-now-label">Primary front</div>
+        <div class="f-front-card">
+          <div class="f-bar"></div>
+          <div class="f-inner">
+            <div class="f-avatar">R</div>
+            <div class="f-info">
+              <div class="f-name">Riven</div>
+              <div class="f-pro">she/her</div>
+            </div>
+            <div class="f-timer">2:14</div>
+          </div>
+          <div class="f-tags">
+            <span class="f-tag f-tag-pink">Co-fronting</span>
+            <span class="f-tag f-tag-purple">Protective</span>
+          </div>
+          <div class="f-status">feeling scattered but okay</div>
+        </div>
+
+        <div class="f-also-label">Also fronting</div>
+        <div class="f-co-row">
+          <div class="f-co-dot" style="background:#00d4ff;"></div>
+          <div class="f-co-name">Ash</div>
+          <div class="f-co-timer" style="color:#00d4ff;">1:02</div>
+        </div>
+        <div class="f-co-row">
+          <div class="f-co-dot" style="background:#b400ff;"></div>
+          <div class="f-co-name">Tide</div>
+          <div class="f-co-timer" style="color:#b400ff;">0:34</div>
+        </div>
+
+        <div class="spacer"></div>
+        <div class="nav">
+          <div class="nav-item act">
+            <div class="nav-dot"></div>
+            <div class="nav-icon">◈</div>
+            <span>now</span>
+          </div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>members</span></div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>history</span></div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>system</span></div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>settings</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMBERS -->
+  <div>
+    <div class="phone-label">Members List</div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="page-pad">
+          <div class="eyebrow">Your system</div>
+          <div class="m-title"><span class="accent-word">Members</span></div>
+          <div class="m-search">Search members…</div>
+
+          <div class="m-member m-member-pink">
+            <div class="m-av" style="background:#ff4db8;">R</div>
+            <div><div class="m-mname">Riven</div><div class="m-mpro">she/her</div></div>
+            <div class="m-front-dot" style="background:#ff4db8;"></div>
+          </div>
+          <div class="m-member m-member-cyan">
+            <div class="m-av" style="background:#00d4ff;">A</div>
+            <div><div class="m-mname">Ash</div><div class="m-mpro">they/them</div></div>
+            <div class="m-front-dot" style="background:#00d4ff;"></div>
+          </div>
+          <div class="m-member m-member-purple">
+            <div class="m-av" style="background:#b400ff;">T</div>
+            <div><div class="m-mname">Tide</div><div class="m-mpro">any</div></div>
+            <div class="m-front-dot" style="background:#b400ff;"></div>
+          </div>
+          <div class="m-member m-member-lime">
+            <div class="m-av" style="background:#b6ff00;">S</div>
+            <div><div class="m-mname">Sol</div><div class="m-mpro">he/him</div></div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav">
+          <div class="nav-item"><div class="nav-icon">◻</div><span>now</span></div>
+          <div class="nav-item act">
+            <div class="nav-dot"></div>
+            <div class="nav-icon">◈</div>
+            <span>members</span>
+          </div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>history</span></div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>system</span></div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>settings</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMBER DETAIL -->
+  <div>
+    <div class="phone-label">Member Detail</div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="d-back">← Members</div>
+        <div class="d-hero">
+          <div class="d-avatar-wrap">
+            <div class="d-avatar">R</div>
+          </div>
+          <div class="d-name-row">
+            <div class="d-name"><span class="d-name-accent">R</span>iven</div>
+          </div>
+          <div class="d-pro">she/her · Public</div>
+          <div class="d-tags">
+            <span class="d-tag d-tag-pink">Fronting now</span>
+            <span class="d-tag d-tag-purple">Protector</span>
+          </div>
+        </div>
+        <div class="d-tabs">
+          <div class="d-tab active">Essence</div>
+          <div class="d-tab">Specs</div>
+          <div class="d-tab">Dossier</div>
+          <div class="d-tab">Comms</div>
+          <div class="d-tab">Logs</div>
+          <div class="d-tab">Access</div>
+        </div>
+        <div class="d-field">
+          <div class="d-fl">Bio</div>
+          <div class="d-fv">Protective, blunt, doesn't do small talk.</div>
+        </div>
+        <div class="d-field">
+          <div class="d-fl">Description</div>
+          <div class="d-fv-empty">tap to add…</div>
+        </div>
+        <div class="d-field">
+          <div class="d-fl">Pronouns</div>
+          <div class="d-fv">she/her</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav">
+          <div class="nav-item"><div class="nav-icon">◻</div><span>now</span></div>
+          <div class="nav-item act">
+            <div class="nav-dot"></div>
+            <div class="nav-icon">◈</div>
+            <span>members</span>
+          </div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>history</span></div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>system</span></div>
+          <div class="nav-item"><div class="nav-icon">◻</div><span>settings</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

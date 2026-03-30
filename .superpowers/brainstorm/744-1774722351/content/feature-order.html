@@ -1,0 +1,26 @@
+<h2>Three features — which first?</h2>
+<p class="subtitle">Each gets its own spec → plan → implementation cycle. Pick the one to start with.</p>
+
+<div class="options">
+  <div class="option" data-choice="heatmap" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>24h Front Heatmap</h3>
+      <p>Visual timeline showing who fronted over the last 24 hours. Pure frontend — reads existing FrontHistory data. Quickest win.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="mindmap" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>System Mind Map</h3>
+      <p>React Flow graph of all alters and their group relationships. New library, no backend changes. Visual centerpiece.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="theming" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Per-Alter Theming</h3>
+      <p>Each alter gets their own accent color and optional background. Requires a new DB column + API changes. Most full-stack.</p>
+    </div>
+  </div>
+</div>
