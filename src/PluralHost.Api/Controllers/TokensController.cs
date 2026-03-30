@@ -54,4 +54,22 @@ public class TokensController(
         var revoked = await tokenService.RevokeTokenAsync(tokenValue);
         return revoked ? Ok() : NotFound();
     }
+
+    [HttpPost("{tokenValue}/delete")]
+    public async Task<IActionResult> DeleteAsync(string tokenValue, [FromBody][Required] PinRequest body)
+    {
+        if (string.IsNullOrWhiteSpace(body.Pin))
+            return BadRequest(new { error = "PIN is required" });
+
+        if (!await gatekeeper.ValidatePinAsync(body.Pin))
+            return Forbid();
+
+        var token = await context.AccessTokens
+            .FirstOrDefaultAsync(t => t.TokenValue == tokenValue && t.RevokedAt != null);
+        if (token == null) return NotFound();
+
+        context.AccessTokens.Remove(token);
+        await context.SaveChangesAsync();
+        return NoContent();
+    }
 }

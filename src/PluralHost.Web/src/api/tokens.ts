@@ -16,4 +16,10 @@ export const tokensApi = {
       method: 'POST',
       body: JSON.stringify({ pin }),
     }),
+
+  delete: (tokenValue: string, pin: string): Promise<void> =>
+    apiFetch<void>(`/api/tokens/${tokenValue}/delete`, {
+      method: 'POST',
+      body: JSON.stringify({ pin }),
+    }),
 }

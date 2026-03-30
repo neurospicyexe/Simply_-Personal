@@ -49,9 +49,13 @@ export default function SystemPage() {
   const [statusDeleteTarget, setStatusDeleteTarget] = useState<string | null>(null)
   const [statusDeletePin, setStatusDeletePin] = useState('')
 
-  // ── token revoke state ─────────────────────────────────────────────────
+  // ── token revoke/delete state ──────────────────────────────────────────
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null)
   const [revokePin, setRevokePin] = useState('')
+  const [revokeError, setRevokeError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [deletePin, setDeletePin] = useState('')
+  const [deleteError, setDeleteError] = useState('')
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
 
   // ── queries ────────────────────────────────────────────────────────────
@@ -75,7 +79,20 @@ export default function SystemPage() {
       queryClient.invalidateQueries({ queryKey: ['tokens'] })
       setRevokeTarget(null)
       setRevokePin('')
+      setRevokeError('')
     },
+    onError: (err: Error) => setRevokeError(err.message.includes('403') ? 'Wrong PIN.' : 'Failed to revoke. Is your Gatekeeper PIN set?'),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => tokensApi.delete(deleteTarget!, deletePin),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tokens'] })
+      setDeleteTarget(null)
+      setDeletePin('')
+      setDeleteError('')
+    },
+    onError: (err: Error) => setDeleteError(err.message.includes('403') ? 'Wrong PIN.' : 'Failed to delete. Is your Gatekeeper PIN set?'),
   })
 
   const statusDeleteMutation = useMutation({
@@ -193,6 +210,9 @@ export default function SystemPage() {
               <div key={t.tokenValue} className={`${styles.tokenRow} ${styles.revoked}`}>
                 <span className={styles.tokenLabel}>{t.label ?? 'Untitled'}</span>
                 <span className={styles.badge}>revoked</span>
+                <button className={styles.revokeBtn} onClick={() => setDeleteTarget(t.tokenValue)} aria-label={`Delete ${t.label}`}>
+                  Delete
+                </button>
               </div>
             ))}
           </div>
@@ -267,13 +287,27 @@ export default function SystemPage() {
       />
 
       {/* Token revoke confirmation */}
-      <BottomSheet isOpen={revokeTarget !== null} onClose={() => { setRevokeTarget(null); setRevokePin('') }} title="Confirm Revoke">
+      <BottomSheet isOpen={revokeTarget !== null} onClose={() => { setRevokeTarget(null); setRevokePin(''); setRevokeError('') }} title="Confirm Revoke">
         <p className={styles.revokeHint}>Enter your Gatekeeper PIN to revoke this link.</p>
-        <input type="password" className={styles.pinInput} placeholder="PIN" value={revokePin} onChange={e => setRevokePin(e.target.value)} aria-label="Gatekeeper PIN" />
+        <input type="password" className={styles.pinInput} placeholder="PIN" value={revokePin} onChange={e => { setRevokePin(e.target.value); setRevokeError('') }} aria-label="Gatekeeper PIN" />
+        {revokeError && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem' }}>{revokeError}</p>}
         <div className={styles.revokeActions}>
-          <button onClick={() => { setRevokeTarget(null); setRevokePin('') }}>Cancel</button>
+          <button onClick={() => { setRevokeTarget(null); setRevokePin(''); setRevokeError('') }}>Cancel</button>
           <button onClick={() => revokeMutation.mutate()} disabled={!revokePin.trim() || revokeMutation.isPending} className={styles.revokeBtn} aria-label="Confirm revoke">
             {revokeMutation.isPending ? 'Revoking…' : 'Revoke'}
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* Token delete confirmation */}
+      <BottomSheet isOpen={deleteTarget !== null} onClose={() => { setDeleteTarget(null); setDeletePin(''); setDeleteError('') }} title="Delete Token">
+        <p className={styles.revokeHint}>Enter your Gatekeeper PIN to permanently remove this revoked link.</p>
+        <input type="password" className={styles.pinInput} placeholder="PIN" value={deletePin} onChange={e => { setDeletePin(e.target.value); setDeleteError('') }} aria-label="Gatekeeper PIN" />
+        {deleteError && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem' }}>{deleteError}</p>}
+        <div className={styles.revokeActions}>
+          <button onClick={() => { setDeleteTarget(null); setDeletePin(''); setDeleteError('') }}>Cancel</button>
+          <button onClick={() => deleteMutation.mutate()} disabled={!deletePin.trim() || deleteMutation.isPending} className={styles.revokeBtn} aria-label="Confirm delete">
+            {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
           </button>
         </div>
       </BottomSheet>

@@ -49,7 +49,7 @@ export default function MembersPage() {
     const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name))
     const map = new Map<string, Member[]>()
     for (const m of sorted) {
-      const letter = m.name[0].toUpperCase()
+      const letter = ([...m.name][0] ?? '#').toUpperCase()
       if (!map.has(letter)) map.set(letter, [])
       map.get(letter)!.push(m)
     }
@@ -140,9 +140,10 @@ export default function MembersPage() {
           <SystemMap />
         </div>
       ) : mode === 'list' ? (
-        <div className={styles.listContent}>
+        <div className={styles.listWrapper}>
+          <div className={styles.listContent}>
           {Array.from(alphabetGroups.entries()).map(([letter, letterMembers]) => (
-            <div key={letter}>
+            <div key={letter} id={`alpha-${letter}`}>
               <div className={styles.letterHeader}>{letter}</div>
               {letterMembers.map(m => (
                 <MemberCard
@@ -156,6 +157,21 @@ export default function MembersPage() {
           ))}
           {filtered.length === 0 && (
             <p className={styles.empty}>{search ? 'No members match that search.' : 'No members yet. Tap + to add the first one.'}</p>
+          )}
+          </div>
+          {alphabetGroups.size > 3 && (
+            <nav className={styles.alphaRail} aria-label="Jump to letter">
+              {Array.from(alphabetGroups.keys()).map(letter => (
+                <button
+                  key={letter}
+                  className={styles.alphaBtn}
+                  onClick={() => document.getElementById(`alpha-${letter}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  aria-label={`Jump to ${letter}`}
+                >
+                  {letter}
+                </button>
+              ))}
+            </nav>
           )}
         </div>
       ) : (
