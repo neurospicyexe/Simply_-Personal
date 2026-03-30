@@ -42,6 +42,14 @@ public class MemberRelationshipsController(PluralHostContext context) : Controll
         var toExists = await context.Members.AnyAsync(m => m.Id == body.ToMemberId);
         if (!toExists) return BadRequest(new { error = "ToMember not found or deleted" });
 
+        var duplicate = await context.MemberRelationships.AnyAsync(r =>
+            r.FromMemberId == body.FromMemberId &&
+            r.ToMemberId == body.ToMemberId &&
+            r.Label.ToLower() == body.Label.Trim().ToLower() &&
+            r.DeletedAt == null);
+        if (duplicate)
+            return Conflict(new { error = "A relationship with this label already exists between these alters." });
+
         var rel = new MemberRelationship
         {
             FromMemberId = body.FromMemberId,

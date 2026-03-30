@@ -128,6 +128,32 @@ public class MemberRelationshipsControllerTests
     }
 
     [Fact]
+    public async Task Create_ReturnConflict_WhenSamePairAndLabelExists()
+    {
+        var (ctx, ctrl) = Setup(nameof(Create_ReturnConflict_WhenSamePairAndLabelExists));
+        var fromId = SeedMember(ctx);
+        var toId = SeedMember(ctx);
+        ctx.MemberRelationships.Add(new MemberRelationship { FromMemberId = fromId, ToMemberId = toId, Label = "siblings" });
+        ctx.SaveChanges();
+
+        var result = await ctrl.CreateAsync(new MemberRelationshipCreateRequest(fromId, toId, "siblings", false));
+        Assert.IsType<ConflictObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Create_Returns201_WhenSamePairDifferentLabel()
+    {
+        var (ctx, ctrl) = Setup(nameof(Create_Returns201_WhenSamePairDifferentLabel));
+        var fromId = SeedMember(ctx);
+        var toId = SeedMember(ctx);
+        ctx.MemberRelationships.Add(new MemberRelationship { FromMemberId = fromId, ToMemberId = toId, Label = "mom" });
+        ctx.SaveChanges();
+
+        var result = await ctrl.CreateAsync(new MemberRelationshipCreateRequest(fromId, toId, "caretaker", false));
+        Assert.IsType<CreatedAtActionResult>(result);
+    }
+
+    [Fact]
     public async Task Patch_UpdatesLabelAndDirection()
     {
         var (ctx, ctrl) = Setup(nameof(Patch_UpdatesLabelAndDirection));
