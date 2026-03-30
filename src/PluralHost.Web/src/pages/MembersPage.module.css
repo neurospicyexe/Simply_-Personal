@@ -136,7 +136,7 @@
 }
 
 .mapContent {
-  height: 600px;
+  height: calc(100vh - 64px);
   border-radius: 10px;
   overflow: hidden;
   background: var(--color-surface);
