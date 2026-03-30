@@ -128,9 +128,9 @@ public class MemberRelationshipsControllerTests
     }
 
     [Fact]
-    public async Task Create_ReturnConflict_WhenSamePairAndLabelExists()
+    public async Task Create_ReturnsConflict_WhenSamePairAndLabelExists()
     {
-        var (ctx, ctrl) = Setup(nameof(Create_ReturnConflict_WhenSamePairAndLabelExists));
+        var (ctx, ctrl) = Setup(nameof(Create_ReturnsConflict_WhenSamePairAndLabelExists));
         var fromId = SeedMember(ctx);
         var toId = SeedMember(ctx);
         ctx.MemberRelationships.Add(new MemberRelationship { FromMemberId = fromId, ToMemberId = toId, Label = "siblings" });

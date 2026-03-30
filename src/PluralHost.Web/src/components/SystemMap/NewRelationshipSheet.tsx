@@ -15,7 +15,7 @@ export function NewRelationshipSheet({ isOpen, fromMember, toMember, onClose }: 
   const [isDirected, setIsDirected] = useState(false)
   const qc = useQueryClient()
 
-  const { mutate, isPending } = useMutation({
+  const { mutate, isPending, isError, reset } = useMutation({
     mutationFn: () =>
       relationshipsApi.create({
         fromMemberId: fromMember.id,
@@ -34,6 +34,7 @@ export function NewRelationshipSheet({ isOpen, fromMember, toMember, onClose }: 
   function handleClose() {
     setLabel('')
     setIsDirected(false)
+    reset()
     onClose()
   }
 
@@ -61,6 +62,11 @@ export function NewRelationshipSheet({ isOpen, fromMember, toMember, onClose }: 
           value={label}
           onChange={e => setLabel(e.target.value)}
         />
+        {isError && (
+          <p style={{ color: 'var(--color-danger)', fontSize: 11, margin: '0' }}>
+            A &quot;{label.trim()}&quot; connection already exists between these alters.
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 6 }}>
           <button
             onClick={() => setIsDirected(false)}
