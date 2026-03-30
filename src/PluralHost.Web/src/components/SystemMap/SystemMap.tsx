@@ -28,7 +28,7 @@ import { GroupNode, type GroupNodeData } from './GroupNode'
 import { RelationshipEdge, type RelationshipEdgeData } from './RelationshipEdge'
 import { NewRelationshipSheet } from './NewRelationshipSheet'
 import styles from './SystemMap.module.css'
-import type { Member, Group, MemberRelationship, FrontContent } from '../../types'
+import type { Member, Group, MemberRelationship } from '../../types'
 
 type MapMode = 'groups' | 'relationships' | 'both'
 
