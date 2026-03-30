@@ -12,7 +12,7 @@ class ResizeObserverMock {
   unobserve = vi.fn()
   disconnect = vi.fn()
 }
-global.ResizeObserver = ResizeObserverMock as any
+globalThis.ResizeObserver = ResizeObserverMock as any
 
 const mockNavigate = vi.fn()
 
@@ -59,6 +59,9 @@ describe('MemberNode', () => {
           id="mem-1"
           selected={false}
           dragging={false}
+          draggable={false}
+          selectable={false}
+          deletable={false}
           zIndex={0}
           isConnectable={true}
           type="member"
@@ -78,6 +81,9 @@ describe('MemberNode', () => {
           id="mem-1"
           selected={false}
           dragging={false}
+          draggable={false}
+          selectable={false}
+          deletable={false}
           zIndex={0}
           isConnectable={true}
           type="member"
@@ -100,6 +106,9 @@ describe('GroupNode', () => {
           id="grp-1"
           selected={false}
           dragging={false}
+          draggable={false}
+          selectable={false}
+          deletable={false}
           zIndex={0}
           isConnectable={true}
           type="group"

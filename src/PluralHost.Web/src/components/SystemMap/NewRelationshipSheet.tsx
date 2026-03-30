@@ -38,7 +38,7 @@ export function NewRelationshipSheet({ isOpen, fromMember, toMember, onClose }: 
   }
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose}>
+    <BottomSheet isOpen={isOpen} onClose={handleClose} title="New Connection">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           New connection — {fromMember.name} → {toMember.name}

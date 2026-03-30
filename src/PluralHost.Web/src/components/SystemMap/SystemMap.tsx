@@ -66,7 +66,7 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
   const { data: front = [] } = useQuery({ queryKey: ['front-current'], queryFn: frontApi.getCurrent })
 
   const frontingIds = useMemo(
-    () => new Set((front as FrontContent[]).map(f => f.member)),
+    () => new Set(front.map(f => f.content.member)),
     [front]
   )
 
