@@ -25,6 +25,15 @@ function formatDate(isoOrMs: string | number) {
   })
 }
 
+function formatDuration(startMs: number, endMs: number): string {
+  const totalMinutes = Math.floor((endMs - startMs) / 60000)
+  if (totalMinutes < 1) return '< 1m'
+  if (totalMinutes < 60) return `${totalMinutes}m`
+  const hours = Math.floor(totalMinutes / 60)
+  const mins = totalMinutes % 60
+  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+}
+
 export default function LogsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const raw = searchParams.get('tab')
@@ -125,10 +134,17 @@ export default function LogsPage() {
             .sort((a, b) => b.content.startTime - a.content.startTime)
             .map(e => {
               const m = memberMap[e.content.member]
+              const endMs = e.content.endTime ?? null
+              const endDisplay = endMs ? formatDate(endMs) : 'now'
+              const duration = endMs
+                ? formatDuration(e.content.startTime, endMs)
+                : 'ongoing'
               return (
                 <div key={e.content.uid} className={styles.historyCard}>
                   <div className={styles.historyMember}>{m?.name ?? e.content.member}</div>
-                  <div className={styles.historyTime}>{formatDate(e.content.startTime)}</div>
+                  <div className={styles.historyTime}>
+                    {formatDate(e.content.startTime)} → {endDisplay} · ({duration})
+                  </div>
                 </div>
               )
             })}

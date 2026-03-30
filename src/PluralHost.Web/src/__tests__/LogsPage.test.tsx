@@ -13,6 +13,8 @@ vi.mock('../api/members', () => ({
   membersApi: { list: vi.fn().mockResolvedValue([]) },
 }))
 
+import { frontApi } from '../api/front'
+import { membersApi } from '../api/members'
 import LogsPage from '../pages/LogsPage'
 
 const wrap = (initialPath: string) => (
@@ -40,5 +42,27 @@ describe('LogsPage', () => {
     render(wrap('/logs?tab=heatmap'))
     // FrontHeatmap renders the toggle buttons when active
     expect(await screen.findByRole('button', { name: '24h' })).toBeInTheDocument()
+  })
+
+  it('shows time range and duration for history entry with endTime', async () => {
+    const START = new Date('2026-01-01T14:00:00Z').getTime()
+    const END = new Date('2026-01-01T17:20:00Z').getTime() // 3h 20m after START
+    vi.mocked(frontApi.history).mockResolvedValue([
+      { content: { uid: 'uid1', member: 'member-id', startTime: START, endTime: END, live: false } },
+    ])
+    vi.mocked(membersApi.list).mockResolvedValue([])
+    render(wrap('/logs?tab=history'))
+    expect(await screen.findByText(/→/)).toBeInTheDocument()
+    expect(await screen.findByText(/3h 20m/)).toBeInTheDocument()
+  })
+
+  it('shows ongoing when history entry has no endTime', async () => {
+    const START = new Date('2026-01-01T14:00:00Z').getTime()
+    vi.mocked(frontApi.history).mockResolvedValue([
+      { content: { uid: 'uid2', member: 'member-id', startTime: START, live: true } },
+    ])
+    vi.mocked(membersApi.list).mockResolvedValue([])
+    render(wrap('/logs?tab=history'))
+    expect(await screen.findByText(/ongoing/i)).toBeInTheDocument()
   })
 })
