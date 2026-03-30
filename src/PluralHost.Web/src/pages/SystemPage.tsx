@@ -105,7 +105,7 @@ export default function SystemPage() {
   })
 
   function copyUrl(tokenValue: string) {
-    navigator.clipboard.writeText(`${window.location.origin}/share/${tokenValue}`)
+    navigator.clipboard.writeText(`${window.location.origin}/view/${tokenValue}`)
     setCopiedToken(tokenValue)
     setTimeout(() => setCopiedToken(t => t === tokenValue ? null : t), 2000)
   }

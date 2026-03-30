@@ -28,7 +28,7 @@ export default function App() {
         <Route path="/system" element={<Protected><SystemPage /></Protected>} />
         <Route path="/logs" element={<Protected><LogsPage /></Protected>} />
         <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
-        <Route path="/share/:token" element={<SharePage />} />
+        <Route path="/view/:token" element={<SharePage />} />
       </Routes>
       {isAuthenticated && <BottomNav />}
     </>
