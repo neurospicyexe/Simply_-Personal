@@ -43,6 +43,7 @@ export function NewRelationshipSheet({ isOpen, fromMember, toMember, onClose }: 
         <div style={{ fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           New connection — {fromMember.name} → {toMember.name}
         </div>
+        <p style={{ fontSize: 10, color: '#888' }}>A label is required to save (e.g. siblings, rivals, parent of)</p>
         <input
           style={{
             width: '100%',

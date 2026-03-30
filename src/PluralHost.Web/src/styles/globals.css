@@ -69,3 +69,12 @@ button, a, [role="button"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Scrollbars ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
+
+/* ── BottomNav clearance ────────────────────────────────────── */
+.navClearance { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
