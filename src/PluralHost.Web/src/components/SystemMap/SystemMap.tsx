@@ -35,6 +35,10 @@ type MapMode = 'groups' | 'relationships' | 'both'
 const nodeTypes = { member: MemberNode, group: GroupNode }
 const edgeTypes = { relationship: RelationshipEdge }
 
+// Stable reference prevents useMemo deps changing while queries are pending
+// (= [] in destructuring creates a new array each render when data is undefined)
+const EMPTY: never[] = []
+
 interface D3Node { id: string; x?: number; y?: number }
 interface D3Link { source: string; target: string }
 
@@ -60,10 +64,10 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
   const [connectTo, setConnectTo] = useState<string | null>(null)
 
-  const { data: members = [] } = useQuery({ queryKey: ['members'], queryFn: membersApi.list })
-  const { data: groups = [] } = useQuery({ queryKey: ['groups'], queryFn: groupsApi.list })
-  const { data: relationships = [] } = useQuery({ queryKey: ['relationships'], queryFn: relationshipsApi.list })
-  const { data: front = [] } = useQuery({ queryKey: ['front-current'], queryFn: frontApi.getCurrent })
+  const { data: members = EMPTY } = useQuery({ queryKey: ['members'], queryFn: membersApi.list })
+  const { data: groups = EMPTY } = useQuery({ queryKey: ['groups'], queryFn: groupsApi.list })
+  const { data: relationships = EMPTY } = useQuery({ queryKey: ['relationships'], queryFn: relationshipsApi.list })
+  const { data: front = EMPTY } = useQuery({ queryKey: ['front-current'], queryFn: frontApi.getCurrent })
 
   const frontingIds = useMemo(
     () => new Set(front.map(f => f.content.member)),
