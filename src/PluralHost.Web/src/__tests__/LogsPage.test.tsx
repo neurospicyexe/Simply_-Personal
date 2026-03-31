@@ -48,7 +48,7 @@ describe('LogsPage', () => {
     const START = new Date('2026-01-01T14:00:00Z').getTime()
     const END = new Date('2026-01-01T17:20:00Z').getTime() // 3h 20m after START
     vi.mocked(frontApi.history).mockResolvedValue([
-      { content: { uid: 'uid1', member: 'member-id', startTime: START, endTime: END, live: false, custom: false } },
+      { exists: true, id: 'uid1', content: { uid: 'uid1', member: 'member-id', startTime: START, endTime: END, live: false, custom: false } },
     ])
     vi.mocked(membersApi.list).mockResolvedValue([])
     render(wrap('/logs?tab=history'))
@@ -59,7 +59,7 @@ describe('LogsPage', () => {
   it('shows ongoing when history entry has no endTime', async () => {
     const START = new Date('2026-01-01T14:00:00Z').getTime()
     vi.mocked(frontApi.history).mockResolvedValue([
-      { content: { uid: 'uid2', member: 'member-id', startTime: START, live: true, custom: false } },
+      { exists: true, id: 'uid2', content: { uid: 'uid2', member: 'member-id', startTime: START, live: true, custom: false } },
     ])
     vi.mocked(membersApi.list).mockResolvedValue([])
     render(wrap('/logs?tab=history'))
