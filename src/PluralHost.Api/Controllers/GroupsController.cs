@@ -15,20 +15,19 @@ public class GroupsController(PluralHostContext context) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllAsync()
     {
-        var groups = await context.Groups
-            .Select(g => new {
-                id = g.Id,
-                name = g.Name,
-                color = g.Color,
-                description = g.Description,
-                emoji = g.Emoji,
-                isPrivate = g.IsPrivate,
-                createdAt = g.CreatedAt,
-                updatedAt = g.UpdatedAt,
-                memberCount = context.Members.Count(m => m.ParentIds.Contains(g.Id))
-            })
-            .ToListAsync();
-        return Ok(groups);
+        var groups = await context.Groups.ToListAsync();
+        var members = await context.Members.ToListAsync();
+        return Ok(groups.Select(g => new {
+            id = g.Id,
+            name = g.Name,
+            color = g.Color,
+            description = g.Description,
+            emoji = g.Emoji,
+            isPrivate = g.IsPrivate,
+            createdAt = g.CreatedAt,
+            updatedAt = g.UpdatedAt,
+            memberCount = members.Count(m => m.ParentIds.Contains(g.Id))
+        }));
     }
 
     [HttpPost]
