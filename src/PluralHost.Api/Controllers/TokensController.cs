@@ -42,6 +42,27 @@ public class TokensController(
         return Ok(ToResponse(token));
     }
 
+    [HttpPatch("{tokenValue}")]
+    public async Task<IActionResult> UpdateAsync(string tokenValue, [FromBody] TokenUpdateRequest body)
+    {
+        var token = await context.AccessTokens
+            .FirstOrDefaultAsync(t => t.TokenValue == tokenValue && t.RevokedAt == null);
+        if (token == null) return NotFound();
+
+        if (body.Label != null)
+        {
+            if (string.IsNullOrWhiteSpace(body.Label)) return BadRequest(new { error = "Label cannot be empty" });
+            token.Label = body.Label.Trim();
+        }
+        if (body.MinBucketSortOrder.HasValue)
+            token.MinBucketSortOrder = body.MinBucketSortOrder.Value;
+        if (body.AllowsBoardPosting.HasValue)
+            token.AllowsBoardPosting = body.AllowsBoardPosting.Value;
+
+        await context.SaveChangesAsync();
+        return Ok(ToResponse(token));
+    }
+
     [HttpPost("{tokenValue}/revoke")]
     public async Task<IActionResult> RevokeAsync(string tokenValue, [FromBody][Required] PinRequest body)
     {

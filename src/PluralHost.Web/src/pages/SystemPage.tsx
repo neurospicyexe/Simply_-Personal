@@ -13,7 +13,7 @@ import { bucketsApi } from '../api/buckets'
 import { tokensApi } from '../api/tokens'
 import { frontStatusesApi } from '../api/frontStatuses'
 import type { FrontStatus } from '../api/frontStatuses'
-import type { Group, PrivacyBucket } from '../types'
+import type { AccessToken, Group, PrivacyBucket } from '../types'
 import styles from './SystemPage.module.css'
 
 const TABS = [
@@ -44,7 +44,7 @@ export default function SystemPage() {
   // ── sheet state ────────────────────────────────────────────────────────
   const [groupSheet, setGroupSheet] = useState<{ open: boolean; group: Group | null }>({ open: false, group: null })
   const [bucketSheet, setBucketSheet] = useState<{ open: boolean; bucket: PrivacyBucket | null }>({ open: false, bucket: null })
-  const [tokenSheetOpen, setTokenSheetOpen] = useState(false)
+  const [tokenSheet, setTokenSheet] = useState<{ open: boolean; token: AccessToken | null }>({ open: false, token: null })
   const [statusSheet, setStatusSheet] = useState<{ open: boolean; status: FrontStatus | null }>({ open: false, status: null })
   const [statusDeleteTarget, setStatusDeleteTarget] = useState<string | null>(null)
   const [statusDeletePin, setStatusDeletePin] = useState('')
@@ -123,7 +123,7 @@ export default function SystemPage() {
             if (tab === 'Groups') setGroupSheet({ open: true, group: null })
             else if (tab === 'Buckets') setBucketSheet({ open: true, bucket: null })
             else if (tab === 'Statuses') setStatusSheet({ open: true, status: null })
-            else if (tab === 'Tokens') setTokenSheetOpen(true)
+            else if (tab === 'Tokens') setTokenSheet({ open: true, token: null })
           }}
           aria-label={`Add ${tab === 'Groups' ? 'group' : tab === 'Buckets' ? 'bucket' : tab === 'Tokens' ? 'token' : 'status'}`}
         >
@@ -193,6 +193,9 @@ export default function SystemPage() {
                 <div className={styles.tokenActions}>
                   <button className={styles.copyBtn} onClick={() => copyUrl(t.tokenValue)} aria-label={`Copy URL for ${t.label}`}>
                     {copiedToken === t.tokenValue ? 'Copied!' : '📋 Copy'}
+                  </button>
+                  <button className={styles.editBtn} onClick={() => setTokenSheet({ open: true, token: t as AccessToken })} aria-label={`Edit ${t.label}`}>
+                    Edit
                   </button>
                   <button className={styles.revokeBtn} onClick={() => setRevokeTarget(t.tokenValue)} aria-label={`Revoke ${t.label}`}>
                     Revoke
@@ -272,7 +275,7 @@ export default function SystemPage() {
         isOpen={bucketSheet.open}
         onClose={() => setBucketSheet({ open: false, bucket: null })}
       />
-      <TokenSheet isOpen={tokenSheetOpen} onClose={() => setTokenSheetOpen(false)} />
+      <TokenSheet isOpen={tokenSheet.open} token={tokenSheet.token} onClose={() => setTokenSheet({ open: false, token: null })} />
       <FrontStatusSheet
         status={statusSheet.status}
         isOpen={statusSheet.open}

@@ -10,6 +10,10 @@ vi.mock('../api/tokens', () => ({
       tokenValue: 'abc', label: 'Test', minBucketSortOrder: 1,
       allowsBoardPosting: false, expiresAt: null, revokedAt: null, createdAt: '',
     }),
+    update: vi.fn().mockResolvedValue({
+      tokenValue: 'abc', label: 'Updated', minBucketSortOrder: 0,
+      allowsBoardPosting: false, expiresAt: null, revokedAt: null, createdAt: '',
+    }),
   },
 }))
 
@@ -67,7 +71,7 @@ describe('TokenSheet', () => {
 
   it('hides board posting toggle when Front Only selected', () => {
     wrap(<TokenSheet isOpen onClose={vi.fn()} />)
-    // Front Only is default — board posting should not be visible
+    fireEvent.click(screen.getByText(/front only/i))
     expect(screen.queryByLabelText(/board posting/i)).not.toBeInTheDocument()
   })
 

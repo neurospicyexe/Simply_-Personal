@@ -97,6 +97,11 @@ public record TokenCreateRequest(
     bool AllowsBoardPosting = false,
     DateTime? ExpiresAt = null);
 
+public record TokenUpdateRequest(
+    string? Label,
+    int? MinBucketSortOrder,
+    bool? AllowsBoardPosting);
+
 // ── Share (token-holder endpoints) ───────────────────────────────────
 public record ShareBoardPostRequest(string AuthorName, string Content);
 
