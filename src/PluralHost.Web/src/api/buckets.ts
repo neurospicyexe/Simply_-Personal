@@ -31,4 +31,16 @@ export const bucketsApi = {
       method: 'PUT',
       body: JSON.stringify(items),
     }),
+
+  listExcludedFields: (bucketId: string) =>
+    apiFetch<{ fieldId: string; label: string }[]>(`/api/buckets/${bucketId}/excluded-fields`),
+
+  addExcludedField: (bucketId: string, fieldId: string) =>
+    apiFetch<{ fieldId: string; label: string }>(`/api/buckets/${bucketId}/excluded-fields`, {
+      method: 'POST',
+      body: JSON.stringify({ fieldId }),
+    }),
+
+  removeExcludedField: (bucketId: string, fieldId: string) =>
+    apiFetch<void>(`/api/buckets/${bucketId}/excluded-fields/${fieldId}`, { method: 'DELETE' }),
 }
