@@ -155,10 +155,7 @@ export default function ShareMemberDetailPage() {
                   {h.statusLabel && (
                     <span
                       className={styles.statusBadge}
-                      style={{
-                        color: h.statusColor ?? undefined,
-                        borderColor: h.statusColor ?? undefined,
-                      }}
+                      style={{ '--badge-color': h.statusColor ?? 'inherit' } as React.CSSProperties}
                     >
                       {h.statusLabel}
                     </span>
