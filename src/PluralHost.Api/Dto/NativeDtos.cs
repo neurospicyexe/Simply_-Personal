@@ -27,6 +27,10 @@ public record BucketUpdateRequest(
 
 public record ReorderItem(Guid Id, int SortOrder);
 
+// ── BucketFieldExclusion ──────────────────────────────────────────────
+public record BucketExcludedFieldDto(Guid FieldId, string Label);
+public record BucketExcludeFieldRequest(Guid FieldId);
+
 // ── Group ─────────────────────────────────────────────────────────────
 public record SetGroupMembersRequest(List<Guid> MemberIds);
 

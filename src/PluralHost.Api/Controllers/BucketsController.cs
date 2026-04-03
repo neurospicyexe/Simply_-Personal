@@ -88,4 +88,57 @@ public class BucketsController(PluralHostContext context) : ControllerBase
         await context.SaveChangesAsync();
         return NoContent();
     }
+
+    [HttpGet("{id:guid}/excluded-fields")]
+    public async Task<ActionResult<IEnumerable<BucketExcludedFieldDto>>> GetExcludedFieldsAsync(Guid id)
+    {
+        var bucket = await context.PrivacyBuckets.FindAsync(id);
+        if (bucket == null) return NotFound();
+
+        var exclusions = await context.BucketFieldExclusions
+            .Where(e => e.BucketId == id)
+            .Select(e => new BucketExcludedFieldDto(e.FieldId, e.Field.Label))
+            .ToListAsync();
+
+        return Ok(exclusions);
+    }
+
+    [HttpPost("{id:guid}/excluded-fields")]
+    public async Task<ActionResult<BucketExcludedFieldDto>> AddExcludedFieldAsync(Guid id, [FromBody] BucketExcludeFieldRequest req)
+    {
+        var bucket = await context.PrivacyBuckets.FindAsync(id);
+        if (bucket == null) return NotFound();
+
+        var field = await context.CustomFields.FindAsync(req.FieldId);
+        if (field == null || field.DeletedAt != null) return NotFound();
+
+        // Idempotent: if already excluded (including soft-deleted), restore or return existing
+        var existing = await context.BucketFieldExclusions
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(e => e.BucketId == id && e.FieldId == req.FieldId);
+
+        if (existing != null)
+        {
+            if (existing.DeletedAt != null) existing.Restore();
+            await context.SaveChangesAsync();
+            return Ok(new BucketExcludedFieldDto(existing.FieldId, field.Label));
+        }
+
+        var exclusion = new BucketFieldExclusion { BucketId = id, FieldId = req.FieldId };
+        context.BucketFieldExclusions.Add(exclusion);
+        await context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetExcludedFieldsAsync), new { id }, new BucketExcludedFieldDto(req.FieldId, field.Label));
+    }
+
+    [HttpDelete("{id:guid}/excluded-fields/{fieldId:guid}")]
+    public async Task<IActionResult> RemoveExcludedFieldAsync(Guid id, Guid fieldId)
+    {
+        var exclusion = await context.BucketFieldExclusions
+            .FirstOrDefaultAsync(e => e.BucketId == id && e.FieldId == fieldId);
+        if (exclusion == null) return NotFound();
+
+        exclusion.SoftDelete();
+        await context.SaveChangesAsync();
+        return NoContent();
+    }
 }

@@ -70,5 +70,68 @@ public class BucketsControllerTests : IDisposable
         Assert.NotNull(found.DeletedAt);
     }
 
+    // ── Excluded Fields ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetExcludedFields_ReturnsEmptyForNewBucket()
+    {
+        var bucket = new PrivacyBucket { Name = "Test", SortOrder = 10, IsDefault = false };
+        _ctx.PrivacyBuckets.Add(bucket);
+        await _ctx.SaveChangesAsync();
+
+        var result = await _sut.GetExcludedFieldsAsync(bucket.Id);
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var list = Assert.IsAssignableFrom<IEnumerable<BucketExcludedFieldDto>>(ok.Value);
+        Assert.Empty(list);
+    }
+
+    [Fact]
+    public async Task AddExcludedField_CreatesExclusion()
+    {
+        var bucket = new PrivacyBucket { Name = "Test", SortOrder = 10, IsDefault = false };
+        var field = new CustomField { Label = "Trauma Notes", FieldType = FieldType.Text };
+        _ctx.PrivacyBuckets.Add(bucket);
+        _ctx.CustomFields.Add(field);
+        await _ctx.SaveChangesAsync();
+
+        var result = await _sut.AddExcludedFieldAsync(bucket.Id, new BucketExcludeFieldRequest(field.Id));
+        var created = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var dto = Assert.IsType<BucketExcludedFieldDto>(created.Value);
+        Assert.Equal(field.Id, dto.FieldId);
+        Assert.Equal("Trauma Notes", dto.Label);
+    }
+
+    [Fact]
+    public async Task AddExcludedField_DuplicateIsIdempotent()
+    {
+        var bucket = new PrivacyBucket { Name = "Test", SortOrder = 10, IsDefault = false };
+        var field = new CustomField { Label = "Notes", FieldType = FieldType.Text };
+        _ctx.PrivacyBuckets.Add(bucket);
+        _ctx.CustomFields.Add(field);
+        await _ctx.SaveChangesAsync();
+        _ctx.BucketFieldExclusions.Add(new BucketFieldExclusion { BucketId = bucket.Id, FieldId = field.Id });
+        await _ctx.SaveChangesAsync();
+
+        // Adding again should return 200 OK with existing record, not 500
+        var result = await _sut.AddExcludedFieldAsync(bucket.Id, new BucketExcludeFieldRequest(field.Id));
+        Assert.IsType<OkObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task RemoveExcludedField_SoftDeletesExclusion()
+    {
+        var bucket = new PrivacyBucket { Name = "Test", SortOrder = 10, IsDefault = false };
+        var field = new CustomField { Label = "Notes", FieldType = FieldType.Text };
+        _ctx.PrivacyBuckets.Add(bucket);
+        _ctx.CustomFields.Add(field);
+        await _ctx.SaveChangesAsync();
+        _ctx.BucketFieldExclusions.Add(new BucketFieldExclusion { BucketId = bucket.Id, FieldId = field.Id });
+        await _ctx.SaveChangesAsync();
+
+        var result = await _sut.RemoveExcludedFieldAsync(bucket.Id, field.Id);
+        Assert.IsType<NoContentResult>(result);
+        Assert.Empty(_ctx.BucketFieldExclusions.Where(e => e.BucketId == bucket.Id && e.DeletedAt == null));
+    }
+
     public void Dispose() => _ctx.Dispose();
 }
