@@ -103,9 +103,7 @@
 }
 
 .listWrapper {
-  display: flex;
-  gap: var(--space-3);
-  align-items: flex-start;
+  position: relative;
 }
 
 .listContent {
@@ -134,14 +132,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: sticky;
-  top: 80px;
+  position: fixed;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
   gap: 2px;
   padding: var(--space-2) 0;
   background: var(--color-surface);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
-  flex-shrink: 0;
+  box-shadow: var(--shadow-tactile);
 }
 
 .alphaBtn {

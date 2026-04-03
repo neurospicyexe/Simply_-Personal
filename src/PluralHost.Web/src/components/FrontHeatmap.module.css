@@ -41,7 +41,8 @@
   font-weight: 800;
   color: var(--color-muted);
   margin-bottom: var(--space-3);
-  padding-left: 32px;
+  /* 20px dot + 12px gap + 72px name + 12px gap */
+  padding-left: 116px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -58,8 +59,16 @@
   gap: var(--space-3);
 }
 
-.row.dimmed {
-  opacity: 0.3;
+.memberName {
+  width: 72px;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dot {

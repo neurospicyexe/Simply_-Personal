@@ -117,19 +117,18 @@ export default function SystemPage() {
           <span className="eyebrow">Manage</span>
           <h1 className={`pageTitle ${styles.pageTitle}`}><span className="accentWord">System</span></h1>
         </div>
-        {tab !== 'Tokens' && (
-          <button
-            className={styles.addBtn}
-            onClick={() => {
-              if (tab === 'Groups') setGroupSheet({ open: true, group: null })
-              else if (tab === 'Buckets') setBucketSheet({ open: true, bucket: null })
-              else if (tab === 'Statuses') setStatusSheet({ open: true, status: null })
-            }}
-            aria-label={`Add ${tab === 'Groups' ? 'group' : tab === 'Buckets' ? 'bucket' : 'status'}`}
-          >
-            <Plus size={20} />
-          </button>
-        )}
+        <button
+          className={styles.addBtn}
+          onClick={() => {
+            if (tab === 'Groups') setGroupSheet({ open: true, group: null })
+            else if (tab === 'Buckets') setBucketSheet({ open: true, bucket: null })
+            else if (tab === 'Statuses') setStatusSheet({ open: true, status: null })
+            else if (tab === 'Tokens') setTokenSheetOpen(true)
+          }}
+          aria-label={`Add ${tab === 'Groups' ? 'group' : tab === 'Buckets' ? 'bucket' : tab === 'Tokens' ? 'token' : 'status'}`}
+        >
+          <Plus size={20} />
+        </button>
       </header>
 
       <TabBar tabs={[...TABS]} activeTab={tab} onChange={t => setTab(t as Tab)} />
@@ -172,11 +171,6 @@ export default function SystemPage() {
 
       {tab === 'Tokens' && (
         <>
-          <div className={styles.tabHeader}>
-            <button className={styles.addBtn} onClick={() => setTokenSheetOpen(true)} aria-label="Add token">
-              <Plus size={20} />
-            </button>
-          </div>
           {tokensLoading && <p className={styles.empty} role="status">Loading…</p>}
           {tokensError && <p className={styles.empty}>Failed to load tokens.</p>}
           {!tokensLoading && !tokensError && tokens.length === 0 && (

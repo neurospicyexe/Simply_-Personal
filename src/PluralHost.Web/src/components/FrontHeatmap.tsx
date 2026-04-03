@@ -94,12 +94,13 @@ export default function FrontHeatmap() {
   const labels = useMemo(() => axisLabels(windowMs, now), [windowMs, now])
   const allEmpty = activeMemberIds.length === 0
 
-  function renderRow(memberId: string, dimmed = false) {
+  function renderRow(memberId: string) {
     const member = memberMap[memberId]
     const color = member?.color ?? 'var(--color-primary)'
     return (
-      <div key={memberId} className={`${styles.row} ${dimmed ? styles.dimmed : ''}`}>
+      <div key={memberId} className={styles.row}>
         <div className={styles.dot} style={{ background: color }} />
+        <span className={styles.memberName}>{member?.name ?? '?'}</span>
         <div className={styles.track}>
           {(spansByMember[memberId] ?? []).map((s, i) => (
             <div
@@ -138,8 +139,7 @@ export default function FrontHeatmap() {
         <p className={styles.empty}>No front activity in the last {range}.</p>
       ) : (
         <div className={styles.rows}>
-          {activeMemberIds.map(id => renderRow(id, false))}
-          {inactiveMemberIds.map(id => renderRow(id, true))}
+          {activeMemberIds.map(id => renderRow(id))}
         </div>
       )}
     </div>

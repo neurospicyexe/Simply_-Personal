@@ -102,6 +102,18 @@
   flex-shrink: 0;
 }
 
+.tokenRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-tactile);
+}
+
 .tokenRow.revoked {
   opacity: 0.4;
 }
@@ -109,65 +121,76 @@
 .tokenInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .tokenLabel {
-  font-size: 14px;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
   color: var(--color-text);
 }
 
 .tokenMeta {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
   flex-wrap: wrap;
 }
 
 .badge {
-  font-size: 11px;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
   background: rgba(180, 0, 255, 0.1);
   border: 1px solid rgba(180, 0, 255, 0.35);
-  border-radius: 4px;
-  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
   color: var(--color-purple);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .metaItem {
-  font-size: 11px;
-  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
 }
 
 .tokenActions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-3);
   align-items: center;
   flex-shrink: 0;
 }
 
 .copyBtn {
   background: none;
-  border: none;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
   color: var(--color-primary);
-  font-size: 12px;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
   cursor: pointer;
+  padding: 4px 10px;
   white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.copyBtn:hover {
+  background: var(--color-primary);
+  color: var(--color-bg);
 }
 
 .revokeBtn {
   background: none;
   border: none;
   color: var(--color-pink);
-  font-size: 12px;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
   cursor: pointer;
-}
-
-.tabHeader {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 12px;
+  padding: 4px 0;
 }
 
 .revokeHint {

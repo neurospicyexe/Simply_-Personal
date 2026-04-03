@@ -313,7 +313,7 @@ export default function SettingsPage() {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Security" defaultOpen>
+      <CollapsibleSection title="Security">
         <div className={styles.subSection}>
           <h3 className={styles.subTitle}>Change Password</h3>
           <form onSubmit={handleChangePassword} className={styles.form}>
