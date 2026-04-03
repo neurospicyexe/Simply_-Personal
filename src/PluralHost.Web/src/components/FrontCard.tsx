@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import type { FrontContent, Member } from '../types'
 import Avatar from './Avatar'
+import StatusPickerSheet from './StatusPickerSheet'
 import { useReducedMotion } from '../hooks/useReducedMotion'
+import type { FrontStatus } from '../api/frontStatuses'
 import styles from './FrontCard.module.css'
 
 interface FrontCardProps {
   entry: FrontContent
   member: Member
+  frontStatuses: FrontStatus[]
   onRemove: (uid: string) => void
   onUpdateStatus: (uid: string, status: string) => void
   onEdit: (uid: string, memberId: string, startTime: number) => void
@@ -21,11 +24,11 @@ function formatDuration(ms: number): string {
   return `${s}s`
 }
 
-export default function FrontCard({ entry, member, onRemove, onUpdateStatus, onEdit }: FrontCardProps) {
+export default function FrontCard({ entry, member, frontStatuses, onRemove, onUpdateStatus, onEdit }: FrontCardProps) {
   const reduced = useReducedMotion()
   const [collapsed, setCollapsed] = useState(false)
   const [elapsed, setElapsed] = useState(Date.now() - entry.startTime)
-  const [editingStatus, setEditingStatus] = useState(false)
+  const [showStatusSheet, setShowStatusSheet] = useState(false)
   const [status, setStatus] = useState(entry.customStatus ?? '')
   const [showEdit, setShowEdit] = useState(false)
   const [editMemberId, setEditMemberId] = useState(entry.member)
@@ -45,15 +48,12 @@ export default function FrontCard({ entry, member, onRemove, onUpdateStatus, onE
     return () => clearInterval(id)
   }, [entry.startTime, reduced])
 
-  const handleStatusSave = () => {
-    onUpdateStatus(entry.uid, status)
-    setEditingStatus(false)
-  }
-
   const handleEditSave = () => {
     onEdit(entry.uid, editMemberId, new Date(editStartTime).getTime())
     setShowEdit(false)
   }
+
+  const currentStatusColor = frontStatuses.find(s => s.label === status)?.color ?? 'var(--color-muted)'
 
   const startDisplay = new Date(entry.startTime).toLocaleString([], {
     hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric',
@@ -98,27 +98,32 @@ export default function FrontCard({ entry, member, onRemove, onUpdateStatus, onE
 
           {/* Status */}
           <div className={styles.statusRow}>
-            {editingStatus ? (
-              <input
-                className={styles.statusInput}
-                value={status}
-                onChange={e => setStatus(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleStatusSave()}
-                onBlur={handleStatusSave}
-                autoFocus
-                placeholder="Add a status..."
-                aria-label="Custom status"
-              />
-            ) : (
-              <button
-                className={styles.statusTap}
-                onClick={() => setEditingStatus(true)}
-                aria-label="Edit status"
-              >
-                {status || <span className={styles.placeholder}>Add a status…</span>}
-              </button>
-            )}
+            <button
+              className={styles.statusTap}
+              onClick={() => setShowStatusSheet(true)}
+              aria-label="Edit status"
+            >
+              {status ? (
+                <>
+                  <span className={styles.statusDot} style={{ background: currentStatusColor }} />
+                  {status}
+                </>
+              ) : (
+                <span className={styles.placeholder}>Set a status…</span>
+              )}
+            </button>
           </div>
+
+          <StatusPickerSheet
+            isOpen={showStatusSheet}
+            currentStatus={status}
+            statuses={frontStatuses}
+            onSelect={value => {
+              setStatus(value)
+              onUpdateStatus(entry.uid, value)
+            }}
+            onClose={() => setShowStatusSheet(false)}
+          />
 
           {/* Edit form */}
           {showEdit && (
