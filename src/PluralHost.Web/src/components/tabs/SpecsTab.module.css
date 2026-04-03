@@ -1,17 +1,86 @@
-.container { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
-.header { display: flex; justify-content: space-between; align-items: center; }
-.addBtn { background: var(--color-primary); color: #000; border: none; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.empty { color: #666; text-align: center; padding: 40px 0; }
-.error { color: #f87171; text-align: center; padding: 20px; }
-.retryBtn { background: none; border: 1px solid #444; color: #aaa; padding: 6px 14px; border-radius: 6px; cursor: pointer; margin-top: 8px; }
-.fieldRow { display: flex; flex-direction: column; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; overflow: hidden; }
-.defHeader { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; border-bottom: 1px solid #222; }
-.defLabel { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.menuBtn { background: none; border: none; color: var(--color-primary, #b6ff00); cursor: pointer; padding: 2px 6px; font-size: 1.1rem; line-height: 1; letter-spacing: 2px; }
-.valueRow { display: flex; align-items: center; gap: 12px; padding: 8px 14px; }
-.fieldValue { flex: 1; color: var(--color-text, #fff); cursor: pointer; min-height: 24px; }
-.fieldInput { flex: 1; background: #222; border: 1px solid var(--color-primary, #b6ff00); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.9rem; }
-.placeholder { color: #555; font-style: italic; }
+.container { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+.addBtn { 
+  background: var(--color-primary); 
+  color: var(--color-bg); 
+  border: 2px solid var(--color-bg); 
+  border-radius: var(--radius-full); 
+  width: 52px; 
+  height: 52px; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  box-shadow: var(--shadow-tactile);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.addBtn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--color-border);
+}
+.empty { 
+  color: var(--color-muted); 
+  text-align: center; 
+  padding: 60px 20px; 
+  font-family: var(--font-display);
+  font-weight: 500;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-border);
+}
+
+.fieldRow { 
+  display: flex; 
+  flex-direction: column; 
+  background: var(--color-surface); 
+  border: 2px solid var(--color-border); 
+  border-radius: var(--radius-lg); 
+  overflow: hidden; 
+  box-shadow: var(--shadow-tactile);
+}
+.defHeader { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  padding: var(--space-2) var(--space-4); 
+  background: var(--color-bg);
+  border-bottom: 2px solid var(--color-border); 
+}
+.defLabel { 
+  color: var(--color-primary); 
+  font-family: var(--font-display);
+  font-size: var(--text-xs); 
+  font-weight: 800;
+  text-transform: uppercase; 
+  letter-spacing: 0.1em; 
+}
+.valueRow { 
+  display: flex; 
+  align-items: center; 
+  gap: var(--space-3); 
+  padding: var(--space-3) var(--space-4); 
+}
+.fieldValue { 
+  flex: 1; 
+  color: var(--color-text); 
+  cursor: pointer; 
+  min-height: var(--touch-min); 
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+.fieldInput { 
+  flex: 1; 
+  background: var(--color-bg); 
+  border: 2px solid var(--color-primary); 
+  color: var(--color-text); 
+  padding: var(--space-2) var(--space-3); 
+  border-radius: var(--radius-md); 
+  font-size: var(--text-base); 
+  min-height: 44px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+.placeholder { color: var(--color-muted); font-style: italic; opacity: 0.6; }
 .deleteIcon { background: none; border: none; color: #555; cursor: pointer; padding: 2px 6px; }
 .deleteIcon:hover { color: #f87171; }
 .actionRow { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #2a2a2a; cursor: pointer; font-size: 14px; color: var(--color-text); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: left; }
@@ -19,14 +88,43 @@
 .actionRow.danger { color: var(--color-danger); }
 .actionRow:hover { opacity: 0.8; }
 .defLabelInput { width: 100%; box-sizing: border-box; background: #222; border: 1px solid var(--color-primary, #b6ff00); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; margin-bottom: 12px; }
-.saveDefBtn { background: var(--color-primary, #b6ff00); color: #000; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 700; cursor: pointer; width: 100%; }
-.saveDefBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.customBtn { 
+  background: var(--color-primary); 
+  color: var(--color-bg); 
+  border: 2px solid var(--color-bg); 
+  padding: 0 var(--space-4); 
+  border-radius: var(--radius-md); 
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800; 
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer; 
+  min-height: 44px;
+  box-shadow: var(--shadow-tactile);
+}
+.customBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Sheet */
-.presetLabel { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; margin-bottom: 8px; }
-.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-.chip { background: rgba(182, 255, 0, 0.1); color: var(--color-primary, #b6ff00); border: 1px solid rgba(182, 255, 0, 0.3); padding: 5px 12px; border-radius: 16px; cursor: pointer; font-size: 0.85rem; }
-.chip.dimmed { opacity: 0.45; }
+.chip { 
+  background: rgba(182, 255, 0, 0.1); 
+  color: var(--color-primary); 
+  border: 2px solid var(--color-primary); 
+  padding: var(--space-1) var(--space-4); 
+  border-radius: var(--radius-full); 
+  cursor: pointer; 
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.chip:hover {
+  background: var(--color-primary);
+  color: var(--color-bg);
+}
+.chip.dimmed { opacity: 0.4; }
+
 .customLabel { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; margin-bottom: 6px; }
 .customRow { display: flex; gap: 8px; }
 .customInput { flex: 1; background: #222; border: 1px solid #444; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; }

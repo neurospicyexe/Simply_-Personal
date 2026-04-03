@@ -65,9 +65,19 @@ builder.Services.AddHttpClient<IAvatarDownloadService, AvatarDownloadService>()
 builder.Services.AddHttpClient<IPluralKitClient, PluralKitClient>();
 builder.Services.AddHostedService<AutoUnfreezeService>();
 
-// Rate limiting — 5 freeze requests per minute per IP (DoS protection on anonymous endpoint)
+// Rate limiting policies
 builder.Services.AddRateLimiter(options =>
 {
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+
     options.AddPolicy("freeze", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -89,7 +99,17 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    ctx.Response.Headers["X-Frame-Options"] = "DENY";
+    ctx.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    ctx.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+    await next();
+});
+
 app.UseCors();
+app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PluralHost.Api.Services;
 
 namespace PluralHost.Api.Controllers;
@@ -28,6 +29,7 @@ public class AuthController(IAuthService auth) : ControllerBase
 
     // POST /api/auth/login — sets httpOnly cookie, returns 200 no body
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
     {
         var token = await auth.LoginAsync(request.Password);
@@ -56,6 +58,13 @@ public class AuthController(IAuthService auth) : ControllerBase
             SameSite = SameSiteMode.Strict
         });
         return Ok();
+    }
+
+    [Authorize]
+    [HttpGet("status")]
+    public IActionResult GetStatus()
+    {
+        return Ok(new { isAuthenticated = true });
     }
 
     // POST /api/auth/change-password — Requires JWT + Gatekeeper PIN

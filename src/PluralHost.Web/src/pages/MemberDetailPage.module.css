@@ -1,28 +1,31 @@
 .page {
   max-width: 600px;
   margin: 0 auto;
-  /* no padding here — hero bleeds edge to edge */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
 }
 
 .loading {
   display: flex;
   justify-content: center;
-  padding: 60px;
-  color: var(--color-muted);
+  padding: 80px;
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .hero {
-  height: 120px;
+  height: 200px;
   position: relative;
   overflow: hidden;
   background-size: cover;
   background-position: center;
+  border-bottom: 4px solid var(--member-color, var(--color-primary));
 }
 
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.15) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
 }
 
 .heroContent {
@@ -30,30 +33,29 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 12px 16px;
+  padding: var(--space-6) var(--space-4);
   display: flex;
   align-items: flex-end;
-  gap: 12px;
+  gap: var(--space-4);
 }
 
 .heroInfo {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding-bottom: 2px;
+  gap: 4px;
+  flex: 1;
 }
 
 .content {
-  padding: 0 16px 16px;
-  background: linear-gradient(180deg, var(--member-color-tint5) 0%, transparent 40%);
+  padding: var(--space-6) var(--space-4);
 }
 
 .name {
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: var(--text-4xl);
   font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1;
+  letter-spacing: -0.05em;
+  line-height: 0.85;
   color: var(--color-text);
   margin: 0;
 }
@@ -61,15 +63,17 @@
 .frontingBadge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-pink);
-  background: rgba(255, 77, 184, 0.12);
-  border: 1px solid rgba(255, 77, 184, 0.25);
-  border-radius: 20px;
-  padding: 3px 10px;
+  color: var(--color-primary);
+  background: var(--color-bg);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  box-shadow: 0 4px 0 var(--color-border);
 }
 
 .pronouns {

@@ -9,4 +9,7 @@ export const authApi = {
 
   logout: () =>
     apiFetch<void>('/api/auth/logout', { method: 'POST' }),
+
+  status: () =>
+    apiFetch<{ isAuthenticated: boolean }>('/api/auth/status'),
 }

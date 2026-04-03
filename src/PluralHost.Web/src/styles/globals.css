@@ -40,27 +40,35 @@ button, a, [role="button"] {
 
 /* ── Page typography utilities ─────────────────────────────── */
 .eyebrow {
-  font-size: 0.62rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--color-muted);
+  letter-spacing: 0.12em;
+  color: var(--color-primary);
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: var(--space-1);
 }
 
 .pageTitle {
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: var(--text-4xl);
   font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
   color: var(--color-text);
-  margin: 0 0 18px;
+  margin: 0;
 }
 
 .accentWord {
   color: var(--color-primary);
+  /* Text stroke for that handbuilt vibe on large titles */
+  -webkit-text-stroke: 1px var(--color-primary);
+}
+
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
 }
 
 @media (prefers-reduced-motion: reduce) {

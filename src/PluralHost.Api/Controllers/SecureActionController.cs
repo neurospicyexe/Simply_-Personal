@@ -25,6 +25,9 @@ public class SecureActionController(
     [HttpPost("freeze")]
     public async Task<IActionResult> FreezeAsync([FromBody] FreezeRequest request)
     {
+        if (request.DurationHours.HasValue && (request.DurationHours.Value < 1 || request.DurationHours.Value > 8760))
+            return BadRequest(new { error = "DurationHours must be between 1 and 8760." });
+
         var duration = request.DurationHours.HasValue
             ? TimeSpan.FromHours(request.DurationHours.Value)
             : (TimeSpan?)null;

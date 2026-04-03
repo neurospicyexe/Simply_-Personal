@@ -11,12 +11,23 @@ import BottomNav from './components/BottomNav'
 import SharePage from './pages/SharePage'
 
 function Protected({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p role="status" aria-live="polite">Verifying session…</p>
+      </div>
+    )
+  }
+
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
 }
 
 export default function App() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) return null
   return (
     <>
       <Routes>

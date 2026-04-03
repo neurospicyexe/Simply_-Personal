@@ -1,30 +1,33 @@
 .card {
   background: var(--color-surface);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid #252525;
+  border: 2px solid var(--color-border);
   position: relative;
+  box-shadow: var(--shadow-tactile);
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--member-color, var(--color-primary));
 }
 
 .card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--member-color, var(--color-primary)) 0%,
-    transparent 60%
-  );
+  height: 6px;
+  background: var(--member-color, var(--color-primary));
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-4);
   cursor: pointer;
-  min-height: var(--touch-min);
+  min-height: 72px;
 }
 
 .headerInfo {
@@ -35,39 +38,57 @@
 }
 
 .name {
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 700;
   color: var(--color-text);
-  font-size: 1rem;
+  font-size: var(--text-lg);
+  line-height: 1;
 }
 
 .pronouns {
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
+  font-weight: 500;
   color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .timer {
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--member-color, var(--color-cyan));
   font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.3);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .body {
-  padding: 0 16px 14px;
+  padding: 0 var(--space-4) var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-4);
 }
 
 .startTime {
-  font-size: 0.78rem;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 500;
   color: var(--color-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .statusRow {
   min-height: var(--touch-min);
   display: flex;
   align-items: center;
+  background: var(--color-bg);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border);
 }
 
 .statusTap {

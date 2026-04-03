@@ -49,7 +49,7 @@ public class MediaController : ControllerBase
         if (!ContentTypeProvider.TryGetContentType(resolved, out var contentType))
             contentType = "application/octet-stream";
 
-        return PhysicalFile(resolved, contentType);
+        return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
     }
 
     // POST /api/media/upload
