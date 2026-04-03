@@ -22,6 +22,7 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<PrivacyBucket> PrivacyBuckets => Set<PrivacyBucket>();
     public DbSet<MemberRelationship> MemberRelationships => Set<MemberRelationship>();
+    public DbSet<BucketFieldExclusion> BucketFieldExclusions => Set<BucketFieldExclusion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -175,6 +176,22 @@ public class PluralHostContext(DbContextOptions<PluralHostContext> options)
             .WithMany(b => b.Members)
             .HasForeignKey(m => m.BucketId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // ── BucketFieldExclusion ──────────────────────────────────────────────
+        modelBuilder.Entity<BucketFieldExclusion>(b =>
+        {
+            b.HasQueryFilter(e => e.DeletedAt == null);
+            b.HasIndex(e => new { e.BucketId, e.FieldId }).IsUnique();
+            // Note: covers soft-deleted rows — controller must IgnoreQueryFilters() on upsert to find them
+            b.HasOne(e => e.Bucket)
+                .WithMany(bk => bk.ExcludedFields)
+                .HasForeignKey(e => e.BucketId)
+                .OnDelete(DeleteBehavior.NoAction);
+            b.HasOne(e => e.Field)
+                .WithMany()
+                .HasForeignKey(e => e.FieldId)
+                .OnDelete(DeleteBehavior.NoAction);
+        });
 
         // MemberRelationship: soft-delete + Ghost Mode
         modelBuilder.Entity<MemberRelationship>()

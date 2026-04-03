@@ -16,4 +16,5 @@ public class PrivacyBucket : BaseEntity
     public bool IsDefault { get; set; }
 
     public ICollection<Member> Members { get; set; } = new List<Member>();
+    public ICollection<BucketFieldExclusion> ExcludedFields { get; set; } = new List<BucketFieldExclusion>();
 }
