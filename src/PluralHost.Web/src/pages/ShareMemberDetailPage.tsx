@@ -107,9 +107,9 @@ export default function ShareMemberDetailPage() {
 
       {activeTab === 'Specs' && (
         <div>
-          {member.customFields.length === 0
+          {(member.customFields ?? []).length === 0
             ? <p className={styles.empty}>No fields to display.</p>
-            : member.customFields.map((f, i) => (
+            : (member.customFields ?? []).map((f, i) => (
               <div key={`${f.label}-${i}`} className={styles.fieldRow}>
                 <span className={styles.fieldLabel}>{f.label}</span>
                 <span className={styles.fieldValue}>{f.value}</span>
@@ -143,8 +143,8 @@ export default function ShareMemberDetailPage() {
             ? <p className={styles.loading}>Loading history…</p>
             : history.length === 0
               ? <p className={styles.empty}>No front history.</p>
-              : history.map((h, i) => (
-                <div key={i} className={styles.historyRow}>
+              : history.map(h => (
+                <div key={h.id} className={styles.historyRow}>
                   <div>
                     <div>{formatDate(h.frontStart)}</div>
                     <div className={styles.historyTime}>

@@ -35,6 +35,7 @@ export interface ShareBoardMessage {
 }
 
 export interface ShareHistoryEntry {
+  id: string
   frontStart: string
   frontEnd?: string | null
   statusLabel?: string | null

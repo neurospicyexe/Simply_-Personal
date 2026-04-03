@@ -209,6 +209,7 @@ public class ShareController(
             .Take(100)
             .Select(f => new
             {
+                id = f.Id,
                 frontStart = f.FrontStart,
                 frontEnd = f.FrontEnd,
                 statusLabel = f.CustomStatus != null ? f.CustomStatus.Label : (string?)null,
