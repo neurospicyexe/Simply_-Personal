@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import BottomSheet from './BottomSheet'
 import type { FrontStatus } from '../api/frontStatuses'
 import styles from './StatusPickerSheet.module.css'
@@ -21,6 +21,10 @@ export default function StatusPickerSheet({
   const visible = statuses.filter(s => !s.isHidden)
   const isCustom = currentStatus !== '' && !visible.some(s => s.label === currentStatus)
   const [freetext, setFreetext] = useState(isCustom ? currentStatus : '')
+
+  useEffect(() => {
+    if (isOpen) setFreetext(isCustom ? currentStatus : '')
+  }, [isOpen])
 
   const handleSelect = (value: string) => {
     onSelect(value)

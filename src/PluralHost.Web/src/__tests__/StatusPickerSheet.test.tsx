@@ -63,3 +63,17 @@ test('Set button disabled when freetext is empty', () => {
   render(<StatusPickerSheet {...BASE} />)
   expect(screen.getByRole('button', { name: /^set$/i })).toBeDisabled()
 })
+
+test('pressing Enter in freetext calls onSelect', async () => {
+  const onSelect = vi.fn()
+  const onClose = vi.fn()
+  render(<StatusPickerSheet {...BASE} onSelect={onSelect} onClose={onClose} />)
+  await userEvent.type(screen.getByLabelText(/custom status/i), 'Tired{Enter}')
+  expect(onSelect).toHaveBeenCalledWith('Tired')
+  expect(onClose).toHaveBeenCalled()
+})
+
+test('freetext pre-filled when current status is custom', () => {
+  render(<StatusPickerSheet {...BASE} currentStatus="Sleepy" />)
+  expect(screen.getByLabelText<HTMLInputElement>(/custom status/i).value).toBe('Sleepy')
+})
