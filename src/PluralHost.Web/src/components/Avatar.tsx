@@ -4,7 +4,7 @@ import styles from './Avatar.module.css'
 interface AvatarProps {
   name: string
   color?: string
-  avatarPath?: string
+  avatarPath?: string | null
   isFronting?: boolean
   size?: 'sm' | 'md' | 'lg'
 }
