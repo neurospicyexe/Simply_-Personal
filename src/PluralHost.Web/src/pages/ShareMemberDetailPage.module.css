@@ -1,0 +1,162 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  padding: var(--space-5) var(--space-5) var(--space-10);
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  text-decoration: none;
+  margin-bottom: var(--space-5);
+}
+
+.backLink:hover {
+  color: var(--color-text);
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.heroInfo {
+  flex: 1;
+}
+
+.memberName {
+  font-family: 'Space Grotesk', var(--font-sans, system-ui, sans-serif);
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 var(--space-1);
+}
+
+.pronouns {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.tabBar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-5);
+}
+
+.tab {
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.15s;
+}
+
+.tab:hover {
+  color: var(--color-text);
+}
+
+.tabActive {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.description {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+  margin-bottom: var(--space-4);
+  white-space: pre-wrap;
+}
+
+.fieldRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875rem;
+}
+
+.fieldLabel {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fieldValue {
+  color: var(--color-text);
+}
+
+.boardMessage {
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.messageAuthor {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  margin-bottom: var(--space-1);
+}
+
+.messageContent {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.85rem;
+}
+
+.historyTime {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.statusBadge {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.empty {
+  color: var(--color-muted);
+  padding: var(--space-6) 0;
+  font-size: 0.85rem;
+}
+
+.notFound {
+  color: var(--color-muted);
+  padding: var(--space-8) 0;
+}
+
+.loading {
+  color: var(--color-muted);
+  padding: var(--space-4) 0;
+  font-size: 0.85rem;
+}
