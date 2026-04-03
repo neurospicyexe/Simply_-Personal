@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { frontApi } from '../api/front'
 import { membersApi } from '../api/members'
+import { frontStatusesApi } from '../api/frontStatuses'
 import FrontCard from '../components/FrontCard'
 import HeatmapStrip from '../components/HeatmapStrip'
 import styles from './FrontPage.module.css'
@@ -21,6 +22,11 @@ export default function FrontPage() {
   const { data: members = [] } = useQuery({
     queryKey: ['members'],
     queryFn: membersApi.list,
+  })
+
+  const { data: frontStatuses = [] } = useQuery({
+    queryKey: ['frontStatuses'],
+    queryFn: frontStatusesApi.list,
   })
 
   // Build member lookup map
@@ -108,6 +114,7 @@ export default function FrontPage() {
               key={envelope.id}
               entry={envelope.content}
               member={member}
+              frontStatuses={frontStatuses}
               onRemove={uid => removeMutation.mutate(uid)}
               onUpdateStatus={(uid, status) => updateStatusMutation.mutate({ uid, status })}
               onEdit={(uid, memberId, startTime) => editMutation.mutate({ uid, memberId, startTime })}
