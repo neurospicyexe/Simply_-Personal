@@ -9,6 +9,7 @@ import LogsPage from './pages/LogsPage'
 import SystemPage from './pages/SystemPage'
 import BottomNav from './components/BottomNav'
 import SharePage from './pages/SharePage'
+import ShareMemberDetailPage from './pages/ShareMemberDetailPage'
 
 function Protected({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/logs" element={<Protected><LogsPage /></Protected>} />
         <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
         <Route path="/view/:token" element={<SharePage />} />
+        <Route path="/view/:token/members/:memberId" element={<ShareMemberDetailPage />} />
       </Routes>
       {isAuthenticated && <BottomNav />}
     </>
