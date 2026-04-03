@@ -104,6 +104,7 @@ export default function HeatmapStrip() {
             return (
               <div key={memberId} className={styles.row}>
                 <div className={styles.dot} style={{ background: color }} />
+                <span className={styles.memberName} title={member?.name}>{member?.name ?? '?'}</span>
                 <div className={styles.track}>
                   {(spansByMember[memberId] ?? []).map((s, i) => (
                     <div
