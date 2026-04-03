@@ -59,11 +59,10 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
   const addExcludedFieldMutation = useMutation({
     mutationFn: (fieldId: string) => {
       const bucketId = bucket!.id
-      return bucketsApi.addExcludedField(bucketId, fieldId)
+      return bucketsApi.addExcludedField(bucketId, fieldId).then(r => ({ ...r, bucketId }))
     },
-    onSuccess: () => {
-      const bucketId = bucket!.id
-      qc.invalidateQueries({ queryKey: ['buckets', bucketId, 'excluded-fields'] })
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['buckets', data.bucketId, 'excluded-fields'] })
       setSelectedFieldId('')
     },
   })
@@ -72,11 +71,10 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
     mutationFn: (fieldId: string) => {
       const bucketId = bucket!.id
       setRemovingFieldIds(prev => new Set(prev).add(fieldId))
-      return bucketsApi.removeExcludedField(bucketId, fieldId)
+      return bucketsApi.removeExcludedField(bucketId, fieldId).then(() => ({ bucketId }))
     },
-    onSuccess: () => {
-      const bucketId = bucket!.id
-      qc.invalidateQueries({ queryKey: ['buckets', bucketId, 'excluded-fields'] })
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['buckets', data.bucketId, 'excluded-fields'] })
     },
     onSettled: (_data, _error, fieldId) => {
       setRemovingFieldIds(prev => { const s = new Set(prev); s.delete(fieldId); return s })
