@@ -83,8 +83,7 @@ public class ShareController(
                 customFields = m.CustomFieldValues
                     .Where(cfv => cfv.Field != null &&
                                   cfv.Field.DeletedAt == null &&
-                                  cfv.Bucket != null &&
-                                  cfv.Bucket.SortOrder <= accessToken.MinBucketSortOrder &&
+                                  (cfv.Bucket == null || cfv.Bucket.SortOrder <= accessToken.MinBucketSortOrder) &&
                                   !excludedFieldIds.Contains(cfv.FieldId))
                     .Select(cfv => new SharedCustomFieldDto(cfv.Field!.Label, cfv.Field.FieldType, cfv.Value))
                     .ToList()
@@ -113,7 +112,7 @@ public class ShareController(
                 f.CustomStatus?.Color))
             .ToList();
 
-        return Ok(new { members, currentFront = visibleFront });
+        return Ok(new { members, currentFront = visibleFront, canPost = accessToken.AllowsBoardPosting });
     }
 
     // GET /share/{token}/journals

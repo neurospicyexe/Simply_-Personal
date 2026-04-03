@@ -23,6 +23,7 @@ export interface ShareFrontEntry {
 export interface ShareData {
   members: ShareMember[]
   currentFront: ShareFrontEntry[]
+  canPost: boolean
 }
 
 export interface ShareBoardMessage {
@@ -53,6 +54,7 @@ export const shareApi = {
       .then((data: Partial<ShareData>) => ({
         members: data.members ?? [],
         currentFront: data.currentFront ?? [],
+        canPost: data.canPost ?? false,
       })),
 
   getBoard: (token: string, memberId: string): Promise<ShareBoardMessage[]> =>
@@ -61,6 +63,14 @@ export const shareApi = {
         if (!r.ok) return []
         return r.json()
       }),
+
+  postBoard: (token: string, memberId: string, body: { authorName: string; content: string }): Promise<void> =>
+    fetch(`/share/${token}/board/${memberId}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then(r => { if (!r.ok) throw new Error(r.status.toString()) }),
 
   getHistory: (token: string, memberId: string): Promise<ShareHistoryEntry[]> =>
     fetch(`/share/${token}/history/${memberId}`, { credentials: 'include' })
