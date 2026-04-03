@@ -38,12 +38,21 @@ public class ShareController(
             var front = await context.FrontHistory
                 .Include(f => f.Member)
                     .ThenInclude(m => m!.Bucket)
+                .Include(f => f.CustomStatus)
                 .Where(f => f.FrontEnd == null &&
                             f.Member != null &&
                             f.Member.BucketId == PrivacyBucket.PublicId)
-                .Select(f => new { f.Member!.Name, f.Member.DisplayName, f.Member.Color })
                 .ToListAsync();
-            return Ok(new { currentFront = front });
+            var frontDtos = front.Select(f => new SharedFrontEntryDto(
+                f.Member!.Id,
+                f.Member.Name,
+                f.Member.DisplayName,
+                f.Member.Color,
+                f.Member.AvatarPath,
+                f.CustomStatus?.Label,
+                f.CustomStatus?.Color))
+                .ToList();
+            return Ok(new { currentFront = frontDtos });
         }
 
         var rawMembers = await visibility
@@ -52,28 +61,40 @@ public class ShareController(
                 .ThenInclude(cfv => cfv.Field)
             .Include(m => m.CustomFieldValues)
                 .ThenInclude(cfv => cfv.Bucket)
+            .Include(m => m.Bucket!)
+                .ThenInclude(b => b.ExcludedFields)
             .ToListAsync();
 
-        var members = rawMembers.Select(m => new
+        var members = rawMembers.Select(m =>
         {
-            m.Name,
-            m.DisplayName,
-            m.Pronouns,
-            m.Color,
-            m.Status,
-            customFields = m.CustomFieldValues
-                // Must match ITokenVisibilityService.FilterByPermission tier logic
-                .Where(cfv => cfv.Field != null &&
-                              cfv.Field.DeletedAt == null &&
-                              cfv.Bucket != null &&
-                              cfv.Bucket.SortOrder <= accessToken.MinBucketSortOrder)
-                .Select(cfv => new SharedCustomFieldDto(cfv.Field!.Label, cfv.Field.FieldType, cfv.Value))
-                .ToList()
+            var excludedFieldIds = m.Bucket?.ExcludedFields
+                .Select(e => e.FieldId).ToHashSet() ?? new HashSet<Guid>();
+
+            return new
+            {
+                id = m.Id,
+                m.Name,
+                m.DisplayName,
+                m.Pronouns,
+                m.Color,
+                m.AvatarPath,
+                m.Description,
+                m.Status,
+                customFields = m.CustomFieldValues
+                    .Where(cfv => cfv.Field != null &&
+                                  cfv.Field.DeletedAt == null &&
+                                  cfv.Bucket != null &&
+                                  cfv.Bucket.SortOrder <= accessToken.MinBucketSortOrder &&
+                                  !excludedFieldIds.Contains(cfv.FieldId))
+                    .Select(cfv => new SharedCustomFieldDto(cfv.Field!.Label, cfv.Field.FieldType, cfv.Value))
+                    .ToList()
+            };
         }).ToList();
 
         var currentFront = await context.FrontHistory
             .Include(f => f.Member)
                 .ThenInclude(m => m!.Bucket)
+            .Include(f => f.CustomStatus)
             .Where(f => f.FrontEnd == null &&
                         f.Member != null &&
                         f.Member.DeletedAt == null &&
@@ -82,7 +103,14 @@ public class ShareController(
             .ToListAsync();
 
         var visibleFront = currentFront
-            .Select(f => new { f.Member!.Name, f.Member.DisplayName })
+            .Select(f => new SharedFrontEntryDto(
+                f.Member!.Id,
+                f.Member.Name,
+                f.Member.DisplayName,
+                f.Member.Color,
+                f.Member.AvatarPath,
+                f.CustomStatus?.Label,
+                f.CustomStatus?.Color))
             .ToList();
 
         return Ok(new { members, currentFront = visibleFront });
@@ -117,6 +145,78 @@ public class ShareController(
             .ToListAsync();
 
         return Ok(journals);
+    }
+
+    // GET /share/{token}/board/{memberId}
+    [HttpGet("{token}/board/{memberId:guid}")]
+    public async Task<IActionResult> GetSharedBoardAsync(string token, Guid memberId)
+    {
+        if (await ghostMode.IsFrozenAsync())
+            return Ok(Array.Empty<object>());
+
+        var result = await tokenService.ResolveTokenAsync(token);
+        if (result.Status == TokenResolveStatus.Expired)
+            return Unauthorized(new { error = "Token has expired." });
+        if (result.Status != TokenResolveStatus.Valid)
+            return Unauthorized(new { error = "Token is invalid." });
+
+        var accessToken = result.Token!;
+        if (accessToken.MinBucketSortOrder == -1)
+            return StatusCode(403, new { error = "Not permitted" });
+
+        var member = await visibility
+            .FilterByPermission(context.Members, accessToken.MinBucketSortOrder)
+            .FirstOrDefaultAsync(m => m.Id == memberId);
+
+        if (member == null) return NotFound();
+
+        var messages = await context.BoardMessages
+            .Where(b => b.MemberId == memberId)
+            .OrderByDescending(b => b.CreatedAt)
+            .Select(b => new BoardMessageResponse(b.Id, b.MemberId, b.AuthorName, b.Content, b.TokenId, b.CreatedAt))
+            .ToListAsync();
+
+        return Ok(messages);
+    }
+
+    // GET /share/{token}/history/{memberId}
+    [HttpGet("{token}/history/{memberId:guid}")]
+    public async Task<IActionResult> GetSharedHistoryAsync(string token, Guid memberId)
+    {
+        if (await ghostMode.IsFrozenAsync())
+            return Ok(Array.Empty<object>());
+
+        var result = await tokenService.ResolveTokenAsync(token);
+        if (result.Status == TokenResolveStatus.Expired)
+            return Unauthorized(new { error = "Token has expired." });
+        if (result.Status != TokenResolveStatus.Valid)
+            return Unauthorized(new { error = "Token is invalid." });
+
+        var accessToken = result.Token!;
+        if (accessToken.MinBucketSortOrder == -1)
+            return StatusCode(403, new { error = "Not permitted" });
+
+        var member = await visibility
+            .FilterByPermission(context.Members, accessToken.MinBucketSortOrder)
+            .FirstOrDefaultAsync(m => m.Id == memberId);
+
+        if (member == null) return NotFound();
+
+        var history = await context.FrontHistory
+            .Include(f => f.CustomStatus)
+            .Where(f => f.MemberId == memberId)
+            .OrderByDescending(f => f.FrontStart)
+            .Take(100)
+            .Select(f => new
+            {
+                frontStart = f.FrontStart,
+                frontEnd = f.FrontEnd,
+                statusLabel = f.CustomStatus != null ? f.CustomStatus.Label : (string?)null,
+                statusColor = f.CustomStatus != null ? f.CustomStatus.Color : (string?)null,
+            })
+            .ToListAsync();
+
+        return Ok(history);
     }
 
     // POST /share/{token}/board/{memberId}

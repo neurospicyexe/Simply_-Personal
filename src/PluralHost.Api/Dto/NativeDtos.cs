@@ -133,6 +133,16 @@ public record CustomFieldValueUpsertRequest(
 // Slim DTO used in GET /share/{token} member response
 public record SharedCustomFieldDto(string Label, FieldType FieldType, string Value);
 
+// Slim DTO for front entries in GET /share/{token} response
+public record SharedFrontEntryDto(
+    Guid MemberId,
+    string Name,
+    string? DisplayName,
+    string? Color,
+    string? AvatarPath,
+    string? CustomStatusLabel,
+    string? CustomStatusColor);
+
 // ── JournalEntry ──────────────────────────────────────────────────────
 public record JournalEntryResponse(
     Guid Id, string? Title, string Content, bool IsPrivate,

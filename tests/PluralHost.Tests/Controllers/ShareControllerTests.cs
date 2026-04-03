@@ -435,5 +435,220 @@ public class ShareControllerTests : IDisposable
         Assert.DoesNotContain("UpdatedAt", props);
     }
 
+    // ── Member response includes id ───────────────────────────────────
+
+    [Fact]
+    public async Task GetSharedView_MemberResponseIncludesId()
+    {
+        var member = new Member { Name = "Echo", BucketId = PrivacyBucket.PublicId };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(0), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
+        Assert.NotNull(result);
+
+        var value = result!.Value!;
+        var membersProperty = value.GetType().GetProperty("members")!.GetValue(value) as System.Collections.IEnumerable;
+        var membersList = membersProperty!.Cast<object>().ToList();
+        Assert.Single(membersList);
+
+        var first = membersList[0];
+        var idProp = first.GetType().GetProperty("id")!.GetValue(first);
+        Assert.Equal(member.Id, idProp);
+    }
+
+    // ── Bucket-excluded fields are hidden ─────────────────────────────
+
+    [Fact]
+    public async Task GetSharedView_ExcludedFieldsAreHidden()
+    {
+        var member = new Member { Name = "Aspen", BucketId = PrivacyBucket.PublicId };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        var field = new CustomField { Label = "Hidden Field", FieldType = FieldType.Text };
+        _context.CustomFields.Add(field);
+        await _context.SaveChangesAsync();
+
+        // Field value is Public-tier (visible by sortOrder), but bucket has it excluded
+        var cfv = new CustomFieldValue
+        {
+            MemberId = member.Id,
+            FieldId = field.Id,
+            Value = "should be hidden",
+            BucketId = PrivacyBucket.PublicId
+        };
+        _context.CustomFieldValues.Add(cfv);
+
+        // Exclude this field from the Public bucket
+        var exclusion = new BucketFieldExclusion
+        {
+            BucketId = PrivacyBucket.PublicId,
+            FieldId = field.Id
+        };
+        _context.BucketFieldExclusions.Add(exclusion);
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(0), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedViewAsync("t") as OkObjectResult;
+        Assert.NotNull(result);
+
+        var value = result!.Value!;
+        var membersProperty = value.GetType().GetProperty("members")!.GetValue(value) as System.Collections.IEnumerable;
+        var membersList = membersProperty!.Cast<object>().ToList();
+        Assert.Single(membersList);
+
+        var first = membersList[0];
+        var customFieldsProp = first.GetType().GetProperty("customFields")!.GetValue(first) as System.Collections.IEnumerable;
+        var customFieldsList = customFieldsProp!.Cast<object>().ToList();
+        Assert.Empty(customFieldsList);
+    }
+
+    // ── GET /share/{token}/board/{memberId} ───────────────────────────
+
+    [Fact]
+    public async Task GetSharedBoard_ReturnsBoardMessages()
+    {
+        var member = new Member { Name = "Birch", BucketId = PrivacyBucket.PublicId };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        _context.BoardMessages.Add(new BoardMessage
+        {
+            MemberId = member.Id,
+            AuthorName = "Visitor",
+            Content = "Hello Birch!",
+            TokenId = "t"
+        });
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(0), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedBoardAsync("t", member.Id) as OkObjectResult;
+        Assert.NotNull(result);
+
+        var messages = result!.Value as IList<BoardMessageResponse>;
+        Assert.NotNull(messages);
+        Assert.Single(messages!);
+        Assert.Equal("Hello Birch!", messages![0].Content);
+        Assert.Equal("Visitor", messages![0].AuthorName);
+    }
+
+    [Fact]
+    public async Task GetSharedBoard_GhostMode_ReturnsEmptyArray()
+    {
+        _ghostMode.Setup(g => g.IsFrozenAsync()).ReturnsAsync(true);
+        var result = await _controller.GetSharedBoardAsync("anytoken", Guid.NewGuid()) as OkObjectResult;
+        Assert.NotNull(result);
+        var items = result!.Value as System.Collections.IEnumerable;
+        Assert.NotNull(items);
+        Assert.Empty(items!.Cast<object>());
+        _tokenService.Verify(s => s.ResolveTokenAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSharedBoard_ReadFrontOnlyToken_Returns403()
+    {
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(-1), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedBoardAsync("t", Guid.NewGuid()) as ObjectResult;
+        Assert.NotNull(result);
+        Assert.Equal(403, result!.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetSharedBoard_MemberNotVisible_Returns404()
+    {
+        // Member is Friend-tier, token is Public (SortOrder 0) — member not visible
+        var member = new Member { Name = "Hidden", BucketId = PrivacyBucket.FriendId };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(0), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedBoardAsync("t", member.Id);
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    // ── GET /share/{token}/history/{memberId} ─────────────────────────
+
+    [Fact]
+    public async Task GetSharedHistory_ReturnsFrontHistory()
+    {
+        var member = new Member { Name = "Cedar", BucketId = PrivacyBucket.PublicId };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        var start = DateTime.UtcNow.AddHours(-2);
+        var end = DateTime.UtcNow.AddHours(-1);
+        _context.FrontHistory.Add(new FrontHistory
+        {
+            MemberId = member.Id,
+            FrontStart = start,
+            FrontEnd = end
+        });
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(0), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedHistoryAsync("t", member.Id) as OkObjectResult;
+        Assert.NotNull(result);
+
+        var history = result!.Value as System.Collections.IEnumerable;
+        Assert.NotNull(history);
+        var historyList = history!.Cast<object>().ToList();
+        Assert.Single(historyList);
+
+        var entry = historyList[0];
+        var frontStartProp = entry.GetType().GetProperty("frontStart")!.GetValue(entry);
+        Assert.Equal(start, frontStartProp);
+    }
+
+    [Fact]
+    public async Task GetSharedHistory_GhostMode_ReturnsEmptyArray()
+    {
+        _ghostMode.Setup(g => g.IsFrozenAsync()).ReturnsAsync(true);
+        var result = await _controller.GetSharedHistoryAsync("anytoken", Guid.NewGuid()) as OkObjectResult;
+        Assert.NotNull(result);
+        var items = result!.Value as System.Collections.IEnumerable;
+        Assert.NotNull(items);
+        Assert.Empty(items!.Cast<object>());
+        _tokenService.Verify(s => s.ResolveTokenAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSharedHistory_ReadFrontOnlyToken_Returns403()
+    {
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(-1), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedHistoryAsync("t", Guid.NewGuid()) as ObjectResult;
+        Assert.NotNull(result);
+        Assert.Equal(403, result!.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetSharedHistory_MemberNotVisible_Returns404()
+    {
+        var member = new Member { Name = "Ghost", BucketId = PrivacyBucket.FriendId };
+        _context.Members.Add(member);
+        await _context.SaveChangesAsync();
+
+        _tokenService.Setup(s => s.ResolveTokenAsync("t"))
+            .ReturnsAsync(new TokenResolveResult(MakeToken(0), TokenResolveStatus.Valid));
+
+        var result = await _controller.GetSharedHistoryAsync("t", member.Id);
+        Assert.IsType<NotFoundResult>(result);
+    }
+
     public void Dispose() => _context.Dispose();
 }
