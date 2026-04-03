@@ -26,6 +26,8 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedFieldId, setSelectedFieldId] = useState('')
+  const [removingFieldIds, setRemovingFieldIds] = useState<Set<string>>(new Set())
 
   const navigate = useNavigate()
   const { data: members = [] } = useQuery({
@@ -55,17 +57,29 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
   )
 
   const addExcludedFieldMutation = useMutation({
-    mutationFn: (fieldId: string) => bucketsApi.addExcludedField(bucket!.id, fieldId),
+    mutationFn: (fieldId: string) => {
+      const bucketId = bucket!.id
+      return bucketsApi.addExcludedField(bucketId, fieldId)
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['buckets', bucket!.id, 'excluded-fields'] })
+      const bucketId = bucket!.id
+      qc.invalidateQueries({ queryKey: ['buckets', bucketId, 'excluded-fields'] })
       setSelectedFieldId('')
     },
   })
 
   const removeExcludedFieldMutation = useMutation({
-    mutationFn: (fieldId: string) => bucketsApi.removeExcludedField(bucket!.id, fieldId),
+    mutationFn: (fieldId: string) => {
+      const bucketId = bucket!.id
+      setRemovingFieldIds(prev => new Set(prev).add(fieldId))
+      return bucketsApi.removeExcludedField(bucketId, fieldId)
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['buckets', bucket!.id, 'excluded-fields'] })
+      const bucketId = bucket!.id
+      qc.invalidateQueries({ queryKey: ['buckets', bucketId, 'excluded-fields'] })
+    },
+    onSettled: (_data, _error, fieldId) => {
+      setRemovingFieldIds(prev => { const s = new Set(prev); s.delete(fieldId); return s })
     },
   })
 
@@ -73,7 +87,6 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
     t => !t.revokedAt && t.minBucketSortOrder === (bucket?.sortOrder ?? -999)
   )
 
-  const [selectedFieldId, setSelectedFieldId] = useState('')
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
   function copyUrl(tokenValue: string) {
     navigator.clipboard.writeText(`${window.location.origin}/share/${tokenValue}`)
@@ -244,7 +257,7 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
                   <button
                     className={styles.hiddenFieldRemoveBtn}
                     onClick={() => removeExcludedFieldMutation.mutate(ef.fieldId)}
-                    disabled={removeExcludedFieldMutation.isPending}
+                    disabled={removingFieldIds.has(ef.fieldId)}
                     aria-label={`Unhide ${ef.label}`}
                     type="button"
                   >
