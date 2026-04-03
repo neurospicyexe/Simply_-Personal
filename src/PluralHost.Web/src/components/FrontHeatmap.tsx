@@ -51,7 +51,7 @@ export default function FrontHeatmap() {
 
   const memberList = members as Member[]
 
-  const { activeMemberIds, inactiveMemberIds } = useMemo(() => {
+  const { activeMemberIds } = useMemo(() => {
     const totals: Record<string, number> = {}
     for (const e of history as SpEnvelope<FrontContent>[]) {
       const start = Math.max(e.content.startTime, windowStart)
