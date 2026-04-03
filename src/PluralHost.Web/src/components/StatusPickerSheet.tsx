@@ -24,7 +24,7 @@ export default function StatusPickerSheet({
 
   useEffect(() => {
     if (isOpen) setFreetext(isCustom ? currentStatus : '')
-  }, [isOpen])
+  }, [isOpen, currentStatus])
 
   const handleSelect = (value: string) => {
     onSelect(value)
