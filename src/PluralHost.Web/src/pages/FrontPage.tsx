@@ -25,7 +25,7 @@ export default function FrontPage() {
   })
 
   const { data: frontStatuses = [] } = useQuery({
-    queryKey: ['frontStatuses'],
+    queryKey: ['front-statuses'],
     queryFn: frontStatusesApi.list,
   })
 
