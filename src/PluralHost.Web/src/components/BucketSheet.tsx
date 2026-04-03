@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Trash2 } from 'lucide-react'
+import { Trash2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import BottomSheet from './BottomSheet'
 import MemberPickerList from './MemberPickerList'
 import { bucketsApi, PUBLIC_BUCKET_ID } from '../api/buckets'
 import { membersApi } from '../api/members'
 import { tokensApi } from '../api/tokens'
+import { fieldsApi } from '../api/fields'
 import type { PrivacyBucket } from '../types'
 import styles from './BucketSheet.module.css'
 
@@ -37,10 +38,42 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
     queryFn: tokensApi.list,
   })
 
+  const { data: excludedFields = [] } = useQuery({
+    queryKey: ['buckets', bucket?.id, 'excluded-fields'],
+    queryFn: () => bucketsApi.listExcludedFields(bucket!.id),
+    enabled: !!bucket,
+  })
+
+  const { data: allFieldDefs = [] } = useQuery({
+    queryKey: ['fields'],
+    queryFn: fieldsApi.listDefs,
+    enabled: !!bucket,
+  })
+
+  const availableFields = allFieldDefs.filter(
+    f => !f.deletedAt && !excludedFields.some(e => e.fieldId === f.id)
+  )
+
+  const addExcludedFieldMutation = useMutation({
+    mutationFn: (fieldId: string) => bucketsApi.addExcludedField(bucket!.id, fieldId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['buckets', bucket!.id, 'excluded-fields'] })
+      setSelectedFieldId('')
+    },
+  })
+
+  const removeExcludedFieldMutation = useMutation({
+    mutationFn: (fieldId: string) => bucketsApi.removeExcludedField(bucket!.id, fieldId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['buckets', bucket!.id, 'excluded-fields'] })
+    },
+  })
+
   const bucketTokens = allTokens.filter(
     t => !t.revokedAt && t.minBucketSortOrder === (bucket?.sortOrder ?? -999)
   )
 
+  const [selectedFieldId, setSelectedFieldId] = useState('')
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
   function copyUrl(tokenValue: string) {
     navigator.clipboard.writeText(`${window.location.origin}/share/${tokenValue}`)
@@ -195,6 +228,55 @@ export default function BucketSheet({ bucket, isOpen, onClose }: Props) {
           >
             Manage in Tokens tab →
           </button>
+        </div>
+      )}
+
+      {!isNew && (
+        <div className={styles.hiddenFieldsSection}>
+          <div className={styles.sectionLabel}>Hidden Fields</div>
+          {excludedFields.length === 0 ? (
+            <p className={styles.tokenEmpty}>No hidden fields.</p>
+          ) : (
+            <div className={styles.tokenList}>
+              {excludedFields.map(ef => (
+                <div key={ef.fieldId} className={styles.hiddenFieldRow}>
+                  <span className={styles.tokenPreviewLabel}>{ef.label}</span>
+                  <button
+                    className={styles.hiddenFieldRemoveBtn}
+                    onClick={() => removeExcludedFieldMutation.mutate(ef.fieldId)}
+                    disabled={removeExcludedFieldMutation.isPending}
+                    aria-label={`Unhide ${ef.label}`}
+                    type="button"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {availableFields.length > 0 && (
+            <div className={styles.fieldPickerRow}>
+              <select
+                className={styles.fieldSelect}
+                value={selectedFieldId}
+                onChange={e => setSelectedFieldId(e.target.value)}
+                aria-label="Select field to hide"
+              >
+                <option value="" disabled>Hide a field…</option>
+                {availableFields.map(f => (
+                  <option key={f.id} value={f.id}>{f.label}</option>
+                ))}
+              </select>
+              <button
+                className={styles.addFieldBtn}
+                onClick={() => { if (selectedFieldId) addExcludedFieldMutation.mutate(selectedFieldId) }}
+                disabled={!selectedFieldId || addExcludedFieldMutation.isPending}
+                type="button"
+              >
+                Add
+              </button>
+            </div>
+          )}
         </div>
       )}
     </BottomSheet>
