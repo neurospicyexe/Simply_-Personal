@@ -111,10 +111,7 @@ export default function HeatmapStrip() {
                       key={i}
                       className={styles.span}
                       style={{ '--span-color': color, left: `${s.left}%`, width: `${s.width}%` } as React.CSSProperties}
-                    >
-                      <div className={styles.spanFill} />
-                      <div className={styles.spanBar} />
-                    </div>
+                    />
                   ))}
                 </div>
               </div>
