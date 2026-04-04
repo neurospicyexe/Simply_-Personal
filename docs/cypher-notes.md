@@ -58,7 +58,22 @@ Six tabs implemented: Essence, Specs, Dossier, Comms, Logs, Access. Each is a st
 - **LogsTab** — front history (GET `/api/front/history`)
 - **AccessTab** — privacy tier, group membership, danger zone (delete with PIN + cooldown)
 
-## Pending / Watch List
+## Bug Fixes Applied (2026-04-04)
+
+- **uid="owner" bug** — `SpFrontContent.Uid` was hardcoded to `"owner"` in `ToEnvelope`. Every FrontCard operation (remove, status update, edit, comment save) routed `entry.uid` as the URL param → `DELETE /v1/frontHistory/owner` → GUID parse fail → 404. Fixed: FrontPage closures now capture `envelope.id` from the map; FrontCard callbacks ignore the uid param.
+- **LogsTab 404 on save/delete** — same uid bug. `selected.content.uid` ("owner") replaced with `selected.id` (actual GUID).
+- **LogsTab status field** — was a plain text input. Now opens StatusPickerSheet backed by a `front-statuses` query.
+- **Duplicate fronters** — `POST /v1/frontHistory` now returns 409 Conflict if member already has an active session (`FrontEnd == null`). Picker also hides already-fronting members.
+- **Groups in member profile** — AccessTab had no group management. Added group checkbox section using new `POST/DELETE /api/groups/{id}/members/{memberId}` endpoints.
+- **Groups alphabetical** — SystemPage Groups tab now sorts A-Z before render.
+- **FrontCard comment Enter key** — Enter (without Shift) now saves immediately in addition to onBlur.
+
+## Known Remaining Issues
+
+### Photo upload (avatar / background / extra images)
+Upload code is correct end-to-end. Backend accepts jpg/jpeg/png/gif/webp only — validates magic bytes. To diagnose: open browser Network tab, try an upload, check the `POST /api/media/upload` response body for the exact error. Common cause: HEIC/AVIF/JFIF files are rejected with 400. If the upload returns 200 but image never displays, check that the API is running and `GET /api/media/<uuid>` returns the file.
+
+### Pending / Watch List
 
 - No rate limiting on `/api/auth/login` or `/api/secure/freeze` yet (known security backlog).
 - Cookie `Secure = true` will break if served over plain HTTP in production without a TLS proxy.
