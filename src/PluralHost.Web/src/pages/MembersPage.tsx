@@ -75,7 +75,8 @@ export default function MembersPage() {
   const groupChildrenMap = useMemo(() => {
     const groupIds = new Set((groups as Group[]).map(g => g.id))
     const map = new Map<string | null, Group[]>()
-    for (const g of groups as Group[]) {
+    const sorted = [...(groups as Group[])].sort((a, b) => a.name.localeCompare(b.name))
+    for (const g of sorted) {
       const parentId = g.parentGroupId && groupIds.has(g.parentGroupId) ? g.parentGroupId : null
       if (!map.has(parentId)) map.set(parentId, [])
       map.get(parentId)!.push(g)

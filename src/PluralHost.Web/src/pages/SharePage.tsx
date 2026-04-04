@@ -94,7 +94,7 @@ export default function SharePage() {
 
         <main className={styles.rightPanel}>
           <p className={styles.panelLabel}>Members · {data.members.length}</p>
-          {data.members.map(m => (
+          {[...data.members].sort((a, b) => (a.displayName || a.name).localeCompare(b.displayName || b.name)).map(m => (
             <Link
               key={m.id}
               to={`/view/${token}/members/${m.id}`}
