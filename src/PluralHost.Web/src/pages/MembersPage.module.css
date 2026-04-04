@@ -5,6 +5,10 @@
   margin: 0 auto;
 }
 
+.pageHeader {
+  margin-bottom: var(--space-5);
+}
+
 .searchRow {
   margin-bottom: var(--space-4);
 }

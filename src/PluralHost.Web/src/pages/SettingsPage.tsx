@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { secureApi } from '../api/secure'
 import { apiFetch } from '../api/client'
-import { importApi, type ImportResult, type SpImportPayload, type PkImportPayload } from '../api/import'
+import { importApi, type ImportResult, type SpImportPayload, type PkImportPayload, type SpGroupEntry } from '../api/import'
 import styles from './SettingsPage.module.css'
 
 function ImportResultCard({ result }: { result: ImportResult }) {
@@ -16,6 +16,9 @@ function ImportResultCard({ result }: { result: ImportResult }) {
       </div>
       {result.frontHistoryImported > 0 && (
         <p className={styles.resultMeta}>{result.frontHistoryImported} front entries imported</p>
+      )}
+      {result.groupsImported > 0 && (
+        <p className={styles.resultMeta}>{result.groupsImported} group{result.groupsImported !== 1 ? 's' : ''} imported</p>
       )}
       {(result.avatarsDownloaded > 0 || result.avatarsFailed > 0) && (
         <p className={styles.resultMeta}>
@@ -139,6 +142,7 @@ export default function SettingsPage() {
   const [spIncludeFields, setSpIncludeFields] = useState(true)
   const [spIncludeHistory, setSpIncludeHistory] = useState(true)
   const [spIncludeAvatars, setSpIncludeAvatars] = useState(true)
+  const [spIncludeGroups, setSpIncludeGroups] = useState(true)
   const [spResult, setSpResult] = useState<ImportResult | null>(null)
 
   const spMutation = useMutation({
@@ -163,9 +167,11 @@ export default function SettingsPage() {
       includeCustomFields: spIncludeFields,
       includeFrontHistory: spIncludeHistory,
       includeAvatars: spIncludeAvatars,
+      includeGroups: spIncludeGroups,
       members: (p.members as SpImportPayload['members']) ?? [],
       customFields: (p.customFields as SpImportPayload['customFields']) ?? [],
       frontHistory: (p.frontHistory as SpImportPayload['frontHistory']) ?? [],
+      groups: (p.groups as SpGroupEntry[]) ?? [],
     })
   }
 
@@ -227,6 +233,11 @@ export default function SettingsPage() {
               <input type="checkbox" checked={spIncludeAvatars}
                 onChange={e => setSpIncludeAvatars(e.target.checked)} />
               Download avatars
+            </label>
+            <label className={styles.checkRow}>
+              <input type="checkbox" checked={spIncludeGroups}
+                onChange={e => setSpIncludeGroups(e.target.checked)} />
+              Import groups
             </label>
             <div className={styles.conflictRow}>
               <span className={styles.conflictPill}>Safe merge</span>

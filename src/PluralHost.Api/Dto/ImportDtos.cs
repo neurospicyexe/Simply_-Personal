@@ -18,6 +18,14 @@ public record SpMemberEntry(
     bool? ReceiveMessageBoardNotifs,
     Dictionary<string, string>? Info);
 
+public record SpGroupEntry(
+    [property: JsonPropertyName("_id")] string Id,
+    string? Name,
+    string? Desc,
+    string? Color,
+    string? Emoji,
+    IReadOnlyList<string>? Members);
+
 public record SpCustomFieldEntry(
     [property: JsonPropertyName("_id")] string Id,
     string? Name,
@@ -34,9 +42,11 @@ public record SpImportRequest(
     bool IncludeCustomFields,
     bool IncludeFrontHistory,
     bool IncludeAvatars,
+    bool IncludeGroups,
     IReadOnlyList<SpMemberEntry> Members,
     IReadOnlyList<SpCustomFieldEntry>? CustomFields,
-    IReadOnlyList<SpFrontHistoryEntry>? FrontHistory);
+    IReadOnlyList<SpFrontHistoryEntry>? FrontHistory,
+    IReadOnlyList<SpGroupEntry>? Groups);
 
 // ── PK live pull ──────────────────────────────────────────────────────
 
@@ -88,4 +98,5 @@ public record ImportResult(
     IReadOnlyList<ImportMemberError> Errors,
     int AvatarsDownloaded,
     int AvatarsFailed,
-    int FrontHistoryImported);
+    int FrontHistoryImported,
+    int GroupsImported);

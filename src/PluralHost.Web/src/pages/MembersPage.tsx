@@ -66,7 +66,7 @@ export default function MembersPage() {
 
   return (
     <div className={styles.page}>
-      <div>
+      <div className={styles.pageHeader}>
         <span className="eyebrow">Your system</span>
         <h1 className="pageTitle">
           <span className="accentWord">Members</span>
@@ -159,7 +159,7 @@ export default function MembersPage() {
             <p className={styles.empty}>{search ? 'No members match that search.' : 'No members yet. Tap + to add the first one.'}</p>
           )}
           </div>
-          {alphabetGroups.size > 3 && (
+          {alphabetGroups.size > 0 && (
             <nav className={styles.alphaRail} aria-label="Jump to letter">
               {Array.from(alphabetGroups.keys()).map(letter => (
                 <button

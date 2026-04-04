@@ -18,7 +18,7 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
         var strategy = ParseStrategy(request.ConflictStrategy);
         var created = 0; var updated = 0; var skipped = 0;
         var avatarsOk = 0; var avatarsFail = 0;
-        var frontImported = 0;
+        var frontImported = 0; var groupsImported = 0;
         var errors = new List<ImportMemberError>();
 
         // Upsert custom field definitions first (needed for Info mapping)
@@ -160,8 +160,50 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
             }
         }
 
+        // Groups
+        if (request.IncludeGroups && request.Groups != null)
+        {
+            var spIdToMemberId = await context.Members
+                .IgnoreQueryFilters()
+                .Where(m => m.DeletedAt == null && m.SpMemberId != null)
+                .Select(m => new { m.SpMemberId, m.Id })
+                .ToDictionaryAsync(x => x.SpMemberId!, x => x.Id, ct);
+
+            foreach (var spGroup in request.Groups)
+            {
+                if (string.IsNullOrWhiteSpace(spGroup.Name)) continue;
+
+                var group = await context.Groups
+                    .Include(g => g.Members)
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(g => g.Name == spGroup.Name && g.DeletedAt == null, ct);
+
+                if (group == null)
+                {
+                    group = new Group { Name = spGroup.Name };
+                    context.Groups.Add(group);
+                    groupsImported++;
+                }
+
+                if (!string.IsNullOrEmpty(spGroup.Desc)) group.Description = spGroup.Desc;
+                if (!string.IsNullOrEmpty(spGroup.Color)) group.Color = NormalizeColor(spGroup.Color);
+                if (!string.IsNullOrEmpty(spGroup.Emoji)) group.Emoji = spGroup.Emoji;
+
+                if (spGroup.Members != null)
+                {
+                    foreach (var spMemberId in spGroup.Members)
+                    {
+                        if (!spIdToMemberId.TryGetValue(spMemberId, out var memberId)) continue;
+                        if (group.Members.Any(m => m.Id == memberId)) continue;
+                        var member = await context.Members.FindAsync([memberId], ct);
+                        if (member != null) group.Members.Add(member);
+                    }
+                }
+            }
+        }
+
         await context.SaveChangesAsync(ct);
-        return new ImportResult(created, updated, skipped, errors, avatarsOk, avatarsFail, frontImported);
+        return new ImportResult(created, updated, skipped, errors, avatarsOk, avatarsFail, frontImported, groupsImported);
     }
 
     public async Task<ImportResult> ImportPkAsync(PkImportRequest request, CancellationToken ct = default)
@@ -263,7 +305,7 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
         }
 
         await context.SaveChangesAsync(ct);
-        return new ImportResult(created, updated, skipped, errors, avatarsOk, avatarsFail, frontImported);
+        return new ImportResult(created, updated, skipped, errors, avatarsOk, avatarsFail, frontImported, 0);
     }
 
     private static void ApplyPkFields(

@@ -17,6 +17,15 @@ export interface SpMemberEntry {
   info?: Record<string, string>
 }
 
+export interface SpGroupEntry {
+  _id: string
+  name?: string
+  desc?: string
+  color?: string
+  emoji?: string
+  members?: string[]
+}
+
 export interface SpCustomFieldEntry {
   _id: string
   name?: string
@@ -35,9 +44,11 @@ export interface SpImportPayload {
   includeCustomFields: boolean
   includeFrontHistory: boolean
   includeAvatars: boolean
+  includeGroups: boolean
   members: SpMemberEntry[]
   customFields: SpCustomFieldEntry[]
   frontHistory: SpFrontHistoryEntry[]
+  groups: SpGroupEntry[]
 }
 
 // ── PK types ──────────────────────────────────────────────────────────
@@ -65,6 +76,7 @@ export interface ImportResult {
   avatarsDownloaded: number
   avatarsFailed: number
   frontHistoryImported: number
+  groupsImported: number
 }
 
 // ── API calls ─────────────────────────────────────────────────────────
