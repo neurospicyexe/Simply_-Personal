@@ -13,6 +13,7 @@ interface FrontCardProps {
   onRemove: (uid: string) => void
   onUpdateStatus: (uid: string, status: string) => void
   onEdit: (uid: string, memberId: string, startTime: number) => void
+  onUpdateComment?: (uid: string, comment: string) => void
 }
 
 function formatDuration(ms: number): string {
@@ -24,12 +25,13 @@ function formatDuration(ms: number): string {
   return `${s}s`
 }
 
-export default function FrontCard({ entry, member, frontStatuses, onRemove, onUpdateStatus, onEdit }: FrontCardProps) {
+export default function FrontCard({ entry, member, frontStatuses, onRemove, onUpdateStatus, onEdit, onUpdateComment }: FrontCardProps) {
   const reduced = useReducedMotion()
   const [collapsed, setCollapsed] = useState(false)
   const [elapsed, setElapsed] = useState(Date.now() - entry.startTime)
   const [showStatusSheet, setShowStatusSheet] = useState(false)
   const [status, setStatus] = useState(entry.customStatus ?? '')
+  const [comment, setComment] = useState(entry.comment ?? '')
   const [showEdit, setShowEdit] = useState(false)
   const [editMemberId, setEditMemberId] = useState(entry.member)
   const [editStartTime, setEditStartTime] = useState(
@@ -40,7 +42,8 @@ export default function FrontCard({ entry, member, frontStatuses, onRemove, onUp
     setStatus(entry.customStatus ?? '')
     setEditMemberId(entry.member)
     setEditStartTime(new Date(entry.startTime).toISOString().slice(0, 16))
-  }, [entry.uid, entry.customStatus, entry.member, entry.startTime])
+    setComment(entry.comment ?? '')
+  }, [entry.uid, entry.customStatus, entry.member, entry.startTime, entry.comment])
 
   useEffect(() => {
     if (reduced) return
@@ -151,6 +154,19 @@ export default function FrontCard({ entry, member, frontStatuses, onRemove, onUp
               </div>
             </div>
           )}
+
+          {/* Comment */}
+          <div className={styles.commentRow}>
+            <textarea
+              className={styles.commentInput}
+              placeholder="Add a note…"
+              value={comment}
+              rows={1}
+              onChange={e => setComment(e.target.value)}
+              onBlur={() => onUpdateComment?.(entry.uid, comment)}
+              aria-label="Front session note"
+            />
+          </div>
 
           {/* Actions */}
           <div className={styles.actions}>
