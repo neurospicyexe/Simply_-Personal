@@ -220,6 +220,16 @@
   color: var(--color-muted);
 }
 
+.bucketChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .timer { display: none; }
   * { transition: none !important; }

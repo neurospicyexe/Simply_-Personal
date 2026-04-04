@@ -110,7 +110,14 @@
       "mcp__plugin_context-mode_context-mode__ctx_index",
       "Bash(bash scripts/start-server.sh --project-dir /c/dev/simply-personal)",
       "Bash(bash /c/Users/razse/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh --project-dir /c/dev/simply-personal)",
-      "mcp__plugin_serena_serena__insert_after_symbol"
+      "mcp__plugin_serena_serena__insert_after_symbol",
+      "Bash(C:\\\\Users\\\\razse\\\\.claude\\\\plugins\\\\cache\\\\superpowers-marketplace\\\\superpowers\\\\5.0.7\\\\skills\\\\brainstorming\\\\scripts\\\\start-server.sh:*)",
+      "Bash(bash:*)",
+      "Bash(ls /c/dev/simply-personal/src/PluralHost.Web/src/components/StatusPickerSheet*)",
+      "Bash(node \"C:\\\\Users\\\\razse\\\\.claude\\\\plugins\\\\cache\\\\superpowers-marketplace\\\\superpowers\\\\5.0.7\\\\skills\\\\brainstorming\\\\scripts\\\\start-server.sh\" --project-dir \"C:\\\\dev\\\\simply-personal\")",
+      "mcp__claude_ai_Librarian__ask_librarian",
+      "Bash(npx vite-bundle-visualizer:*)",
+      "Bash(npx vite:*)"
     ]
   }
 }

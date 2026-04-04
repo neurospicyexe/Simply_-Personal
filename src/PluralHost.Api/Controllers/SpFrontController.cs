@@ -21,7 +21,8 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
                 StartTime: Epoch.ToMs(fh.FrontStart),
                 EndTime: fh.FrontEnd.HasValue ? Epoch.ToMs(fh.FrontEnd.Value) : null,
                 Custom: false,
-                CustomStatus: fh.CustomStatus?.Label
+                CustomStatus: fh.CustomStatus?.Label,
+                Comment: fh.Comment
             ));
 
     // GET /v1/fronters — currently fronting (FrontEnd == null)
@@ -93,22 +94,38 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
 
     // PATCH /v1/frontHistory/:id — update entry (set live:false + endTime to end fronting)
     [HttpPatch("v1/frontHistory/{id}")]
-    public async Task<IActionResult> UpdateAsync(string id, [FromBody] SpFrontUpdateRequest body)
+    public async Task<IActionResult> UpdateAsync(string id, [FromBody] SpFrontUpdateRequest body, CancellationToken ct = default)
     {
         if (!Guid.TryParse(id, out var guid)) return NotFound();
-        var entry = await context.FrontHistory.FirstOrDefaultAsync(f => f.Id == guid);
+        var entry = await context.FrontHistory.FirstOrDefaultAsync(f => f.Id == guid, ct);
         if (entry is null) return NotFound();
 
         if (body.Live is false && body.EndTime.HasValue)
             entry.FrontEnd = Epoch.FromMs(body.EndTime.Value);
         if (body.CustomStatus is not null) entry.Comment = body.CustomStatus;
+        if (body.Comment is not null) entry.Comment = body.Comment;
         if (body.MemberId is not null && Guid.TryParse(body.MemberId, out var newMemberId))
             entry.MemberId = newMemberId;
         if (body.StartTime.HasValue)
             entry.FrontStart = Epoch.FromMs(body.StartTime.Value);
 
-        await context.SaveChangesAsync();
-        return Ok();
+        await context.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    // POST /v1/fronters/clear-all — end all active front sessions
+    [HttpPost("v1/fronters/clear-all")]
+    [Authorize]
+    public async Task<IActionResult> ClearAllFrontersAsync(CancellationToken ct)
+    {
+        var active = await context.FrontHistory
+            .Where(f => f.FrontEnd == null && f.DeletedAt == null)
+            .ToListAsync(ct);
+        var now = DateTime.UtcNow;
+        foreach (var entry in active)
+            entry.FrontEnd = now;
+        await context.SaveChangesAsync(ct);
+        return NoContent();
     }
 
     // DELETE /v1/frontHistory/:id — soft-delete

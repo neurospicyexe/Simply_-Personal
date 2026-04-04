@@ -55,7 +55,8 @@ public record SpFrontContent(
     long StartTime,        // epoch ms
     long? EndTime,         // epoch ms, null if live
     bool Custom,
-    string? CustomStatus
+    string? CustomStatus,
+    string? Comment        // free-text annotation -- separate from status label
 );
 
 public record SpFrontCreateRequest(
@@ -72,7 +73,8 @@ public record SpFrontUpdateRequest(
     long? EndTime = null,
     string? CustomStatus = null,
     string? MemberId = null,
-    long? StartTime = null
+    long? StartTime = null,
+    string? Comment = null   // set/clear free-text annotation
 );
 
 // ── Group ─────────────────────────────────────────────────────────────

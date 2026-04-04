@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SharePage Layout Options</title>
+<script src="/helper.js"></script>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --text: #f0f0f0;
+    --muted: #777;
+    --lime: #b6ff00;
+    --pink: #ff4db8;
+    --cyan: #00d4ff;
+    --purple: #b400ff;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    padding: 24px 16px 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--lime);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .option {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    overflow: hidden;
+  }
+  .option:hover { border-color: #444; }
+  .option.selected { border-color: var(--lime); }
+  .option.selected .option-badge { background: var(--lime); color: #000; }
+
+  .option-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .option-badge {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.9rem; color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .option-title {
+    font-weight: 700;
+    font-size: 1rem;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+  .option-tag {
+    margin-left: auto;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .tag-recommended { background: rgba(182,255,0,0.12); color: var(--lime); }
+  .tag-simple { background: rgba(0,212,255,0.1); color: var(--cyan); }
+  .tag-power { background: rgba(180,0,255,0.12); color: var(--purple); }
+
+  .option-desc {
+    padding: 12px 20px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mockup-wrap {
+    padding: 16px 20px 20px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ─── MOCKUP SHARED ATOMS ─────────────────────── */
+  .m-eyebrow {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .m-page-title {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+  .m-accent { color: var(--lime); }
+  .m-section-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .m-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .m-front-card {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .m-front-info { flex: 1; }
+  .m-name { font-weight: 700; font-size: 0.9rem; }
+  .m-pronouns { font-size: 0.72rem; color: var(--muted); }
+  .m-status {
+    font-size: 0.72rem;
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 3px;
+  }
+  .m-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--lime);
+    flex-shrink: 0;
+  }
+  .m-member-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .m-member-row:last-child { border-bottom: none; }
+  .m-field-chip {
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .m-live-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: rgba(182,255,0,0.15);
+    color: var(--lime);
+  }
+  .m-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .m-system-name {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .m-ghost-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--lime);
+    box-shadow: 0 0 6px var(--lime);
+    display: inline-block;
+  }
+
+  /* ─── OPTION A MOCKUP: Card-Centric ──────────── */
+  .opt-a .m-page { background: var(--bg); border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
+  .opt-a .front-grid { display: flex; gap: 8px; margin-bottom: 20px; }
+  .opt-a .m-front-card { flex: 1; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .opt-a .member-list { display: flex; flex-direction: column; }
+
+  /* ─── OPTION B MOCKUP: Split Panel ───────────── */
+  .opt-b .m-page { background: var(--bg); border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
+  .opt-b .split { display: flex; gap: 12px; }
+  .opt-b .left-panel {
+    width: 220px; flex-shrink: 0;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid var(--border);
+  }
+  .opt-b .right-panel {
+    flex: 1;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid var(--border);
+  }
+  .opt-b .sticky-label {
+    font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--lime); margin-bottom: 8px;
+  }
+  .opt-b .member-card {
+    display: flex; gap: 8px; padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .opt-b .member-card:last-child { border-bottom: none; }
+
+  /* ─── OPTION C MOCKUP: Profile Cards ─────────── */
+  .opt-c .m-page { background: var(--bg); border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
+  .opt-c .fronting-banner {
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .opt-c .front-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt-c .front-chip {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 10px;
+  }
+  .opt-c .member-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .opt-c .m-card {
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 12px;
+    display: flex; gap: 8px;
+  }
+  .opt-c .m-card-info { flex: 1; }
+  .opt-c .field-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .opt-c .fronting-indicator {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--lime);
+    box-shadow: 0 0 5px var(--lime);
+    flex-shrink: 0; margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>SharePage Layout</h1>
+<p class="subtitle">Pick a layout direction for the shared system view. All options use Space Grotesk headers, CSS Modules, and the full brand palette.</p>
+
+<div class="options">
+
+  <!-- OPTION A -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="option-header">
+      <div class="option-badge">A</div>
+      <span class="option-title">Card-Centric (Vertical Flow)</span>
+      <span class="option-tag tag-simple">Simple</span>
+    </div>
+    <div class="option-desc">
+      Classic top-to-bottom: fronting alters → member list. Clean, familiar. Best for smaller systems or mobile-first feel. Custom fields appear as chips under each member.
+    </div>
+    <div class="mockup-wrap opt-a">
+      <div class="m-page">
+        <div class="m-header-bar" style="margin-bottom:12px;">
+          <span class="m-system-name">Null's System</span>
+          <span class="m-ghost-dot"></span>
+        </div>
+        <div class="m-eyebrow">Right now</div>
+        <div class="m-page-title">Currently <span class="m-accent">Fronting</span></div>
+        <div class="front-grid">
+          <div class="m-front-card" style="border-left: 3px solid #b6ff00;">
+            <div style="display:flex;align-items:center;gap:8px;width:100%;">
+              <div class="m-avatar" style="background:#b6ff00;"></div>
+              <div class="m-front-info">
+                <div class="m-name">Raziel <span class="m-live-badge">LIVE</span></div>
+                <div class="m-pronouns">they/them</div>
+                <div class="m-status"><span class="m-dot"></span><span style="color:var(--lime)">Focused</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="m-front-card" style="border-left: 3px solid #ff4db8;">
+            <div style="display:flex;align-items:center;gap:8px;width:100%;">
+              <div class="m-avatar" style="background:#ff4db8;"></div>
+              <div class="m-front-info">
+                <div class="m-name">Vesper</div>
+                <div class="m-pronouns">she/her</div>
+                <div class="m-status"><span class="m-dot" style="background:var(--muted)"></span><span style="color:var(--muted)">No status</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="m-section-label">Members · 4 visible</div>
+        <div class="member-list">
+          <div class="m-member-row">
+            <div class="m-avatar" style="background:#b6ff00;width:28px;height:28px;"></div>
+            <div style="flex:1">
+              <div class="m-name" style="font-size:0.82rem;">Raziel</div>
+              <span class="m-field-chip">System Anchor</span>
+              <span class="m-field-chip">Protector</span>
+            </div>
+          </div>
+          <div class="m-member-row">
+            <div class="m-avatar" style="background:#ff4db8;width:28px;height:28px;"></div>
+            <div style="flex:1">
+              <div class="m-name" style="font-size:0.82rem;">Vesper</div>
+              <span class="m-field-chip">Emotional</span>
+            </div>
+          </div>
+          <div class="m-member-row">
+            <div class="m-avatar" style="background:#00d4ff;width:28px;height:28px;"></div>
+            <div style="flex:1"><div class="m-name" style="font-size:0.82rem;">Kael</div></div>
+          </div>
+          <div class="m-member-row">
+            <div class="m-avatar" style="background:#b400ff;width:28px;height:28px;"></div>
+            <div style="flex:1"><div class="m-name" style="font-size:0.82rem;">Wren</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="option-header">
+      <div class="option-badge">B</div>
+      <span class="option-title">Split Panel (Fronting + Members)</span>
+      <span class="option-tag tag-recommended">Recommended</span>
+    </div>
+    <div class="option-desc">
+      Two-column layout: sticky left panel shows fronting alters, scrollable right panel shows members. Best for larger systems. Custom fields show inline. Desktop-first — collapses to stacked on mobile.
+    </div>
+    <div class="mockup-wrap opt-b">
+      <div class="m-page">
+        <div class="m-header-bar" style="margin-bottom:12px;">
+          <span class="m-system-name">Null's System</span>
+          <span style="font-size:0.7rem;color:var(--muted)">Shared view</span>
+        </div>
+        <div class="split">
+          <div class="left-panel">
+            <div class="sticky-label">▶ Fronting Now</div>
+            <div class="m-front-card" style="border-left:3px solid #b6ff00;margin-bottom:8px;">
+              <div class="m-avatar" style="background:#b6ff00;width:30px;height:30px;"></div>
+              <div class="m-front-info">
+                <div class="m-name" style="font-size:0.82rem;">Raziel <span class="m-live-badge">LIVE</span></div>
+                <div class="m-status" style="margin-top:2px;"><span class="m-dot"></span><span style="color:var(--lime);font-size:0.68rem;">Focused</span></div>
+              </div>
+            </div>
+            <div class="m-front-card" style="border-left:3px solid #ff4db8;">
+              <div class="m-avatar" style="background:#ff4db8;width:30px;height:30px;"></div>
+              <div class="m-front-info">
+                <div class="m-name" style="font-size:0.82rem;">Vesper</div>
+                <div class="m-pronouns">she/her</div>
+              </div>
+            </div>
+          </div>
+          <div class="right-panel">
+            <div class="sticky-label" style="color:var(--muted)">Members · 4</div>
+            <div class="member-card">
+              <div class="m-avatar" style="background:#b6ff00;width:30px;height:30px;flex-shrink:0;"></div>
+              <div>
+                <div class="m-name" style="font-size:0.82rem;">Raziel</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">
+                  <span class="m-field-chip">Anchor</span>
+                  <span class="m-field-chip">Protector</span>
+                </div>
+              </div>
+            </div>
+            <div class="member-card">
+              <div class="m-avatar" style="background:#ff4db8;width:30px;height:30px;flex-shrink:0;"></div>
+              <div><div class="m-name" style="font-size:0.82rem;">Vesper</div><span class="m-field-chip">Emotional</span></div>
+            </div>
+            <div class="member-card">
+              <div class="m-avatar" style="background:#00d4ff;width:30px;height:30px;flex-shrink:0;"></div>
+              <div><div class="m-name" style="font-size:0.82rem;">Kael</div></div>
+            </div>
+            <div class="member-card">
+              <div class="m-avatar" style="background:#b400ff;width:30px;height:30px;flex-shrink:0;"></div>
+              <div><div class="m-name" style="font-size:0.82rem;">Wren</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION C -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="option-header">
+      <div class="option-badge">C</div>
+      <span class="option-title">Fronting Banner + Member Grid</span>
+      <span class="option-tag tag-power">Dense</span>
+    </div>
+    <div class="option-desc">
+      Compact fronting banner as chips at top, then a 2-column member grid below. More information density. Fronting members get a live indicator dot on their card. Works well for large member counts.
+    </div>
+    <div class="mockup-wrap opt-c">
+      <div class="m-page">
+        <div class="m-header-bar" style="margin-bottom:12px;">
+          <span class="m-system-name">Null's System</span>
+          <span class="m-ghost-dot"></span>
+        </div>
+        <div class="fronting-banner">
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--lime);min-width:52px;">Fronting</div>
+          <div class="front-chips">
+            <div class="front-chip">
+              <div class="m-avatar" style="background:#b6ff00;width:22px;height:22px;"></div>
+              <span style="font-size:0.78rem;font-weight:600;">Raziel</span>
+              <span style="font-size:0.68rem;color:var(--lime);">Focused</span>
+            </div>
+            <div class="front-chip">
+              <div class="m-avatar" style="background:#ff4db8;width:22px;height:22px;"></div>
+              <span style="font-size:0.78rem;font-weight:600;">Vesper</span>
+            </div>
+          </div>
+        </div>
+        <div class="m-section-label">Members · 4 visible</div>
+        <div class="member-grid">
+          <div class="m-card" style="border-color:#b6ff00;">
+            <div class="fronting-indicator"></div>
+            <div class="m-avatar" style="background:#b6ff00;"></div>
+            <div class="m-card-info">
+              <div class="m-name" style="font-size:0.82rem;">Raziel</div>
+              <div class="field-row"><span class="m-field-chip">Anchor</span><span class="m-field-chip">Protector</span></div>
+            </div>
+          </div>
+          <div class="m-card" style="border-color:#ff4db8;">
+            <div class="fronting-indicator" style="background:var(--pink);box-shadow:0 0 5px var(--pink);"></div>
+            <div class="m-avatar" style="background:#ff4db8;"></div>
+            <div class="m-card-info">
+              <div class="m-name" style="font-size:0.82rem;">Vesper</div>
+              <div class="field-row"><span class="m-field-chip">Emotional</span></div>
+            </div>
+          </div>
+          <div class="m-card">
+            <div style="width:6px;flex-shrink:0;margin-top:4px;"></div>
+            <div class="m-avatar" style="background:#00d4ff;"></div>
+            <div class="m-card-info"><div class="m-name" style="font-size:0.82rem;">Kael</div></div>
+          </div>
+          <div class="m-card">
+            <div style="width:6px;flex-shrink:0;margin-top:4px;"></div>
+            <div class="m-avatar" style="background:#b400ff;"></div>
+            <div class="m-card-info"><div class="m-name" style="font-size:0.82rem;">Wren</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:24px;padding:14px 16px;background:var(--surface);border-radius:10px;border:1px solid var(--border);font-size:0.8rem;color:var(--muted);">
+  All options include: eyebrow + accentWord title pattern · Space Grotesk headers · CSS Modules (no inline styles) · custom fields as chips · <code style="color:var(--cyan);font-size:0.75rem;">customStatus</code> on front entries · board messages section (not shown)
+</div>
+
+</body>
+</html>

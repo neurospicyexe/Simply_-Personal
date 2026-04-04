@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { FrontContent, Member } from '../types'
+import type { FrontContent, Member, PrivacyBucket } from '../types'
 import Avatar from './Avatar'
 import StatusPickerSheet from './StatusPickerSheet'
 import { useReducedMotion } from '../hooks/useReducedMotion'
@@ -10,6 +10,7 @@ interface FrontCardProps {
   entry: FrontContent
   member: Member
   frontStatuses: FrontStatus[]
+  bucket?: PrivacyBucket
   onRemove: (uid: string) => void
   onUpdateStatus: (uid: string, status: string) => void
   onEdit: (uid: string, memberId: string, startTime: number) => void
@@ -25,7 +26,7 @@ function formatDuration(ms: number): string {
   return `${s}s`
 }
 
-export default function FrontCard({ entry, member, frontStatuses, onRemove, onUpdateStatus, onEdit, onUpdateComment }: FrontCardProps) {
+export default function FrontCard({ entry, member, frontStatuses, bucket, onRemove, onUpdateStatus, onEdit, onUpdateComment }: FrontCardProps) {
   const reduced = useReducedMotion()
   const [collapsed, setCollapsed] = useState(false)
   const [elapsed, setElapsed] = useState(Date.now() - entry.startTime)
@@ -84,6 +85,12 @@ export default function FrontCard({ entry, member, frontStatuses, onRemove, onUp
           <span className={styles.name}>{member.name}</span>
           {!collapsed && member.pronouns && (
             <span className={styles.pronouns}>{member.pronouns}</span>
+          )}
+          {bucket && (
+            <span className={styles.bucketChip}>
+              {bucket.emoji && <span>{bucket.emoji}</span>}
+              {bucket.name}
+            </span>
           )}
         </div>
         <span

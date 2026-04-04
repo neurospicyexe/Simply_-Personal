@@ -42,7 +42,6 @@ export default function FrontPage() {
     () => Object.fromEntries((buckets as PrivacyBucket[]).map(b => [b.id, b])),
     [buckets]
   )
-  void bucketMap
 
   // Build member lookup map
   const memberMap = useMemo(() => Object.fromEntries(members.map((m: Member) => [m.id, m])), [members])
@@ -153,6 +152,7 @@ export default function FrontPage() {
               entry={envelope.content}
               member={member}
               frontStatuses={frontStatuses}
+              bucket={bucketMap[member.bucketId]}
               onRemove={uid => removeMutation.mutate(uid)}
               onUpdateStatus={(uid, status) => updateStatusMutation.mutate({ uid, status })}
               onEdit={(uid, memberId, startTime) => editMutation.mutate({ uid, memberId, startTime })}

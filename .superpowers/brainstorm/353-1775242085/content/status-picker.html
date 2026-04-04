@@ -1,0 +1,134 @@
+<style>
+  body { background: #0d0d0d; }
+  .q { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; color: #888; margin-bottom: 2rem; }
+  .approach-grid { display: flex; flex-direction: column; gap: 1.5rem; max-width: 420px; margin: 0 auto; }
+
+  /* FrontCard shell */
+  .fc { background: #1a1a1a; border: 2px solid #2a2a2a; border-radius: 16px; overflow: hidden; box-shadow: 4px 4px 0 #000; cursor: pointer; transition: border-color 0.2s; }
+  .fc:hover { border-color: #444; }
+  .fc.selected { border-color: #b6ff00 !important; box-shadow: 4px 4px 0 rgba(182,255,0,0.3); }
+  .fc-top-bar { height: 4px; background: var(--mc, #b6ff00); }
+  .fc-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .fc-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--mc, #b6ff00); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1rem; color: #000; flex-shrink: 0; }
+  .fc-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem; color: #fff; }
+  .fc-pronouns { font-size: 0.72rem; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+  .fc-timer { margin-left: auto; font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 700; color: var(--mc, #b6ff00); }
+  .fc-body { padding: 0 16px 14px; border-top: 1px solid #222; margin-top: 2px; padding-top: 12px; }
+  .fc-started { font-size: 0.75rem; color: #555; margin-bottom: 10px; }
+
+  /* Option label */
+  .opt-label { font-family: 'Space Grotesk', sans-serif; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #b6ff00; margin-bottom: 8px; }
+
+  /* A — Chips */
+  .chips-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: #222; border: 1.5px solid #333; border-radius: 20px; padding: 4px 12px; font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 600; color: #aaa; cursor: default; display: flex; align-items: center; gap: 6px; }
+  .chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .chip.active-chip { background: rgba(182,255,0,0.12); border-color: #b6ff00; color: #b6ff00; }
+  .chip-none { color: #444; font-style: italic; border-style: dashed; }
+
+  /* B — Select row */
+  .status-select-row { display: flex; align-items: center; gap: 8px; background: #111; border: 1.5px solid #333; border-radius: 10px; padding: 8px 12px; }
+  .status-select-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: #b6ff00; }
+  .status-select-text { flex: 1; font-family: 'Space Grotesk', sans-serif; font-size: 0.875rem; font-weight: 600; color: #ddd; }
+  .status-select-chevron { color: #555; font-size: 0.75rem; }
+
+  /* C — Sheet teaser */
+  .status-tap-row { display: flex; align-items: center; gap: 8px; background: #111; border: 1.5px solid #333; border-radius: 10px; padding: 8px 12px; }
+  .sheet-preview { background: #141414; border: 2px solid #2a2a2a; border-radius: 12px; padding: 12px; margin-top: 8px; }
+  .sheet-item { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 8px; }
+  .sheet-item.sh-active { background: rgba(182,255,0,0.08); }
+  .sheet-item-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .sheet-item-label { font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; font-weight: 600; color: #ccc; }
+  .sheet-item.sh-active .sheet-item-label { color: #b6ff00; }
+  .sheet-divider { border: none; border-top: 1px solid #222; margin: 6px 0; }
+  .sheet-freetext { display: flex; align-items: center; gap: 8px; padding: 6px; }
+  .sheet-freetext-input { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 5px 10px; font-size: 0.8rem; color: #888; font-style: italic; flex: 1; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<h2>How should the status picker work?</h2>
+<p class="q">Three approaches for picking a front status on a FrontCard. Click the one that feels right.</p>
+
+<div class="approach-grid">
+
+  <!-- A: Chips -->
+  <div class="fc option" data-choice="a" onclick="toggleSelect(this)" style="--mc: #b6ff00">
+    <div style="position:absolute;top:8px;right:10px;background:#b6ff00;color:#000;font-family:'Space Grotesk',sans-serif;font-size:0.6rem;font-weight:800;letter-spacing:0.08em;padding:2px 7px;border-radius:20px;text-transform:uppercase">A</div>
+    <div class="fc-top-bar"></div>
+    <div class="fc-header">
+      <div class="fc-avatar">R</div>
+      <div><div class="fc-name">Raziel</div><div class="fc-pronouns">they/them</div></div>
+      <div class="fc-timer">2h 14m</div>
+    </div>
+    <div class="fc-body">
+      <div class="fc-started">Started 2:30 PM, Apr 3</div>
+      <div class="opt-label">Status — tap to set</div>
+      <div class="chips-row">
+        <div class="chip active-chip"><div class="chip-dot" style="background:#b6ff00"></div>Present</div>
+        <div class="chip"><div class="chip-dot" style="background:#00d4ff"></div>Co-con</div>
+        <div class="chip"><div class="chip-dot" style="background:#b400ff"></div>Dormant</div>
+        <div class="chip"><div class="chip-dot" style="background:#ff4db8"></div>Stressed</div>
+        <div class="chip chip-none">None</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: Inline dropdown -->
+  <div class="fc option" data-choice="b" onclick="toggleSelect(this)" style="--mc: #00d4ff; position:relative">
+    <div style="position:absolute;top:8px;right:10px;background:#b6ff00;color:#000;font-family:'Space Grotesk',sans-serif;font-size:0.6rem;font-weight:800;letter-spacing:0.08em;padding:2px 7px;border-radius:20px;text-transform:uppercase">B</div>
+    <div class="fc-top-bar"></div>
+    <div class="fc-header">
+      <div class="fc-avatar" style="background:#00d4ff">C</div>
+      <div><div class="fc-name">Cypher</div><div class="fc-pronouns">she/her</div></div>
+      <div class="fc-timer" style="color:#00d4ff">45m</div>
+    </div>
+    <div class="fc-body">
+      <div class="fc-started">Started 4:00 PM, Apr 3</div>
+      <div class="opt-label">Status</div>
+      <div class="status-select-row">
+        <div class="status-select-dot" style="background:#00d4ff"></div>
+        <div class="status-select-text">Co-con</div>
+        <div class="status-select-chevron">▾</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: Bottom sheet -->
+  <div class="fc option" data-choice="c" onclick="toggleSelect(this)" style="--mc: #ff4db8; position:relative">
+    <div style="position:absolute;top:8px;right:10px;background:#b6ff00;color:#000;font-family:'Space Grotesk',sans-serif;font-size:0.6rem;font-weight:800;letter-spacing:0.08em;padding:2px 7px;border-radius:20px;text-transform:uppercase">C</div>
+    <div class="fc-top-bar"></div>
+    <div class="fc-header">
+      <div class="fc-avatar" style="background:#ff4db8">D</div>
+      <div><div class="fc-name">Drevan</div><div class="fc-pronouns">he/him</div></div>
+      <div class="fc-timer" style="color:#ff4db8">1h 2m</div>
+    </div>
+    <div class="fc-body">
+      <div class="fc-started">Started 3:45 PM, Apr 3</div>
+      <div class="opt-label">Status — tap to open picker</div>
+      <div class="status-tap-row">
+        <div class="status-select-dot" style="background:#ff4db8"></div>
+        <div class="status-select-text">Stressed</div>
+        <div style="color:#555;font-size:0.75rem">›</div>
+      </div>
+      <div class="sheet-preview">
+        <div class="sheet-item"><div class="sheet-item-dot" style="background:#b6ff00"></div><div class="sheet-item-label">Present</div></div>
+        <div class="sheet-item"><div class="sheet-item-dot" style="background:#00d4ff"></div><div class="sheet-item-label">Co-con</div></div>
+        <div class="sheet-item"><div class="sheet-item-dot" style="background:#b400ff"></div><div class="sheet-item-label">Dormant</div></div>
+        <div class="sheet-item sh-active"><div class="sheet-item-dot" style="background:#ff4db8"></div><div class="sheet-item-label">Stressed</div></div>
+        <hr class="sheet-divider">
+        <div class="sheet-freetext"><div class="sheet-freetext-input">or type something custom…</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:1.5rem;max-width:420px;margin-left:auto;margin-right:auto">
+  <p style="font-size:0.8rem;color:#555;font-family:'Space Grotesk',sans-serif">
+    <strong style="color:#888">A — Chips:</strong> One tap, always visible. Best for 3-5 statuses. No scroll, no sheet.<br>
+    <strong style="color:#888">B — Dropdown:</strong> Compact. Familiar. Opens native/custom select on tap.<br>
+    <strong style="color:#888">C — Sheet:</strong> Full list + freetext fallback. Most flexible, most taps.
+  </p>
+</div>
