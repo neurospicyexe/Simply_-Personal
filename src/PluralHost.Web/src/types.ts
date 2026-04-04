@@ -73,6 +73,7 @@ export interface FrontContent {
   endTime?: number
   custom: boolean
   customStatus?: string
+  comment?: string
 }
 
 export interface FrontCreatePayload {
@@ -89,6 +90,7 @@ export interface FrontUpdatePayload {
   customStatus?: string
   memberId?: string
   startTime?: number
+  comment?: string
 }
 
 export interface Group {

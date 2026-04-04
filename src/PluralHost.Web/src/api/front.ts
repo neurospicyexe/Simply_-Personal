@@ -27,4 +27,7 @@ export const frontApi = {
 
   delete: (id: string) =>
     apiFetch<void>(`/v1/frontHistory/${id}`, { method: 'DELETE' }),
+
+  clearAll: () =>
+    apiFetch<void>('/v1/fronters/clear-all', { method: 'POST' }),
 }
