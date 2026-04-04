@@ -196,7 +196,10 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                         if (!spIdToMemberId.TryGetValue(spMemberId, out var memberId)) continue;
                         if (group.Members.Any(m => m.Id == memberId)) continue;
                         var member = await context.Members.FindAsync([memberId], ct);
-                        if (member != null) group.Members.Add(member);
+                        if (member == null) continue;
+                        group.Members.Add(member);
+                        if (!member.ParentIds.Contains(group.Id))
+                            member.ParentIds.Add(group.Id);
                     }
                 }
             }
