@@ -51,7 +51,7 @@ export default function TokenSheet({ isOpen, onClose, token }: Props) {
       setCustomDate(todayIso)
       setAllowsBoardPosting(false)
     }
-  }, [isOpen, token])
+  }, [isOpen, token?.tokenValue])
 
   const { data: buckets = [] } = useQuery({
     queryKey: ['buckets'],
@@ -90,11 +90,6 @@ export default function TokenSheet({ isOpen, onClose, token }: Props) {
   })
 
   function handleClose() {
-    setLabel('')
-    setAccessLevel(0)
-    setExpiryPreset('never')
-    setCustomDate(todayIso)
-    setAllowsBoardPosting(false)
     onClose()
   }
 
@@ -202,7 +197,7 @@ export default function TokenSheet({ isOpen, onClose, token }: Props) {
         <button className={styles.cancelBtn} onClick={handleClose}>Cancel</button>
         <button
           className={styles.createBtn}
-          onClick={() => canSave && (isEdit ? updateMutation.mutate() : createMutation.mutate())}
+          onClick={() => isEdit ? updateMutation.mutate() : createMutation.mutate()}
           disabled={!canSave || isPending}
           aria-label={isEdit ? 'Save changes' : 'Create token'}
         >

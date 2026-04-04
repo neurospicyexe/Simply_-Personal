@@ -125,19 +125,25 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
             }
         }
 
-        // Front history
-        if (request.IncludeFrontHistory && request.FrontHistory != null)
+        // Build SpMemberId → Member.Id lookup (shared by front history + groups blocks)
+        Dictionary<string, Guid>? spIdToMemberId = null;
+        if ((request.IncludeFrontHistory && request.FrontHistory != null) ||
+            (request.IncludeGroups && request.Groups != null))
         {
-            // Build a lookup of SpMemberId → Member.Id for the imported members
-            var spIdToMemberId = await context.Members
+            spIdToMemberId = await context.Members
                 .IgnoreQueryFilters()
                 .Where(m => m.DeletedAt == null && m.SpMemberId != null)
                 .Select(m => new { m.SpMemberId, m.Id })
                 .ToDictionaryAsync(x => x.SpMemberId!, x => x.Id, ct);
+        }
+
+        // Front history
+        if (request.IncludeFrontHistory && request.FrontHistory != null)
+        {
 
             foreach (var entry in request.FrontHistory)
             {
-                if (entry.Member == null || !spIdToMemberId.TryGetValue(entry.Member, out var memberId))
+                if (entry.Member == null || !spIdToMemberId!.TryGetValue(entry.Member, out var memberId))
                     continue;
 
                 var start = DateTimeOffset.FromUnixTimeMilliseconds(entry.StartTime).UtcDateTime;
@@ -163,12 +169,6 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
         // Groups
         if (request.IncludeGroups && request.Groups != null)
         {
-            var spIdToMemberId = await context.Members
-                .IgnoreQueryFilters()
-                .Where(m => m.DeletedAt == null && m.SpMemberId != null)
-                .Select(m => new { m.SpMemberId, m.Id })
-                .ToDictionaryAsync(x => x.SpMemberId!, x => x.Id, ct);
-
             var spGroupIdToGroup = new Dictionary<string, Group>();
 
             // First pass: create/find groups, assign members
@@ -198,7 +198,7 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 {
                     foreach (var spMemberId in spGroup.Members)
                     {
-                        if (!spIdToMemberId.TryGetValue(spMemberId, out var memberId)) continue;
+                        if (!spIdToMemberId!.TryGetValue(spMemberId, out var memberId)) continue;
                         var member = await context.Members.FindAsync([memberId], ct);
                         if (member == null) continue;
                         if (!group.Members.Any(m => m.Id == memberId))

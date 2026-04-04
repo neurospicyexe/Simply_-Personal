@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, lazy } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { membersApi } from '../api/members'
@@ -7,7 +7,7 @@ import { frontApi } from '../api/front'
 import MemberCard from '../components/MemberCard'
 import CreateMemberSheet from '../components/CreateMemberSheet'
 import GroupSheet from '../components/GroupSheet'
-import { SystemMap } from '../components/SystemMap/SystemMap'
+const SystemMap = lazy(() => import('../components/SystemMap/SystemMap').then(m => ({ default: m.SystemMap })))
 import styles from './MembersPage.module.css'
 import type { Member, Group, SpEnvelope } from '../types'
 
@@ -59,6 +59,18 @@ export default function MembersPage() {
     return map
   }, [filtered])
 
+  // Pre-computed map of groupId → filtered members (avoids O(n) scan per renderFolder call)
+  const groupMembersMap = useMemo(() => {
+    const map = new Map<string, Member[]>()
+    for (const m of filtered) {
+      for (const gid of m.parentIds) {
+        if (!map.has(gid)) map.set(gid, [])
+        map.get(gid)!.push(m)
+      }
+    }
+    return map
+  }, [filtered])
+
   // Tree structure for folder mode
   const groupChildrenMap = useMemo(() => {
     const groupIds = new Set((groups as Group[]).map(g => g.id))
@@ -80,7 +92,7 @@ export default function MembersPage() {
   }
 
   function renderFolder(group: Group, depth: number): React.ReactNode {
-    const groupMembers = filtered.filter(m => m.parentIds.includes(group.id))
+    const groupMembers = groupMembersMap.get(group.id) ?? []
     const children = (groupChildrenMap.get(group.id) ?? []) as Group[]
     if (groupMembers.length === 0 && children.length === 0) return null
     const expanded = expandedFolders.has(group.id)
