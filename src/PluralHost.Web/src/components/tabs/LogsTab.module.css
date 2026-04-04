@@ -20,3 +20,19 @@
 .saveBtn { flex: 1; background: var(--color-primary); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
 .deleteBtn { background: none; border: 1px solid var(--color-pink); color: var(--color-pink); padding: 10px 14px; border-radius: 8px; cursor: pointer; }
 .drawerError { color: var(--color-danger); font-size: 0.85rem; }
+
+.commentIndicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--space-1);
+  color: var(--color-cyan);
+  font-size: 11px;
+}
+
+.commentPreview {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}

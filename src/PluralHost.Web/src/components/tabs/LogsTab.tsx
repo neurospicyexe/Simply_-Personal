@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { MessageCircle } from 'lucide-react'
 import { frontApi } from '../../api/front'
 import Drawer from '../Drawer'
 import type { Member, SpEnvelope, FrontContent, FrontUpdatePayload } from '../../types'
@@ -28,6 +29,7 @@ export default function LogsTab({ member }: Props) {
   const [startVal, setStartVal] = useState('')
   const [endVal, setEndVal] = useState('')
   const [statusVal, setStatusVal] = useState('')
+  const [commentVal, setCommentVal] = useState('')
   const [drawerError, setDrawerError] = useState('')
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -59,6 +61,7 @@ export default function LogsTab({ member }: Props) {
     setStartVal(msToDatetimeLocal(entry.content.startTime))
     setEndVal(entry.content.endTime ? msToDatetimeLocal(entry.content.endTime) : '')
     setStatusVal(entry.content.customStatus ?? '')
+    setCommentVal(entry.content.comment ?? '')
     setDrawerError('')
   }
 
@@ -68,6 +71,7 @@ export default function LogsTab({ member }: Props) {
       startTime: datetimeLocalToMs(startVal),
       endTime: endVal ? datetimeLocalToMs(endVal) : undefined,
       customStatus: statusVal || undefined,
+      comment: commentVal || undefined,
     }
     updateMutation.mutate({ uid: selected.content.uid, payload })
   }
@@ -113,6 +117,12 @@ export default function LogsTab({ member }: Props) {
               {formatTime(c.startTime)} – {c.live ? 'ongoing' : c.endTime ? formatTime(c.endTime) : '?'}
             </div>
             {c.customStatus && <div className={styles.status}>{c.customStatus}</div>}
+            {c.comment && (
+              <div className={styles.commentIndicator}>
+                <MessageCircle size={11} />
+                <span className={styles.commentPreview}>{c.comment}</span>
+              </div>
+            )}
           </div>
         )
       })}
@@ -145,6 +155,17 @@ export default function LogsTab({ member }: Props) {
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Status</span>
           <input type="text" className={styles.input} value={statusVal} onChange={e => setStatusVal(e.target.value)} placeholder="Optional" />
+        </div>
+        <div className={styles.field}>
+          <span className={styles.fieldLabel}>Note</span>
+          <textarea
+            className={styles.input}
+            value={commentVal}
+            onChange={e => setCommentVal(e.target.value)}
+            placeholder="Optional note"
+            rows={2}
+            style={{ resize: 'vertical' }}
+          />
         </div>
         {drawerError && <p className={styles.drawerError}>{drawerError}</p>}
         <div className={styles.drawerActions}>
