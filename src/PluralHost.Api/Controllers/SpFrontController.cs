@@ -80,6 +80,11 @@ public class SpFrontController(PluralHostContext context) : ControllerBase
         if (!memberExists)
             return BadRequest(new { error = "Member not found." });
 
+        var alreadyFronting = await context.FrontHistory
+            .AnyAsync(f => f.MemberId == memberId && f.FrontEnd == null && f.DeletedAt == null);
+        if (alreadyFronting)
+            return Conflict(new { error = "Member is already fronting." });
+
         var entry = new FrontHistory
         {
             MemberId = memberId,

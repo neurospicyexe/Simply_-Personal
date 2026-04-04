@@ -171,6 +171,12 @@ export default function FrontCard({ entry, member, frontStatuses, bucket, onRemo
               rows={1}
               onChange={e => setComment(e.target.value)}
               onBlur={() => onUpdateComment?.(entry.uid, comment)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  onUpdateComment?.(entry.uid, comment)
+                }
+              }}
               aria-label="Front session note"
             />
           </div>

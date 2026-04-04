@@ -25,4 +25,10 @@ export const groupsApi = {
       method: 'POST',
       body: JSON.stringify({ memberIds }),
     }),
+
+  addMember: (groupId: string, memberId: string) =>
+    apiFetch<void>(`/api/groups/${groupId}/members/${memberId}`, { method: 'POST' }),
+
+  removeMember: (groupId: string, memberId: string) =>
+    apiFetch<void>(`/api/groups/${groupId}/members/${memberId}`, { method: 'DELETE' }),
 }

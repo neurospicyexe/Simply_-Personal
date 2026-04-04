@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { membersApi } from '../../api/members'
 import { secureApi } from '../../api/secure'
 import { bucketsApi, PUBLIC_BUCKET_ID, FRIEND_BUCKET_ID, TRUSTED_BUCKET_ID, PRIVATE_BUCKET_ID } from '../../api/buckets'
+import { groupsApi } from '../../api/groups'
 import BottomSheet from '../BottomSheet'
 import type { Member, MemberUpdatePayload } from '../../types'
 import styles from './AccessTab.module.css'
@@ -21,6 +22,7 @@ export default function AccessTab({ member }: Props) {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const { data: buckets = [] } = useQuery({ queryKey: ['buckets'], queryFn: bucketsApi.list })
+  const { data: groups = [] } = useQuery({ queryKey: ['groups'], queryFn: groupsApi.list })
   const tierColor = buckets.find(b => b.id === member.bucketId)?.color
     ?? TIER_COLORS[member.bucketId]
     ?? 'var(--color-muted)'
@@ -55,6 +57,24 @@ export default function AccessTab({ member }: Props) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['member', member.id] })
       qc.invalidateQueries({ queryKey: ['members'] })
+    },
+  })
+
+  const addToGroupMutation = useMutation({
+    mutationFn: (groupId: string) => groupsApi.addMember(groupId, member.id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['member', member.id] })
+      qc.invalidateQueries({ queryKey: ['members'] })
+      qc.invalidateQueries({ queryKey: ['groups'] })
+    },
+  })
+
+  const removeFromGroupMutation = useMutation({
+    mutationFn: (groupId: string) => groupsApi.removeMember(groupId, member.id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['member', member.id] })
+      qc.invalidateQueries({ queryKey: ['members'] })
+      qc.invalidateQueries({ queryKey: ['groups'] })
     },
   })
 
@@ -149,6 +169,31 @@ export default function AccessTab({ member }: Props) {
           checked={member.receiveBoardNotifications}
           onChange={() => updateMutation.mutate({ receiveBoardNotifications: !member.receiveBoardNotifications })}
         />
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.fieldLabel}>Groups</span>
+        {groups.length === 0 && <span style={{ opacity: 0.45, fontSize: '0.85rem' }}>No groups yet</span>}
+        {[...groups].sort((a, b) => a.name.localeCompare(b.name)).map(g => {
+          const isMember = member.parentIds.map(String).includes(String(g.id))
+          return (
+            <div key={g.id} className={styles.checkboxField}>
+              <label htmlFor={`grp-${g.id}`} className={styles.fieldLabel}>
+                <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: g.color ?? 'var(--color-muted)', marginRight: 6 }} />
+                {g.name}
+              </label>
+              <input
+                id={`grp-${g.id}`}
+                type="checkbox"
+                checked={isMember}
+                onChange={() => isMember
+                  ? removeFromGroupMutation.mutate(String(g.id))
+                  : addToGroupMutation.mutate(String(g.id))
+                }
+              />
+            </div>
+          )
+        })}
       </div>
 
       <div className={styles.dangerZone}>

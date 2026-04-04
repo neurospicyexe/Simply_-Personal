@@ -104,4 +104,36 @@ public class GroupsController(PluralHostContext context) : ControllerBase
         await context.SaveChangesAsync();
         return NoContent();
     }
+
+    [HttpPost("{id:guid}/members/{memberId:guid}")]
+    public async Task<IActionResult> AddMemberAsync(Guid id, Guid memberId)
+    {
+        var group = await context.Groups.FindAsync(id);
+        if (group == null) return NotFound();
+        var member = await context.Members.FindAsync(memberId);
+        if (member == null) return NotFound();
+        if (!member.ParentIds.Contains(id))
+        {
+            member.ParentIds = [.. member.ParentIds, id];
+            member.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+        }
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}/members/{memberId:guid}")]
+    public async Task<IActionResult> RemoveMemberAsync(Guid id, Guid memberId)
+    {
+        var group = await context.Groups.FindAsync(id);
+        if (group == null) return NotFound();
+        var member = await context.Members.FindAsync(memberId);
+        if (member == null) return NotFound();
+        if (member.ParentIds.Contains(id))
+        {
+            member.ParentIds = member.ParentIds.Where(pid => pid != id).ToList();
+            member.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+        }
+        return NoContent();
+    }
 }

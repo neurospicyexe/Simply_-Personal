@@ -84,7 +84,7 @@ export default function FrontPage() {
   })
 
   const filteredMembers = members.filter((m: Member) =>
-    m.name.toLowerCase().includes(pickerSearch.toLowerCase())
+    m.name.toLowerCase().includes(pickerSearch.toLowerCase()) && !frontingIds.has(m.id)
   )
 
   return (
@@ -153,10 +153,10 @@ export default function FrontPage() {
               member={member}
               frontStatuses={frontStatuses}
               bucket={bucketMap[member.bucketId]}
-              onRemove={uid => removeMutation.mutate(uid)}
-              onUpdateStatus={(uid, status) => updateStatusMutation.mutate({ uid, status })}
-              onEdit={(uid, memberId, startTime) => editMutation.mutate({ uid, memberId, startTime })}
-              onUpdateComment={(uid, comment) => updateCommentMutation.mutate({ uid, comment })}
+              onRemove={() => removeMutation.mutate(envelope.id)}
+              onUpdateStatus={(_, status) => updateStatusMutation.mutate({ uid: envelope.id, status })}
+              onEdit={(_, memberId, startTime) => editMutation.mutate({ uid: envelope.id, memberId, startTime })}
+              onUpdateComment={(_, comment) => updateCommentMutation.mutate({ uid: envelope.id, comment })}
             />
           )
         })}

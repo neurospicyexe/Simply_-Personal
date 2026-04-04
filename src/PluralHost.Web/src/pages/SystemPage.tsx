@@ -138,7 +138,7 @@ export default function SystemPage() {
           {groups.length === 0 && (
             <p className={styles.empty}>No groups yet. Tap + to create one.</p>
           )}
-          {groups.map(g => (
+          {[...groups].sort((a, b) => a.name.localeCompare(b.name)).map(g => (
             <button
               key={g.id}
               className={styles.card}

@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { MessageCircle } from 'lucide-react'
 import { frontApi } from '../../api/front'
+import { frontStatusesApi } from '../../api/frontStatuses'
 import Drawer from '../Drawer'
+import StatusPickerSheet from '../StatusPickerSheet'
 import type { Member, SpEnvelope, FrontContent, FrontUpdatePayload } from '../../types'
 import styles from './LogsTab.module.css'
 
@@ -29,8 +31,14 @@ export default function LogsTab({ member }: Props) {
   const [startVal, setStartVal] = useState('')
   const [endVal, setEndVal] = useState('')
   const [statusVal, setStatusVal] = useState('')
+  const [showStatusPicker, setShowStatusPicker] = useState(false)
   const [commentVal, setCommentVal] = useState('')
   const [drawerError, setDrawerError] = useState('')
+
+  const { data: frontStatuses = [] } = useQuery({
+    queryKey: ['front-statuses'],
+    queryFn: frontStatusesApi.list,
+  })
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['front-history'],
@@ -73,13 +81,13 @@ export default function LogsTab({ member }: Props) {
       customStatus: statusVal || undefined,
       comment: commentVal || undefined,
     }
-    updateMutation.mutate({ uid: selected.content.uid, payload })
+    updateMutation.mutate({ uid: selected.id, payload })
   }
 
   function handleDelete() {
     if (!selected) return
     if (!window.confirm('Delete this front history entry?')) return
-    deleteMutation.mutate(selected.content.uid)
+    deleteMutation.mutate(selected.id)
   }
 
   if (isLoading) return <div role="status" className={styles.container}>Loading…</div>
@@ -154,8 +162,21 @@ export default function LogsTab({ member }: Props) {
         </div>
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Status</span>
-          <input type="text" className={styles.input} value={statusVal} onChange={e => setStatusVal(e.target.value)} placeholder="Optional" />
+          <button
+            className={styles.input}
+            style={{ textAlign: 'left', cursor: 'pointer' }}
+            onClick={() => setShowStatusPicker(true)}
+          >
+            {statusVal || <span style={{ opacity: 0.45 }}>Optional</span>}
+          </button>
         </div>
+        <StatusPickerSheet
+          isOpen={showStatusPicker}
+          currentStatus={statusVal}
+          statuses={frontStatuses}
+          onSelect={v => setStatusVal(v)}
+          onClose={() => setShowStatusPicker(false)}
+        />
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Note</span>
           <textarea
