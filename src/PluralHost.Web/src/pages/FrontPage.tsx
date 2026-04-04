@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { frontApi } from '../api/front'
 import { membersApi } from '../api/members'
 import { frontStatusesApi } from '../api/frontStatuses'
+import { bucketsApi } from '../api/buckets'
+import type { PrivacyBucket } from '../types'
 import FrontCard from '../components/FrontCard'
 import HeatmapStrip from '../components/HeatmapStrip'
 import styles from './FrontPage.module.css'
@@ -12,6 +14,7 @@ export default function FrontPage() {
   const qc = useQueryClient()
   const [showPicker, setShowPicker] = useState(false)
   const [pickerSearch, setPickerSearch] = useState('')
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   const { data: fronters = [] } = useQuery({
     queryKey: ['fronters'],
@@ -28,6 +31,18 @@ export default function FrontPage() {
     queryKey: ['front-statuses'],
     queryFn: frontStatusesApi.list,
   })
+
+  const { data: buckets = [] } = useQuery({
+    queryKey: ['buckets'],
+    queryFn: bucketsApi.list,
+  })
+
+  // bucketMap passed to FrontCard in Task 8 (bucket chip)
+  const bucketMap = useMemo(
+    () => Object.fromEntries((buckets as PrivacyBucket[]).map(b => [b.id, b])),
+    [buckets]
+  )
+  void bucketMap
 
   // Build member lookup map
   const memberMap = useMemo(() => Object.fromEntries(members.map((m: Member) => [m.id, m])), [members])
@@ -47,6 +62,20 @@ export default function FrontPage() {
     mutationFn: ({ uid, memberId, startTime }: { uid: string; memberId: string; startTime: number }) =>
       frontApi.update(uid, { memberId, startTime }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['fronters'] }),
+  })
+
+  const updateCommentMutation = useMutation({
+    mutationFn: ({ uid, comment }: { uid: string; comment: string }) =>
+      frontApi.update(uid, { comment }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fronters'] }),
+  })
+
+  const clearAllMutation = useMutation({
+    mutationFn: frontApi.clearAll,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fronters'] })
+      setShowClearConfirm(false)
+    },
   })
 
   const addMutation = useMutation({
@@ -75,6 +104,15 @@ export default function FrontPage() {
         >
           + Add Fronter
         </button>
+        {(fronters as any[]).length > 0 && (
+          <button
+            className={styles.clearBtn}
+            onClick={() => setShowClearConfirm(true)}
+            aria-label="Remove all from front"
+          >
+            Clear All
+          </button>
+        )}
       </div>
 
       {showPicker && (
@@ -118,6 +156,7 @@ export default function FrontPage() {
               onRemove={uid => removeMutation.mutate(uid)}
               onUpdateStatus={(uid, status) => updateStatusMutation.mutate({ uid, status })}
               onEdit={(uid, memberId, startTime) => editMutation.mutate({ uid, memberId, startTime })}
+              onUpdateComment={(uid, comment) => updateCommentMutation.mutate({ uid, comment })}
             />
           )
         })}
@@ -128,6 +167,24 @@ export default function FrontPage() {
 
       {/* 24h history strip */}
       <HeatmapStrip />
+
+      {showClearConfirm && (
+        <div className={styles.confirmOverlay} role="dialog" aria-modal="true" aria-label="Confirm clear all">
+          <div className={styles.confirmBox}>
+            <p className={styles.confirmMsg}>Remove everyone from front?</p>
+            <div className={styles.confirmActions}>
+              <button className={styles.confirmCancel} onClick={() => setShowClearConfirm(false)}>Cancel</button>
+              <button
+                className={styles.confirmDanger}
+                onClick={() => clearAllMutation.mutate()}
+                disabled={clearAllMutation.isPending}
+              >
+                {clearAllMutation.isPending ? 'Clearing…' : 'Yes, clear all'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
