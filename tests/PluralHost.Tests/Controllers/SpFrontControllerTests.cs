@@ -122,7 +122,7 @@ public class SpFrontControllerTests : IDisposable
         var result = await _controller.UpdateAsync(fh.Id.ToString(),
             new SpFrontUpdateRequest(Live: false, EndTime: endMs));
 
-        Assert.IsType<OkResult>(result);
+        Assert.IsType<NoContentResult>(result);
         var updated = await _context.FrontHistory.FindAsync(fh.Id);
         Assert.NotNull(updated!.FrontEnd);
     }
@@ -157,7 +157,7 @@ public class SpFrontControllerTests : IDisposable
             entry.Id.ToString(),
             new SpFrontUpdateRequest(MemberId: newMemberId.ToString()));
 
-        Assert.IsType<OkResult>(result);
+        Assert.IsType<NoContentResult>(result);
         var updated = await _context.FrontHistory.FindAsync(entry.Id);
         Assert.Equal(newMemberId, updated!.MemberId);
     }
@@ -175,7 +175,7 @@ public class SpFrontControllerTests : IDisposable
             entry.Id.ToString(),
             new SpFrontUpdateRequest(StartTime: newStart));
 
-        Assert.IsType<OkResult>(result);
+        Assert.IsType<NoContentResult>(result);
         var updated = await _context.FrontHistory.FindAsync(entry.Id);
         Assert.Equal(Epoch.FromMs(newStart), updated!.FrontStart);
     }
@@ -253,6 +253,59 @@ public class SpFrontControllerTests : IDisposable
         var result = await _controller.GetHistoryAsync(null, now) as OkObjectResult;
         var items = Assert.IsAssignableFrom<IEnumerable<object>>(result!.Value).ToList();
         Assert.Single(items);
+    }
+
+    [Fact]
+    public async Task GetCurrentFronters_WithComment_ExposesCommentInEnvelope()
+    {
+        var member = await AddMemberAsync();
+        _context.FrontHistory.Add(new FrontHistory
+        {
+            MemberId = member.Id,
+            FrontStart = DateTime.UtcNow,
+            Comment = "feeling anxious"
+        });
+        await _context.SaveChangesAsync();
+
+        var controller = new SpFrontController(_context);
+        var result = await controller.GetCurrentFrontersAsync() as OkObjectResult;
+        var items = Assert.IsAssignableFrom<IEnumerable<SpEnvelope<SpFrontContent>>>(result!.Value);
+        Assert.Equal("feeling anxious", items.Single().Content.Comment);
+    }
+
+    [Fact]
+    public async Task Patch_WithComment_UpdatesComment()
+    {
+        var member = await AddMemberAsync();
+        _context.FrontHistory.Add(new FrontHistory { MemberId = member.Id, FrontStart = DateTime.UtcNow });
+        await _context.SaveChangesAsync();
+        var id = _context.FrontHistory.Single().Id;
+
+        var controller = new SpFrontController(_context);
+        var result = await controller.UpdateAsync(id.ToString(), new SpFrontUpdateRequest(Comment: "my note"), CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(result);
+        Assert.Equal("my note", _context.FrontHistory.Single().Comment);
+    }
+
+    [Fact]
+    public async Task ClearAllFronters_EndAllActiveSessions()
+    {
+        var member = await AddMemberAsync();
+        _context.FrontHistory.Add(new FrontHistory { MemberId = member.Id, FrontStart = DateTime.UtcNow });
+        _context.FrontHistory.Add(new FrontHistory { MemberId = member.Id, FrontStart = DateTime.UtcNow });
+        await _context.SaveChangesAsync();
+
+        var before = DateTime.UtcNow;
+        var controller = new SpFrontController(_context);
+        var result = await controller.ClearAllFrontersAsync(CancellationToken.None);
+        var after = DateTime.UtcNow;
+
+        Assert.IsType<NoContentResult>(result);
+        Assert.All(_context.FrontHistory.IgnoreQueryFilters().ToList(), e => {
+            Assert.NotNull(e.FrontEnd);
+            Assert.True(e.FrontEnd >= before.AddSeconds(-1) && e.FrontEnd <= after.AddSeconds(1));
+        });
     }
 
     public void Dispose() => _context.Dispose();
