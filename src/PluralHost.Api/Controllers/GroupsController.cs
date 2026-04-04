@@ -24,6 +24,7 @@ public class GroupsController(PluralHostContext context) : ControllerBase
             description = g.Description,
             emoji = g.Emoji,
             isPrivate = g.IsPrivate,
+            parentGroupId = g.ParentGroupId,
             createdAt = g.CreatedAt,
             updatedAt = g.UpdatedAt,
             memberCount = members.Count(m => m.ParentIds.Contains(g.Id))

@@ -7,6 +7,7 @@ public class Group : BaseEntity
     public string? Color { get; set; }
     public string? Emoji { get; set; }
     public bool IsPrivate { get; set; } = false;
+    public Guid? ParentGroupId { get; set; }
 
     // Many-to-many: members in this group
     public List<Member> Members { get; set; } = [];

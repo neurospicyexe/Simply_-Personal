@@ -97,6 +97,7 @@ export interface Group {
   description?: string
   color?: string
   emoji?: string
+  parentGroupId?: string
   memberCount: number
 }
 

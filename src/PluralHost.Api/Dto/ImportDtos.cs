@@ -24,7 +24,8 @@ public record SpGroupEntry(
     string? Desc,
     string? Color,
     string? Emoji,
-    IReadOnlyList<string>? Members);
+    IReadOnlyList<string>? Members,
+    string? Parent);
 
 public record SpCustomFieldEntry(
     [property: JsonPropertyName("_id")] string Id,

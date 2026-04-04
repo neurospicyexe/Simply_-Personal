@@ -1,13 +1,15 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Plus } from 'lucide-react'
 import { membersApi } from '../api/members'
 import { groupsApi } from '../api/groups'
 import { frontApi } from '../api/front'
 import MemberCard from '../components/MemberCard'
 import CreateMemberSheet from '../components/CreateMemberSheet'
+import GroupSheet from '../components/GroupSheet'
 import { SystemMap } from '../components/SystemMap/SystemMap'
 import styles from './MembersPage.module.css'
-import type { Member, SpEnvelope } from '../types'
+import type { Member, Group, SpEnvelope } from '../types'
 
 type ViewMode = 'list' | 'folder' | 'map'
 type Density = 'card' | 'compact'
@@ -18,6 +20,7 @@ export default function MembersPage() {
   const [density, setDensity] = useState<Density>('card')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [showCreate, setShowCreate] = useState(false)
+  const [groupSheet, setGroupSheet] = useState<{ open: boolean; group: Group | null }>({ open: false, group: null })
 
   const { data: members = [] } = useQuery({
     queryKey: ['members'],
@@ -56,12 +59,74 @@ export default function MembersPage() {
     return map
   }, [filtered])
 
+  // Tree structure for folder mode
+  const groupChildrenMap = useMemo(() => {
+    const groupIds = new Set((groups as Group[]).map(g => g.id))
+    const map = new Map<string | null, Group[]>()
+    for (const g of groups as Group[]) {
+      const parentId = g.parentGroupId && groupIds.has(g.parentGroupId) ? g.parentGroupId : null
+      if (!map.has(parentId)) map.set(parentId, [])
+      map.get(parentId)!.push(g)
+    }
+    return map
+  }, [groups])
+
   const toggleFolder = (id: string) => {
     setExpandedFolders(prev => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
       return next
     })
+  }
+
+  function renderFolder(group: Group, depth: number): React.ReactNode {
+    const groupMembers = filtered.filter(m => m.parentIds.includes(group.id))
+    const children = (groupChildrenMap.get(group.id) ?? []) as Group[]
+    if (groupMembers.length === 0 && children.length === 0) return null
+    const expanded = expandedFolders.has(group.id)
+    return (
+      <div
+        key={group.id}
+        className={styles.folder}
+        style={depth > 0 ? { marginLeft: `${depth * 16}px` } : undefined}
+      >
+        <div className={styles.folderHeaderRow}>
+          <button
+            className={styles.folderHeader}
+            onClick={() => toggleFolder(group.id)}
+            aria-expanded={expanded}
+          >
+            <span
+              className={styles.folderColor}
+              style={{ background: group.color ?? 'var(--color-muted)' }}
+            />
+            <span className={styles.folderName}>{group.name}</span>
+            <span className={styles.folderCount}>{groupMembers.length}</span>
+            <span className={styles.folderChevron}>{expanded ? '▾' : '▸'}</span>
+          </button>
+          <button
+            className={styles.folderManageBtn}
+            onClick={() => setGroupSheet({ open: true, group })}
+            aria-label={`Manage ${group.name}`}
+          >
+            ···
+          </button>
+        </div>
+        {expanded && (
+          <div className={styles.folderMembers}>
+            {children.map(child => renderFolder(child, depth + 1))}
+            {groupMembers.map(m => (
+              <MemberCard
+                key={m.id}
+                member={m}
+                isFronting={frontingIds.has(m.id)}
+                compact={density === 'compact'}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -176,47 +241,28 @@ export default function MembersPage() {
         </div>
       ) : (
         <div className={styles.folderContent}>
-          {groups.map(group => {
-            const groupMembers = filtered.filter(m => m.parentIds.includes(group.id))
-            if (groupMembers.length === 0) return null
-            const expanded = expandedFolders.has(group.id)
-            return (
-              <div key={group.id} className={styles.folder}>
-                <button
-                  className={styles.folderHeader}
-                  onClick={() => toggleFolder(group.id)}
-                  aria-expanded={expanded}
-                >
-                  <span
-                    className={styles.folderColor}
-                    style={{ background: group.color ?? 'var(--color-muted)' }}
-                  />
-                  <span className={styles.folderName}>{group.name}</span>
-                  <span className={styles.folderCount}>{groupMembers.length}</span>
-                  <span className={styles.folderChevron}>{expanded ? '▾' : '▸'}</span>
-                </button>
-                {expanded && (
-                  <div className={styles.folderMembers}>
-                    {groupMembers.map(m => (
-                      <MemberCard
-                        key={m.id}
-                        member={m}
-                        isFronting={frontingIds.has(m.id)}
-                        compact={density === 'compact'}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-          {groups.length === 0 && (
-            <p className={styles.empty}>No groups yet. Head to System to create some.</p>
+          <div className={styles.folderBar}>
+            <span className={styles.folderBarLabel}>Groups</span>
+            <button
+              className={styles.newFolderBtn}
+              onClick={() => setGroupSheet({ open: true, group: null })}
+            >
+              <Plus size={13} /> New group
+            </button>
+          </div>
+          {(groupChildrenMap.get(null) ?? []).map(group => renderFolder(group, 0))}
+          {(groups as Group[]).length === 0 && (
+            <p className={styles.empty}>No groups yet.</p>
           )}
         </div>
       )}
 
       {showCreate && <CreateMemberSheet onClose={() => setShowCreate(false)} />}
+      <GroupSheet
+        isOpen={groupSheet.open}
+        group={groupSheet.group}
+        onClose={() => setGroupSheet({ open: false, group: null })}
+      />
     </div>
   )
 }

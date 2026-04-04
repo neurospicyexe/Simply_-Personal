@@ -169,6 +169,9 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 .Select(m => new { m.SpMemberId, m.Id })
                 .ToDictionaryAsync(x => x.SpMemberId!, x => x.Id, ct);
 
+            var spGroupIdToGroup = new Dictionary<string, Group>();
+
+            // First pass: create/find groups, assign members
             foreach (var spGroup in request.Groups)
             {
                 if (string.IsNullOrWhiteSpace(spGroup.Name)) continue;
@@ -189,6 +192,8 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                 if (!string.IsNullOrEmpty(spGroup.Color)) group.Color = NormalizeColor(spGroup.Color);
                 if (!string.IsNullOrEmpty(spGroup.Emoji)) group.Emoji = spGroup.Emoji;
 
+                spGroupIdToGroup[spGroup.Id] = group;
+
                 if (spGroup.Members != null)
                 {
                     foreach (var spMemberId in spGroup.Members)
@@ -202,6 +207,15 @@ public class ImportService(PluralHostContext context, IAvatarDownloadService ava
                             member.ParentIds.Add(group.Id);
                     }
                 }
+            }
+
+            // Second pass: wire up parent–child relationships
+            foreach (var spGroup in request.Groups)
+            {
+                if (string.IsNullOrWhiteSpace(spGroup.Parent)) continue;
+                if (!spGroupIdToGroup.TryGetValue(spGroup.Id, out var childGroup)) continue;
+                if (!spGroupIdToGroup.TryGetValue(spGroup.Parent, out var parentGroup)) continue;
+                childGroup.ParentGroupId = parentGroup.Id;
             }
         }
 
