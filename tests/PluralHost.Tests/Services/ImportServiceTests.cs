@@ -69,9 +69,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, null, false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 
@@ -93,9 +95,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember Updated", null, null, null, null, false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 
@@ -115,9 +119,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember New", null, "they/them", null, null, false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 
@@ -138,9 +144,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", "Bio text", "they/them", null, null, false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         await _svc.ImportSpAsync(req);
 
@@ -160,9 +168,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, null, false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 
@@ -178,12 +188,14 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [
                 new SpMemberEntry("sp-001", "", null, null, null, null, false, false, null, false, true, null),
                 new SpMemberEntry("sp-002", "   ", null, null, null, null, false, false, null, false, true, null)
             ],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 
@@ -199,9 +211,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Shadow", null, null, null, null, true, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         await _svc.ImportSpAsync(req);
 
@@ -217,10 +231,12 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: true,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, null, false, false, null, false, true,
                 new Dictionary<string, string> { ["field-001"] = "Pyromancer" })],
             CustomFields: [new SpCustomFieldEntry("field-001", "Role", "0")],
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         await _svc.ImportSpAsync(req);
 
@@ -248,9 +264,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: true,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, null, false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: [new SpFrontHistoryEntry("fh-001", "sp-001", startMs, endMs)]);
+            FrontHistory: [new SpFrontHistoryEntry("fh-001", "sp-001", startMs, endMs)],
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 
@@ -279,9 +297,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: true,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, null, false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: [new SpFrontHistoryEntry("fh-001", "sp-001", startMs, null)]);
+            FrontHistory: [new SpFrontHistoryEntry("fh-001", "sp-001", startMs, null)],
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 
@@ -300,9 +320,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: true,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, "http://example.com/img.jpg", false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 
@@ -322,9 +344,11 @@ public class ImportServiceTests : IDisposable
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: true,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, "http://example.com/img.jpg", false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _svc.ImportSpAsync(req);
 

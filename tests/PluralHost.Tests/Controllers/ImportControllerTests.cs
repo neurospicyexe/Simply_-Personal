@@ -17,10 +17,10 @@ public class ImportControllerTests
         _importService = new Mock<IImportService>();
         _importService
             .Setup(s => s.ImportSpAsync(It.IsAny<SpImportRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImportResult(1, 0, 0, [], 0, 0, 0));
+            .ReturnsAsync(new ImportResult(1, 0, 0, [], 0, 0, 0, 0));
         _importService
             .Setup(s => s.ImportPkAsync(It.IsAny<PkImportRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImportResult(1, 0, 0, [], 0, 0, 0));
+            .ReturnsAsync(new ImportResult(1, 0, 0, [], 0, 0, 0, 0));
         _controller = new ImportController(_importService.Object);
     }
 
@@ -32,9 +32,11 @@ public class ImportControllerTests
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [new SpMemberEntry("sp-001", "Ember", null, null, null, null, false, false, null, false, true, null)],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _controller.ImportSpAsync(req, CancellationToken.None) as OkObjectResult;
 
@@ -67,9 +69,11 @@ public class ImportControllerTests
             IncludeCustomFields: false,
             IncludeFrontHistory: false,
             IncludeAvatars: false,
+            IncludeGroups: false,
             Members: [],
             CustomFields: null,
-            FrontHistory: null);
+            FrontHistory: null,
+            Groups: null);
 
         var result = await _controller.ImportSpAsync(req, CancellationToken.None) as OkObjectResult;
 
