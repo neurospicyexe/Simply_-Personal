@@ -7,7 +7,7 @@ import { AuthContext } from '../context/AuthContext'
 
 const qc = () => new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
-test('unauthenticated user at /front is redirected to /login', () => {
+test('unauthenticated user at /front is redirected to /login', async () => {
   render(
     <QueryClientProvider client={qc()}>
       <AuthContext.Provider value={{ isAuthenticated: false, isLoading: false, setAuthenticated: () => {}, logout: () => Promise.resolve() }}>
@@ -17,10 +17,10 @@ test('unauthenticated user at /front is redirected to /login', () => {
       </AuthContext.Provider>
     </QueryClientProvider>
   )
-  expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: /sign in/i })).toBeInTheDocument()
 })
 
-test('authenticated user at / is redirected to /front', () => {
+test('authenticated user at / is redirected to /front', async () => {
   render(
     <QueryClientProvider client={qc()}>
       <AuthContext.Provider value={{ isAuthenticated: true, isLoading: false, setAuthenticated: () => {}, logout: () => Promise.resolve() }}>
@@ -30,5 +30,5 @@ test('authenticated user at / is redirected to /front', () => {
       </AuthContext.Provider>
     </QueryClientProvider>
   )
-  expect(screen.getByRole('heading', { name: /fronting/i })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: /fronting/i })).toBeInTheDocument()
 })

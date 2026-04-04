@@ -30,6 +30,7 @@ const BASE = {
   onRemove: vi.fn(),
   onUpdateStatus: vi.fn(),
   onEdit: vi.fn(),
+  onUpdateComment: vi.fn(),
 }
 
 test('renders member name', () => {
