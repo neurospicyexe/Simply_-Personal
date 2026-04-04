@@ -84,3 +84,36 @@
 @media (prefers-reduced-motion: reduce) {
   .card, .compactItem { transition: none; }
 }
+
+.bucketChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+.quickAddBtn {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-primary);
+  background: none;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, color 0.1s;
+}
+
+.quickAddBtn:hover {
+  background: var(--color-primary);
+  color: var(--color-bg);
+}

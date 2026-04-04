@@ -1,15 +1,17 @@
 import { Link } from 'react-router-dom'
 import Avatar from './Avatar'
 import styles from './MemberCard.module.css'
-import type { Member } from '../types'
+import type { Member, PrivacyBucket } from '../types'
 
 interface MemberCardProps {
   member: Member
   isFronting?: boolean
   compact?: boolean
+  bucket?: PrivacyBucket
+  onQuickAdd?: () => void
 }
 
-export default function MemberCard({ member, isFronting = false, compact = false }: MemberCardProps) {
+export default function MemberCard({ member, isFronting = false, compact = false, bucket, onQuickAdd }: MemberCardProps) {
   if (compact) {
     return (
       <Link to={`/members/${member.id}`} className={styles.compactItem}>
@@ -41,7 +43,23 @@ export default function MemberCard({ member, isFronting = false, compact = false
       <div className={styles.info}>
         <span className={styles.name}>{member.name}</span>
         {member.pronouns && <span className={styles.pronouns}>{member.pronouns}</span>}
+        {bucket && (
+          <span className={styles.bucketChip}>
+            {bucket.emoji && <span>{bucket.emoji}</span>}
+            {bucket.name}
+          </span>
+        )}
       </div>
+      {onQuickAdd && !isFronting && (
+        <button
+          className={styles.quickAddBtn}
+          onClick={e => { e.preventDefault(); e.stopPropagation(); onQuickAdd() }}
+          aria-label={`Add ${member.name} to front`}
+          title="Add to front"
+        >
+          +
+        </button>
+      )}
     </Link>
   )
 }

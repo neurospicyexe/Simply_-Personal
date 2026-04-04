@@ -1,15 +1,16 @@
 import { useState, useMemo, lazy } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { membersApi } from '../api/members'
 import { groupsApi } from '../api/groups'
 import { frontApi } from '../api/front'
+import { bucketsApi } from '../api/buckets'
 import MemberCard from '../components/MemberCard'
 import CreateMemberSheet from '../components/CreateMemberSheet'
 import GroupSheet from '../components/GroupSheet'
 const SystemMap = lazy(() => import('../components/SystemMap/SystemMap').then(m => ({ default: m.SystemMap })))
 import styles from './MembersPage.module.css'
-import type { Member, Group, SpEnvelope } from '../types'
+import type { Member, Group, SpEnvelope, PrivacyBucket } from '../types'
 
 type ViewMode = 'list' | 'folder' | 'map'
 type Density = 'card' | 'compact'
@@ -18,6 +19,7 @@ export default function MembersPage() {
   const [search, setSearch] = useState('')
   const [mode, setMode] = useState<ViewMode>('list')
   const [density, setDensity] = useState<Density>('card')
+  const [sortAsc, setSortAsc] = useState(true)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [showCreate, setShowCreate] = useState(false)
   const [groupSheet, setGroupSheet] = useState<{ open: boolean; group: Group | null }>({ open: false, group: null })
@@ -37,6 +39,24 @@ export default function MembersPage() {
     queryFn: frontApi.getCurrent,
   })
 
+  const { data: buckets = [] } = useQuery({
+    queryKey: ['buckets'],
+    queryFn: bucketsApi.list,
+  })
+
+  const bucketMap = useMemo(
+    () => Object.fromEntries((buckets as PrivacyBucket[]).map(b => [b.id, b])),
+    [buckets]
+  )
+
+  const qc = useQueryClient()
+
+  const quickAddMutation = useMutation({
+    mutationFn: (memberId: string) =>
+      frontApi.create({ member: memberId, live: true, startTime: Date.now() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fronters'] }),
+  })
+
   const frontingIds = useMemo(
     () => new Set((fronters as SpEnvelope<{ member: string }>[]).map(f => f.content.member)),
     [fronters]
@@ -49,15 +69,17 @@ export default function MembersPage() {
 
   // Alphabetical grouping for list mode
   const alphabetGroups = useMemo(() => {
-    const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name))
+    const sorted = [...filtered].sort((a, b) =>
+      sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    )
     const map = new Map<string, Member[]>()
     for (const m of sorted) {
       const letter = ([...m.name][0] ?? '#').toUpperCase()
       if (!map.has(letter)) map.set(letter, [])
       map.get(letter)!.push(m)
     }
-    return map
-  }, [filtered])
+    return sortAsc ? map : new Map([...map.entries()].reverse())
+  }, [filtered, sortAsc])
 
   // Pre-computed map of groupId → filtered members (avoids O(n) scan per renderFolder call)
   const groupMembersMap = useMemo(() => {
@@ -134,6 +156,7 @@ export default function MembersPage() {
                 member={m}
                 isFronting={frontingIds.has(m.id)}
                 compact={density === 'compact'}
+                bucket={bucketMap[m.bucketId]}
               />
             ))}
           </div>
@@ -204,6 +227,14 @@ export default function MembersPage() {
           </button>
         </div>
         <button
+          className={styles.sortFlipBtn}
+          onClick={() => setSortAsc(v => !v)}
+          aria-label={sortAsc ? 'Sort Z–A' : 'Sort A–Z'}
+          title={sortAsc ? 'Sort Z–A' : 'Sort A–Z'}
+        >
+          {sortAsc ? 'A–Z' : 'Z–A'}
+        </button>
+        <button
           className={styles.addBtn}
           onClick={() => setShowCreate(true)}
           aria-label="Add member"
@@ -229,6 +260,8 @@ export default function MembersPage() {
                   member={m}
                   isFronting={frontingIds.has(m.id)}
                   compact={density === 'compact'}
+                  bucket={bucketMap[m.bucketId]}
+                  onQuickAdd={!frontingIds.has(m.id) ? () => quickAddMutation.mutate(m.id) : undefined}
                 />
               ))}
             </div>
