@@ -37,6 +37,7 @@ public class GhostModeService(PluralHostContext context) : IGhostModeService
     public async Task<bool> IsFrozenAsync()
     {
         var settings = await context.SystemSettings.FirstAsync();
-        return settings.IsFrozen;
+        return settings.IsFrozen &&
+            (settings.FreezeEndDate == null || settings.FreezeEndDate > DateTime.UtcNow);
     }
 }

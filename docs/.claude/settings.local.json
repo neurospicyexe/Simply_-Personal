@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git remote:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(varlock --version)",
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "Bash(xargs grep:*)",
+      "Bash(find:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(npx vitest:*)"
+    ]
+  }
+}

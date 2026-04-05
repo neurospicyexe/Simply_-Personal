@@ -125,8 +125,8 @@ public class SecureActionController(
     public async Task<IActionResult> SetPinAsync([FromBody] SetPinRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.NewPin)
-            || request.NewPin.Length < 4 || request.NewPin.Length > 64)
-            return BadRequest(new { error = "PIN must be between 4 and 64 characters." });
+            || request.NewPin.Length < 8 || request.NewPin.Length > 64)
+            return BadRequest(new { error = "PIN must be between 8 and 64 characters." });
 
         var pinIsSet = await gatekeeper.IsPinSetAsync();
         if (pinIsSet)

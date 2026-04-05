@@ -102,23 +102,23 @@ public class SecureActionControllerTests
     public async Task SetPin_FirstTime_SetsPin()
     {
         _gatekeeperMock.Setup(g => g.IsPinSetAsync()).ReturnsAsync(false);
-        _gatekeeperMock.Setup(g => g.SetPinAsync("5678")).Returns(Task.CompletedTask);
+        _gatekeeperMock.Setup(g => g.SetPinAsync("correcthorse")).Returns(Task.CompletedTask);
 
         var controller = CreateController();
-        var result = await controller.SetPinAsync(new SetPinRequest(null, "5678"));
+        var result = await controller.SetPinAsync(new SetPinRequest(null, "correcthorse"));
         Assert.IsType<NoContentResult>(result);
-        _gatekeeperMock.Verify(g => g.SetPinAsync("5678"), Times.Once);
+        _gatekeeperMock.Verify(g => g.SetPinAsync("correcthorse"), Times.Once);
     }
 
     [Fact]
     public async Task SetPin_ChangePin_CorrectCurrentPin_Succeeds()
     {
         _gatekeeperMock.Setup(g => g.IsPinSetAsync()).ReturnsAsync(true);
-        _gatekeeperMock.Setup(g => g.ValidatePinAsync("old")).ReturnsAsync(true);
-        _gatekeeperMock.Setup(g => g.SetPinAsync("new1")).Returns(Task.CompletedTask);
+        _gatekeeperMock.Setup(g => g.ValidatePinAsync("oldpassword")).ReturnsAsync(true);
+        _gatekeeperMock.Setup(g => g.SetPinAsync("newpassword")).Returns(Task.CompletedTask);
 
         var controller = CreateController();
-        var result = await controller.SetPinAsync(new SetPinRequest("old", "new1"));
+        var result = await controller.SetPinAsync(new SetPinRequest("oldpassword", "newpassword"));
         Assert.IsType<NoContentResult>(result);
     }
 
@@ -126,10 +126,10 @@ public class SecureActionControllerTests
     public async Task SetPin_ChangePin_WrongCurrentPin_Returns403()
     {
         _gatekeeperMock.Setup(g => g.IsPinSetAsync()).ReturnsAsync(true);
-        _gatekeeperMock.Setup(g => g.ValidatePinAsync("wrong")).ReturnsAsync(false);
+        _gatekeeperMock.Setup(g => g.ValidatePinAsync("wrongpassword")).ReturnsAsync(false);
 
         var controller = CreateController();
-        var result = await controller.SetPinAsync(new SetPinRequest("wrong", "newpin"));
+        var result = await controller.SetPinAsync(new SetPinRequest("wrongpassword", "newpassword"));
         var obj = Assert.IsType<ObjectResult>(result);
         Assert.Equal(403, obj.StatusCode);
     }
@@ -140,7 +140,7 @@ public class SecureActionControllerTests
         _gatekeeperMock.Setup(g => g.IsPinSetAsync()).ReturnsAsync(true);
 
         var controller = CreateController();
-        var result = await controller.SetPinAsync(new SetPinRequest(null, "newpin"));
+        var result = await controller.SetPinAsync(new SetPinRequest(null, "newpassword"));
         Assert.IsType<BadRequestObjectResult>(result);
     }
 }

@@ -4,7 +4,7 @@
 **Reviewer:** OWASP Top 10:2025 + ASVS 5.0 scan + vibesec deep scan + OWASP pass
 **Status:** Pending repair (scheduled after remaining feature work)
 
-**Summary:** 0 Critical | 0 High | 0 Medium | 3 Low | 6 Info
+**Summary:** 0 Critical | 0 High | 0 Medium | 0 Low | 6 Info
 
 ---
 
@@ -59,19 +59,8 @@ builder.Services.AddRateLimiter(o => {
 
 ---
 
-### LOW — `IsFrozenAsync()` Ignores `FreezeEndDate`
-**Location:** `src/PluralHost.Api/Services/GhostModeService.cs:IsFrozenAsync()`
-**Risk:** Returns `settings.IsFrozen` without checking whether `FreezeEndDate` has already passed. Data can stay hidden up to 5 minutes after a timed freeze should have lifted (AutoUnfreezeService polls every 5 minutes).
-**Fix:**
-```csharp
-public async Task<bool> IsFrozenAsync()
-{
-    var settings = await context.SystemSettings.FirstAsync();
-    return settings.IsFrozen &&
-        (settings.FreezeEndDate == null || settings.FreezeEndDate > DateTime.UtcNow);
-}
-```
-**Reference:** OWASP A01
+### ~~LOW — `IsFrozenAsync()` Ignores `FreezeEndDate`~~
+**Fixed 2026-04-04.** `GhostModeService.IsFrozenAsync()` now checks `FreezeEndDate > DateTime.UtcNow` -- timed freeze lifts immediately when expired, not after the next AutoUnfreeze poll.
 
 ---
 
@@ -97,11 +86,8 @@ public async Task<bool> IsFrozenAsync()
 ---
 
 
-### LOW — Frontend API Client Reflects Raw Server Error Text
-**Location:** `src/PluralHost.Web/src/api/client.ts` line ~21
-**Risk:** Error messages are built from raw response body text and passed into error state. React escapes JSX interpolation so no immediate XSS -- but if this value ever reaches an unsafe render path or a logging sink it becomes exploitable. Backend validation errors can contain user-supplied field names.
-**Fix:** Parse JSON error response and use a sanitized message field, or hard-cap the reflected text.
-**Reference:** OWASP A03
+### ~~LOW — Frontend API Client Reflects Raw Server Error Text~~
+**Fixed 2026-04-04.** `apiFetch` now parses JSON and uses `body?.error` field; falls back to `"Request failed (${status})"` -- no raw server text reaches error state.
 
 ---
 
@@ -110,11 +96,8 @@ public async Task<bool> IsFrozenAsync()
 
 ---
 
-### LOW — Gatekeeper PIN Minimum is 4 Characters
-**Location:** `src/PluralHost.Api/Controllers/SecureActionController.cs` PIN validation
-**Risk:** 4-char numeric PIN = 10,000 combinations. With rate limiting at 5/min, brute force completes in ~33 hours. Acceptable for current threat model but weak for a "Gatekeeper" protecting deletions.
-**Fix:** Enforce 8-char minimum, or add per-IP lockout after 10 failed attempts.
-**Reference:** OWASP A07 / ASVS L1
+### ~~LOW — Gatekeeper PIN Minimum is 4 Characters~~
+**Fixed 2026-04-04.** Minimum raised to 8 characters in `SecureActionController.SetPinAsync`. Test fixtures updated to use 8+ char PINs.
 
 ---
 

@@ -17,8 +17,8 @@ export async function apiFetch<T>(
 
   if (res.status === 401) throw new UnauthorizedError('Session expired')
   if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`${res.status} ${body}`)
+    const body = await res.json().catch(() => null) as { error?: string } | null
+    throw new Error(body?.error ?? `Request failed (${res.status})`)
   }
 
   const text = await res.text()
