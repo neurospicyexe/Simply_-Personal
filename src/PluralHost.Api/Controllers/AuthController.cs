@@ -11,7 +11,7 @@ public record ChangePasswordRequest(string NewPassword, string GatekeeperPin);
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IAuthService auth) : ControllerBase
+public class AuthController(IAuthService auth, ILogger<AuthController> logger) : ControllerBase
 {
     // POST /api/auth/setup — One-time setup (open, no auth required)
     [HttpPost("setup")]
@@ -32,9 +32,13 @@ public class AuthController(IAuthService auth) : ControllerBase
     [EnableRateLimiting("login")]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
     {
+        var ip = HttpContext.Connection.RemoteIpAddress;
         var token = await auth.LoginAsync(request.Password);
         if (token == null)
+        {
+            logger.LogWarning("Failed login attempt from {IP}", ip);
             return Unauthorized(new { error = "Invalid credentials." });
+        }
 
         Response.Cookies.Append("token", token, new CookieOptions
         {
@@ -43,6 +47,7 @@ public class AuthController(IAuthService auth) : ControllerBase
             SameSite = SameSiteMode.Strict,
             Expires = DateTimeOffset.UtcNow.AddDays(30)
         });
+        logger.LogInformation("Successful login from {IP}", ip);
         return Ok();
     }
 

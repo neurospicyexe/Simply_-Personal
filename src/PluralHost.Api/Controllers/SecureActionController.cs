@@ -16,7 +16,8 @@ public record PinRequest(string Pin);
 [Authorize]
 public class SecureActionController(
     IGhostModeService ghostMode,
-    IGatekeeperService gatekeeper) : ControllerBase
+    IGatekeeperService gatekeeper,
+    ILogger<SecureActionController> logger) : ControllerBase
 {
     // POST /api/secure/freeze — Anyone can freeze (crisis safety — zero friction)
     // Rate-limited to 5/min per IP to prevent DoS via repeated freeze calls
@@ -32,6 +33,9 @@ public class SecureActionController(
             ? TimeSpan.FromHours(request.DurationHours.Value)
             : (TimeSpan?)null;
         await ghostMode.FreezeAsync(duration);
+        logger.LogWarning("System frozen by {IP} (duration: {Duration})",
+            HttpContext.Connection.RemoteIpAddress,
+            duration.HasValue ? $"{duration.Value.TotalHours}h" : "indefinite");
         return Ok();
     }
 
@@ -39,10 +43,15 @@ public class SecureActionController(
     [HttpPost("unfreeze")]
     public async Task<IActionResult> UnfreezeAsync([FromBody] PinRequest request)
     {
+        var ip = HttpContext.Connection.RemoteIpAddress;
         if (!await gatekeeper.ValidatePinAsync(request.Pin))
+        {
+            logger.LogWarning("Invalid PIN on unfreeze attempt from {IP}", ip);
             return Unauthorized(new { error = "Invalid Gatekeeper PIN." });
+        }
 
         await ghostMode.UnfreezeAsync();
+        logger.LogInformation("System unfrozen from {IP}", ip);
         return Ok();
     }
 
@@ -52,8 +61,12 @@ public class SecureActionController(
         [FromBody] PinRequest request,
         [FromServices] PluralHostContext? context = null)
     {
+        var ip = HttpContext.Connection.RemoteIpAddress;
         if (!await gatekeeper.ValidatePinAsync(request.Pin))
+        {
+            logger.LogWarning("Invalid PIN on deletion request from {IP}", ip);
             return Unauthorized(new { error = "Invalid Gatekeeper PIN." });
+        }
 
         if (context == null)
             return BadRequest(new { error = "Context not available." });

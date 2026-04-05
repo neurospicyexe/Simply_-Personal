@@ -11,7 +11,7 @@ public interface IAvatarDownloadService
     Task<string?> DownloadAvatarAsync(string url, CancellationToken ct = default);
 }
 
-public class AvatarDownloadService(HttpClient http, IConfiguration config) : IAvatarDownloadService
+public class AvatarDownloadService(HttpClient http, IConfiguration config, ILogger<AvatarDownloadService> logger) : IAvatarDownloadService
 {
     private static readonly long MaxBytes = 5 * 1024 * 1024; // 5 MB
 
@@ -78,15 +78,16 @@ public class AvatarDownloadService(HttpClient http, IConfiguration config) : IAv
             await File.WriteAllBytesAsync(path, buffer[..bytesRead], ct);
             return path;
         }
-        catch
+        catch (Exception ex)
         {
-            return null; // any failure is non-fatal
+            logger.LogError(ex, "Avatar download failed for {Url}", url);
+            return null;
         }
     }
 
     // Returns true if the URI resolves to a private/loopback/link-local address (SSRF protection).
     // Resolves hostnames via DNS before checking — prevents DNS rebinding and hostname bypass.
-    private static async Task<bool> IsPrivateAddressAsync(Uri uri)
+    private async Task<bool> IsPrivateAddressAsync(Uri uri)
     {
         var host = uri.Host.ToLowerInvariant();
         if (host == "localhost") return true;
@@ -101,9 +102,10 @@ public class AvatarDownloadService(HttpClient http, IConfiguration config) : IAv
             else
                 addresses = await System.Net.Dns.GetHostAddressesAsync(host);
         }
-        catch
+        catch (Exception ex)
         {
-            return true; // DNS failure → treat as unsafe, fail closed
+            logger.LogError(ex, "DNS resolution failed for host {Host} — treating as unsafe", host);
+            return true;
         }
 
         return addresses.Any(IsPrivateIp);

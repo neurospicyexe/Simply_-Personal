@@ -1,10 +1,10 @@
 # Security Audit — PluralHost
 
-**Reviewed:** 2026-03-23
-**Reviewer:** OWASP Top 10:2025 + ASVS 5.0 scan
+**Reviewed:** 2026-04-04 (updated; original 2026-03-23)
+**Reviewer:** OWASP Top 10:2025 + ASVS 5.0 scan + vibesec deep scan + OWASP pass
 **Status:** Pending repair (scheduled after remaining feature work)
 
-**Summary:** 0 Critical | 0 High | 5 Medium | 3 Low | 2 Info
+**Summary:** 0 Critical | 0 High | 3 Medium | 6 Low | 6 Info
 
 ---
 
@@ -13,11 +13,25 @@
 ### ~~HIGH — Gatekeeper PIN in Query String~~
 **Fixed in Plan 9 (2026-03-23).** `DELETE /api/tokens/{tokenValue}` now uses `[FromBody] PinRequest` instead of `[FromQuery] string pin`.
 
+### ~~MEDIUM — SSRF via DNS Rebinding in AvatarDownloadService~~
+**Fixed 2026-03-29.** Hostname now resolved via `Dns.GetHostAddressesAsync` before IP check. `AllowAutoRedirect = false` set on HttpClient handler.
+
+### ~~MEDIUM — No Rate Limiting on Freeze Endpoint~~
+**Fixed 2026-03-29.** Fixed-window rate limiter: 5 requests/min per IP on `POST /api/secure/freeze`. Returns 429 when exceeded.
+
 ---
 
 ## Open Issues
 
-### MEDIUM — SSRF via DNS Rebinding in AvatarDownloadService
+### MEDIUM — No Brute-Force Protection on Login
+**Location:** `src/PluralHost.Api/Controllers/AuthController.cs:LoginAsync`
+**Risk:** `POST /api/auth/login` has no rate limiting. BCrypt wf=12 (~250ms/check) limits to ~240 attempts/min under sustained attack.
+**Fix:** Apply same fixed-window rate limiter pattern as freeze endpoint (10 attempts/min per IP with back-off).
+**Reference:** OWASP A06
+
+---
+
+### ~~MEDIUM — SSRF via DNS Rebinding in AvatarDownloadService~~
 **Location:** `src/PluralHost.Api/Services/AvatarDownloadService.cs:IsPrivateAddress()`
 **Risk:** The service correctly blocks raw private IPs (10.x, 172.16.x, 192.168.x, loopback) but skips validation entirely for hostnames: `"Hostname — allow (public DNS resolves it). Only raw IPs need SSRF checking."` An attacker who controls DNS for a domain can point it at `169.254.169.254` (AWS instance metadata), `10.x.x.x` (internal network), or any other private address. The IP check is only applied when the host parses as a raw IP.
 **Fix:** Resolve DNS before connecting and validate the resolved IP:
@@ -83,7 +97,7 @@ app.Use(async (ctx, next) => {
 
 ---
 
-### MEDIUM — No Rate Limiting on Login or Freeze
+### ~~MEDIUM — No Rate Limiting on Login or Freeze~~
 **Location:** `src/PluralHost.Api/Controllers/AuthController.cs:LoginAsync`, `SecureActionController.cs:FreezeAsync`
 **Risk:** Login has no rate limit — BCrypt wf=12 gives ~250ms/check, still ~240 attempts/min sustained. Freeze is `[AllowAnonymous]` with no rate limit — any IP can call it in a loop to keep the system permanently frozen (DoS against owner).
 **Fix:**
@@ -144,12 +158,68 @@ return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
 
 ---
 
+### ~~MEDIUM — No Global Exception Handler (Stack Trace Exposure Risk)~~
+**Fixed 2026-04-04.** `UseExceptionHandler` middleware added to `Program.cs` before security headers. Returns `{ error: "Internal server error" }` on 500, no stack traces.
+
+---
+
+### ~~MEDIUM — No Security Event Logging~~
+**Fixed 2026-04-04.** `ILogger` injected into `AuthController`, `SecureActionController`, `AvatarDownloadService`. Logs: failed/successful login (with IP), PIN failures on unfreeze/deletion/pin-change, freeze/unfreeze state changes with IP + duration. Bare catch blocks in `AvatarDownloadService` now log exceptions before returning null.
+
+---
+
+
+### LOW — Frontend API Client Reflects Raw Server Error Text
+**Location:** `src/PluralHost.Web/src/api/client.ts` line ~21
+**Risk:** Error messages are built from raw response body text and passed into error state. React escapes JSX interpolation so no immediate XSS -- but if this value ever reaches an unsafe render path or a logging sink it becomes exploitable. Backend validation errors can contain user-supplied field names.
+**Fix:** Parse JSON error response and use a sanitized message field, or hard-cap the reflected text.
+**Reference:** OWASP A03
+
+---
+
+### LOW — Bare Catch Blocks Swallow Exceptions Silently
+**Location:** `src/PluralHost.Api/Services/AvatarDownloadService.cs` lines ~81 and ~104
+**Risk:** `catch { return null; }` and `catch { return true; }` suppress all exceptions without logging. Download failures and DNS resolution errors are invisible -- makes debugging and attack detection impossible.
+**Fix:** Add `_logger.LogError(ex, "...")` before returning in each catch block. Fail-closed behavior (return null/true) is correct; silent failure is not.
+**Reference:** OWASP A09
+
+---
+
+### LOW — Gatekeeper PIN Minimum is 4 Characters
+**Location:** `src/PluralHost.Api/Controllers/SecureActionController.cs` PIN validation
+**Risk:** 4-char numeric PIN = 10,000 combinations. With rate limiting at 5/min, brute force completes in ~33 hours. Acceptable for current threat model but weak for a "Gatekeeper" protecting deletions.
+**Fix:** Enforce 8-char minimum, or add per-IP lockout after 10 failed attempts.
+**Reference:** OWASP A07 / ASVS L1
+
+---
+
 ## Info (no direct risk)
 
 ### INFO — JWT Has No Server-Side Revocation
 **Location:** `src/PluralHost.Api/Services/AuthService.cs`, `Program.cs`
 **Risk:** 30-day tokens with no blacklist. Logout clears the cookie client-side only — a captured token remains usable until expiry. Acceptable for single-user self-hosted tool.
 **Mitigation if needed:** Short expiry (`Jwt:ExpiryHours = 1`) + refresh token, or lightweight in-memory revocation set.
+
+---
+
+### INFO — JWT Signing Key Length Validated in Chars Not Bytes
+**Location:** `src/PluralHost.Api/Program.cs` key length guard
+**Risk:** Non-ASCII characters are multi-byte in UTF-8 -- a 32-character key with non-ASCII chars has fewer than 256 bits of entropy. Negligible in practice (keys are typically ASCII), but not formally correct.
+**Fix:** `Encoding.UTF8.GetBytes(jwtKey).Length >= 32`
+
+---
+
+### INFO — JWT Jti Uses `Guid.NewGuid()` (Not CSPRNG)
+**Location:** `src/PluralHost.Api/Services/AuthService.cs` Jti generation
+**Risk:** `Guid.NewGuid()` is not cryptographically random (uses sequential algorithm). Jti is a token identifier -- JWT security comes from the signing key, not the Jti, so this is not exploitable in isolation. Only matters if a token blacklist is added later (predictable Jti could allow pre-registration of future tokens).
+**Fix:** `Convert.ToBase64String(RandomNumberGenerator.GetBytes(16))` for Jti generation.
+
+---
+
+### INFO — SQLite Database Unencrypted at Rest
+**Location:** `pluralhost.db` (connection string in `appsettings.json`)
+**Risk:** Database file stores password hashes, PIN hashes, member data, board messages in plaintext. If the host is compromised or backups exfiltrated, all data is readable. Acceptable for single-user self-hosted threat model with OS-level access controls.
+**Mitigation if needed:** sqlcipher-backed SQLite, encrypted volume, or document the single-user-only constraint explicitly.
 
 ---
 
@@ -160,7 +230,14 @@ return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
 
 ---
 
-## Confirmed Clean (vibesec deep scan 2026-03-23)
+### INFO — NuGet Packages Not Pinned to Exact Versions
+**Location:** `src/PluralHost.Api/PluralHost.Api.csproj`
+**Risk:** Packages use wildcard minor versions (e.g. `8.*`). Minor/patch updates are automatic, which is good for security patches but could introduce regressions. No `packages.lock.json` committed.
+**Mitigation:** Run `dotnet list package --vulnerable` periodically. Optionally add `RestorePackagesWithLockFile=true` to csproj for reproducible builds.
+
+---
+
+## Confirmed Clean (vibesec deep scan 2026-03-23 + OWASP pass 2026-04-04)
 
 - SQL injection — EF Core LINQ throughout, no raw queries
 - Path traversal — null-byte + `StartsWith` check in MediaController

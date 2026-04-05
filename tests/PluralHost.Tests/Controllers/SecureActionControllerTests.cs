@@ -13,8 +13,18 @@ public class SecureActionControllerTests
 {
     private readonly Mock<IGhostModeService> _ghostMock = new();
     private readonly Mock<IGatekeeperService> _gatekeeperMock = new();
-    private SecureActionController CreateController() =>
-        new(_ghostMock.Object, _gatekeeperMock.Object);
+    private SecureActionController CreateController()
+    {
+        var controller = new SecureActionController(
+            _ghostMock.Object,
+            _gatekeeperMock.Object,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<SecureActionController>.Instance);
+        controller.ControllerContext = new Microsoft.AspNetCore.Mvc.ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext()
+        };
+        return controller;
+    }
 
     private static async Task<PluralHostContext> MakeContextAsync()
     {

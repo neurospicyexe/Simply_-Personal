@@ -36,7 +36,8 @@ public class AvatarDownloadServiceTests : IDisposable
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["SecureUploads:Root"] = Path.Combine(Path.GetTempPath(), "av-test-" + Guid.NewGuid())
-            }).Build());
+            }).Build(),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<AvatarDownloadService>.Instance);
     }
 
     [Fact]

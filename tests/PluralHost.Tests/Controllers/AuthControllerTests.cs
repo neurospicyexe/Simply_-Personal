@@ -12,7 +12,7 @@ public class AuthControllerTests
 
     private AuthController CreateController()
     {
-        var controller = new AuthController(_authMock.Object);
+        var controller = new AuthController(_authMock.Object, Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthController>.Instance);
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext()
