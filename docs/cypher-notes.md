@@ -41,7 +41,7 @@ Things learned in session, kept for continuity.
 
 ## Frontend Gotchas
 
-- `apiFetch` (in `src/api/client.ts`) throws `new Error(\`${res.status} ...\`)` — NOT a `Response` object. Extract status with `parseInt((err as Error).message)`. Extract 409 body with `msg.slice(msg.indexOf('{'))`.
+- `apiFetch` (in `src/api/client.ts`) throws `new Error(body?.error ?? \`Request failed (${status})\`)` — parses JSON error response, uses the `error` field. No raw server text in error messages. For 409 with structured body, catch and re-parse separately if you need the payload (e.g. `cooldownEnd`).
 - For multipart uploads, use raw `fetch` with `credentials: 'include'` — do NOT wrap in `apiFetch` (which sets `Content-Type: application/json`).
 - Avatar field is `avatarPath` (not `avatarId`) in both TypeScript types and the backend DTO.
 - `BottomSheet` component in `src/components/BottomSheet.tsx` — use for any sheet/modal UI. Props: `open`, `onClose`, `children`.
@@ -68,6 +68,21 @@ Six tabs implemented: Essence, Specs, Dossier, Comms, Logs, Access. Each is a st
 - **Groups alphabetical** — SystemPage Groups tab now sorts A-Z before render.
 - **FrontCard comment Enter key** — Enter (without Shift) now saves immediately in addition to onBlur.
 
+## Security Notes (2026-04-04)
+
+Full audit complete. `docs/security-audit.md` is the authoritative record. Summary of current state: **0 Critical | 0 High | 0 Medium | 0 Low | 6 Info (accepted tradeoffs).**
+
+Key things fixed this session:
+- SP export file (`simply_plural_export.json`) was in git history — purged from all 319 commits, force-pushed. `.gitignore` updated.
+- Global exception handler added — no stack traces leak on 500 errors.
+- Security event logging added — failed login, PIN failures, freeze/unfreeze all log with IP.
+- `IsFrozenAsync()` now checks `FreezeEndDate` — timed freeze lifts immediately when expired.
+- Gatekeeper PIN minimum raised to 8 characters.
+- `apiFetch` error sanitized — parses JSON `error` field, no raw server text.
+- Bare catch blocks in `AvatarDownloadService` now log before returning null.
+
+Rate limiting: `[EnableRateLimiting("login")]` on `/api/auth/login` (10/min), `[EnableRateLimiting("freeze")]` on `/api/secure/freeze` (5/min) — both active.
+
 ## Known Remaining Issues
 
 ### Photo upload (avatar / background / extra images)
@@ -75,8 +90,8 @@ Upload code is correct end-to-end. Backend accepts jpg/jpeg/png/gif/webp only �
 
 ### Pending / Watch List
 
-- No rate limiting on `/api/auth/login` or `/api/secure/freeze` yet (known security backlog).
 - Cookie `Secure = true` will break if served over plain HTTP in production without a TLS proxy.
 - `POST /api/auth/setup` is one-time only — returns 409 if password already set.
 - Orphaned upload files: if avatar upload succeeds but the subsequent PATCH fails, the file stays in `secure_uploads/` with no member pointing to it. No cleanup mechanism yet.
 - `pinIsSet` flips to `true` before the "PIN set." success message renders in SettingsPage — shows "PIN changed." on first-set. Cosmetic, non-blocking.
+- `PUT /api/secure/pin` — minimum PIN length is now 8 characters (raised from 4 on 2026-04-04).
