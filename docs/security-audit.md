@@ -4,7 +4,7 @@
 **Reviewer:** OWASP Top 10:2025 + ASVS 5.0 scan + vibesec deep scan + OWASP pass
 **Status:** Pending repair (scheduled after remaining feature work)
 
-**Summary:** 0 Critical | 0 High | 0 Medium | 4 Low | 6 Info
+**Summary:** 0 Critical | 0 High | 0 Medium | 3 Low | 6 Info
 
 ---
 
@@ -81,14 +81,8 @@ public async Task<bool> IsFrozenAsync()
 ---
 
 
-### LOW — `PhysicalFile` Serves Without `Content-Disposition: attachment`
-**Location:** `src/PluralHost.Api/Controllers/MediaController.cs:Get()`
-**Risk:** Browser renders files inline. If an SVG/HTML were ever served from `secure_uploads`, it would execute in the owner's authenticated session. Upload path validates magic bytes and restricts to jpg/png/gif/webp, but defense-in-depth suggests forcing download regardless.
-**Fix:**
-```csharp
-return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
-```
-**Reference:** OWASP A05 / CWE-434
+### ~~LOW — `PhysicalFile` Serves Without `Content-Disposition: attachment`~~
+**Already fixed.** `MediaController.cs:52` uses the three-arg `PhysicalFile(path, contentType, fileDownloadName)` overload which sets `Content-Disposition: attachment` automatically.
 
 ---
 
