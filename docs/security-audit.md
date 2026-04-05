@@ -4,7 +4,7 @@
 **Reviewer:** OWASP Top 10:2025 + ASVS 5.0 scan + vibesec deep scan + OWASP pass
 **Status:** Pending repair (scheduled after remaining feature work)
 
-**Summary:** 0 Critical | 0 High | 3 Medium | 6 Low | 6 Info
+**Summary:** 0 Critical | 0 High | 0 Medium | 4 Low | 6 Info
 
 ---
 
@@ -23,77 +23,18 @@
 
 ## Open Issues
 
-### MEDIUM — No Brute-Force Protection on Login
-**Location:** `src/PluralHost.Api/Controllers/AuthController.cs:LoginAsync`
-**Risk:** `POST /api/auth/login` has no rate limiting. BCrypt wf=12 (~250ms/check) limits to ~240 attempts/min under sustained attack.
-**Fix:** Apply same fixed-window rate limiter pattern as freeze endpoint (10 attempts/min per IP with back-off).
-**Reference:** OWASP A06
+### ~~MEDIUM — No Brute-Force Protection on Login~~
+**Fixed (prior work).** `[EnableRateLimiting("login")]` on `LoginAsync` -- 10 requests/min per IP fixed window.
 
 ---
 
-### ~~MEDIUM — SSRF via DNS Rebinding in AvatarDownloadService~~
-**Location:** `src/PluralHost.Api/Services/AvatarDownloadService.cs:IsPrivateAddress()`
-**Risk:** The service correctly blocks raw private IPs (10.x, 172.16.x, 192.168.x, loopback) but skips validation entirely for hostnames: `"Hostname — allow (public DNS resolves it). Only raw IPs need SSRF checking."` An attacker who controls DNS for a domain can point it at `169.254.169.254` (AWS instance metadata), `10.x.x.x` (internal network), or any other private address. The IP check is only applied when the host parses as a raw IP.
-**Fix:** Resolve DNS before connecting and validate the resolved IP:
-```csharp
-private static bool IsPrivateAddress(Uri uri)
-{
-    var host = uri.Host.ToLowerInvariant();
-    if (host == "localhost") return true;
-
-    // Resolve hostname to IP, then check
-    IPAddress ip;
-    if (!IPAddress.TryParse(host, out ip))
-    {
-        try
-        {
-            var addresses = Dns.GetHostAddresses(host);
-            if (addresses.Length == 0) return true; // can't resolve = block
-            ip = addresses[0];
-        }
-        catch { return true; } // resolution failure = block
-    }
-
-    var bytes = ip.GetAddressBytes();
-    if (bytes.Length == 16) return true; // block IPv6
-    return (bytes[0] == 10) ||
-           (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) ||
-           (bytes[0] == 192 && bytes[1] == 168) ||
-           (bytes[0] == 169 && bytes[1] == 254) || // link-local / cloud metadata
-           (bytes[0] == 127);
-}
-```
-**Reference:** OWASP A10 / CWE-918 (SSRF)
+### ~~MEDIUM — No HTTPS Enforcement~~
+**Fixed (prior work).** `app.UseHttpsRedirection()` present in `Program.cs` middleware pipeline.
 
 ---
 
-### MEDIUM — No HTTPS Enforcement
-**Location:** `src/PluralHost.Api/Program.cs` (middleware pipeline)
-**Risk:** Passwords, PINs, and JWT cookies travel in plaintext if a client connects over HTTP. `Secure: true` on the cookie provides no protection unless HTTPS is actually enforced.
-**Fix:**
-```csharp
-app.UseCors();
-app.UseHttpsRedirection();  // add here
-app.UseAuthentication();
-```
-**Reference:** OWASP A02 / ASVS L1
-
----
-
-### MEDIUM — No Security Response Headers
-**Location:** `src/PluralHost.Api/Program.cs` (middleware pipeline)
-**Risk:** Missing HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy. Every response is missing these.
-**Fix:** Add before `UseAuthentication()`:
-```csharp
-app.Use(async (ctx, next) => {
-    ctx.Response.Headers["X-Content-Type-Options"] = "nosniff";
-    ctx.Response.Headers["X-Frame-Options"] = "DENY";
-    ctx.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    ctx.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
-    await next();
-});
-```
-**Reference:** OWASP A02
+### ~~MEDIUM — No Security Response Headers~~
+**Fixed (prior work).** Security headers middleware in `Program.cs`: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Strict-Transport-Security`.
 
 ---
 
@@ -134,18 +75,11 @@ public async Task<bool> IsFrozenAsync()
 
 ---
 
-### LOW — Integer Overflow on Extreme `DurationHours`
-**Location:** `src/PluralHost.Api/Controllers/SecureActionController.cs:FreezeAsync`
-**Risk:** `TimeSpan.FromHours(int.MaxValue)` throws `OverflowException` → HTTP 500. The freeze endpoint is `[AllowAnonymous]`, so no auth needed to trigger it.
-**Fix:**
-```csharp
-if (request.DurationHours.HasValue &&
-    (request.DurationHours.Value < 1 || request.DurationHours.Value > 8760))
-    return BadRequest(new { error = "DurationHours must be between 1 and 8760." });
-```
-**Reference:** OWASP A10 / CWE-190
+### ~~LOW — Integer Overflow on Extreme `DurationHours`~~
+**Fixed (prior work).** Validation guard added: `DurationHours` must be 1–8760 or request returns 400.
 
 ---
+
 
 ### LOW — `PhysicalFile` Serves Without `Content-Disposition: attachment`
 **Location:** `src/PluralHost.Api/Controllers/MediaController.cs:Get()`
@@ -177,11 +111,8 @@ return PhysicalFile(resolved, contentType, Path.GetFileName(resolved));
 
 ---
 
-### LOW — Bare Catch Blocks Swallow Exceptions Silently
-**Location:** `src/PluralHost.Api/Services/AvatarDownloadService.cs` lines ~81 and ~104
-**Risk:** `catch { return null; }` and `catch { return true; }` suppress all exceptions without logging. Download failures and DNS resolution errors are invisible -- makes debugging and attack detection impossible.
-**Fix:** Add `_logger.LogError(ex, "...")` before returning in each catch block. Fail-closed behavior (return null/true) is correct; silent failure is not.
-**Reference:** OWASP A09
+### ~~LOW — Bare Catch Blocks Swallow Exceptions Silently~~
+**Fixed 2026-04-04.** Both catch blocks in `AvatarDownloadService` now log via `ILogger<AvatarDownloadService>` before returning.
 
 ---
 
