@@ -46,6 +46,8 @@ export default function FrontPage() {
   // Build member lookup map
   const memberMap = useMemo(() => Object.fromEntries(members.map((m: Member) => [m.id, m])), [members])
 
+  const frontingIds = useMemo(() => new Set((fronters as any[]).map((f: any) => f.member)), [fronters])
+
   const removeMutation = useMutation({
     mutationFn: (uid: string) => frontApi.delete(uid),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['fronters'] }),
