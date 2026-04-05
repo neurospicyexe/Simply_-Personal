@@ -6,8 +6,11 @@
 # dotenv files
 .env
 
-# Personal setup notes (private, not for the public repo)
+# Private docs — never commit these
 docs/my-vps-setup.md
+docs/simply_plural_export.json
+docs/gemini_check.txt
+docs/session-log-*.md
 
 # SQLite database files (generated at runtime)
 *.db
