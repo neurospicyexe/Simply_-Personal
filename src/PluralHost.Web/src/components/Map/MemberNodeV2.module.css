@@ -20,12 +20,11 @@
 }
 
 .initial {
-  color: #fff;
+  color: var(--initial-color, #fff);
   font-size: 18px;
   font-weight: 700;
   font-family: var(--font-display, sans-serif);
   line-height: 1;
-  mix-blend-mode: overlay;
 }
 
 .name {

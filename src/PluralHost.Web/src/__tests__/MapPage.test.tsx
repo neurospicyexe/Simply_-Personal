@@ -1,18 +1,12 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemberNodeV2 } from '../components/Map/MemberNodeV2'
 import type { MemberNodeV2Data } from '../hooks/useMapLayout'
 
-const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-const wrap = (ui: React.ReactNode) => (
-  <QueryClientProvider client={qc}><MemoryRouter>{ui}</MemoryRouter></QueryClientProvider>
-)
-
 // React Flow requires ResizeObserver
 beforeAll(() => {
-  global.ResizeObserver = class ResizeObserver {
+  ;(window as unknown as Record<string, unknown>).ResizeObserver = class ResizeObserver {
     observe() {}
     unobserve() {}
     disconnect() {}
