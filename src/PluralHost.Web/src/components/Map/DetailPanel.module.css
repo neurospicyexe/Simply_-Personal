@@ -118,7 +118,7 @@
 
 .relArrow { color: var(--color-muted, #888); flex-shrink: 0; }
 .relName  { color: var(--color-text, #fff); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.relLabel { color: var(--color-muted, #888); font-size: 9px; }
+.relLabel { color: var(--color-muted, #888); font-size: 9px; overflow: hidden; white-space: nowrap; }
 
 .profileBtn {
   margin-top: auto;

@@ -22,7 +22,7 @@ export function DetailPanel({ selected, members, groups, relationships, fronterI
   const navigate = useNavigate()
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && selected) onClose() }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
@@ -92,7 +92,7 @@ export function DetailPanel({ selected, members, groups, relationships, fronterI
           <>
             <div className={styles.colorDot} style={{ background: group.color ?? '#888' }} />
             <div className={styles.name}>{group.name}</div>
-            <div className={styles.pronouns}>{group.memberCount} members</div>
+            <div className={styles.pronouns}>{groupMembers.length} members</div>
             <div className={styles.memberChips}>
               {groupMembers.slice(0, 8).map(m => (
                 <div key={m.id} className={styles.memberChip}>
