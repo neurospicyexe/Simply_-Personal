@@ -1,0 +1,41 @@
+.canvas {
+  position: relative;
+  width: 100%;
+  height: calc(100dvh - 64px);
+  background: var(--color-bg);
+}
+
+.minimap {
+  bottom: 12px !important;
+  left: 12px !important;
+}
+
+.controls {
+  bottom: 12px !important;
+  right: 12px !important;
+}
+
+.emptyState {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--color-muted);
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.emptyState button {
+  pointer-events: all;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 4px 16px;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 12px;
+}
