@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { MemberNodeV2 } from '../components/Map/MemberNodeV2'
 import type { MemberNodeV2Data } from '../hooks/useMapLayout'
+import { GroupNodeV2 } from '../components/Map/GroupNodeV2'
+import type { GroupNodeV2Data } from '../hooks/useMapLayout'
 
 // React Flow requires ResizeObserver
 beforeAll(() => {
@@ -70,5 +72,33 @@ describe('MemberNodeV2', () => {
   it('skips pronouns when not set', () => {
     render(<MemoryRouter><MemberNodeV2 {...makeProps({ pronouns: null })} /></MemoryRouter>)
     expect(screen.queryByText('she/her')).not.toBeInTheDocument()
+  })
+})
+
+type GroupNodeProps = Parameters<typeof GroupNodeV2>[0]
+
+function makeGroupProps(overrides: Partial<GroupNodeV2Data> = {}): GroupNodeProps {
+  return {
+    id: 'group-g1',
+    data: { id: 'g1', name: 'Protectors', color: '#00d4ff', memberCount: 4, ...overrides },
+    selected: false,
+    type: 'groupV2',
+    zIndex: 0,
+    isConnectable: true,
+    dragging: false,
+    positionAbsoluteX: 0,
+    positionAbsoluteY: 0,
+  } as GroupNodeProps
+}
+
+describe('GroupNodeV2', () => {
+  it('renders group name', () => {
+    render(<MemoryRouter><GroupNodeV2 {...makeGroupProps()} /></MemoryRouter>)
+    expect(screen.getByText('Protectors')).toBeInTheDocument()
+  })
+
+  it('renders member count badge', () => {
+    render(<MemoryRouter><GroupNodeV2 {...makeGroupProps()} /></MemoryRouter>)
+    expect(screen.getByText('4')).toBeInTheDocument()
   })
 })
