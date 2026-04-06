@@ -92,7 +92,8 @@ function runDagre(
   g.setDefaultEdgeLabel(() => ({}))
   g.setGraph({ rankdir, ranksep: rankdir === 'LR' ? 100 : 80, nodesep: rankdir === 'LR' ? 50 : 60 })
   nodeIds.forEach(id => g.setNode(id, { width: NODE_W, height: NODE_H }))
-  linkPairs.forEach(([s, t]) => { if (nodeIds.includes(s) && nodeIds.includes(t)) g.setEdge(s, t) })
+  const nodeSet = new Set(nodeIds)
+  linkPairs.forEach(([s, t]) => { if (nodeSet.has(s) && nodeSet.has(t)) g.setEdge(s, t) })
   dagre.layout(g)
   return new Map(nodeIds.map(id => {
     const pos = g.node(id)
@@ -117,13 +118,13 @@ export function useMapLayout(
     ]
     const posMap = runDagre(allNodeIds, linkPairs, rankdir)
     const connectedNodeIds = new Set(linkPairs.flatMap(([s, t]) => [s, t]))
-    const showGroups = mode === 'groups' || mode === 'both'
-    const showRels = mode === 'relationships' || mode === 'both'
+    const groupMap = new Map(groups.map(g => [g.id, g]))
 
-    const nodes: Node[] = memberIds.map(id => {
-      const m = members.find(mem => mem.id === id)!
+    const nodes: Node[] = memberIds.flatMap(id => {
+      const m = members.find(mem => mem.id === id)
+      if (!m) return []
       const pos = posMap.get(`member-${id}`) ?? { x: 0, y: 0 }
-      return {
+      return [{
         id: `member-${id}`,
         type: 'memberV2',
         position: pos,
@@ -135,11 +136,12 @@ export function useMapLayout(
           isFronting: fronterIds.has(id),
           isIsolated: !connectedNodeIds.has(`member-${id}`),
         } satisfies MemberNodeV2Data,
-      }
+      }]
     })
 
     groupIds.forEach(id => {
-      const g = groups.find(grp => grp.id === id)!
+      const g = groupMap.get(id)
+      if (!g) return
       const pos = posMap.get(`group-${id}`) ?? { x: 0, y: 0 }
       nodes.push({
         id: `group-${id}`,
@@ -154,34 +156,28 @@ export function useMapLayout(
       })
     })
 
-    const edges: Edge[] = []
-    if (showGroups) {
-      members.forEach(m => {
-        if (!memberIds.includes(m.id)) return
-        m.parentIds.forEach(gid => {
-          if (!groupIds.includes(gid)) return
-          const grp = groups.find(g => g.id === gid)!
-          edges.push({
-            id: `membership-${m.id}-${gid}`,
-            source: `member-${m.id}`,
-            target: `group-${gid}`,
-            style: { stroke: grp.color ?? '#666', strokeWidth: 1, strokeOpacity: 0.35 },
-          })
-        })
-      })
-    }
-    if (showRels) {
-      relationships.forEach(r => {
-        if (!memberIds.includes(r.fromMemberId) || !memberIds.includes(r.toMemberId)) return
-        edges.push({
-          id: `rel-${r.id}`,
-          source: `member-${r.fromMemberId}`,
-          target: `member-${r.toMemberId}`,
-          type: 'relationship',
-          data: { label: r.label, isDirected: r.isDirected },
-        })
-      })
-    }
+    const edges: Edge[] = linkPairs.map(([source, target]) => {
+      if (target.startsWith('group-')) {
+        const gid = target.replace('group-', '')
+        const grp = groupMap.get(gid)
+        return {
+          id: `membership-${source}-${target}`,
+          source,
+          target,
+          style: { stroke: grp?.color ?? '#666', strokeWidth: 1, strokeOpacity: 0.35 },
+        }
+      }
+      const rel = relationships.find(r =>
+        `member-${r.fromMemberId}` === source && `member-${r.toMemberId}` === target
+      )
+      return {
+        id: rel ? `rel-${rel.id}` : `rel-${source}-${target}`,
+        source,
+        target,
+        type: 'relationship' as const,
+        data: rel ? { label: rel.label, isDirected: rel.isDirected } : { label: '', isDirected: false },
+      }
+    })
 
     return { nodes, edges }
   }, [members, groups, relationships, fronterIds, viewFilter, mode])
