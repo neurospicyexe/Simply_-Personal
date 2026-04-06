@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Member, Group } from '../../types'
 import type { MapMode, ViewFilter } from '../../hooks/useMapLayout'
 import styles from './FloatingToolbar.module.css'
@@ -25,6 +25,19 @@ export function FloatingToolbar({
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!pickerOpen) return
+    function handler(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setPickerOpen(false)
+        setSearch('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [pickerOpen])
 
   const isFiltered = viewFilter.type !== 'all'
   const filterLabel = viewFilter.type === 'group'
@@ -54,10 +67,10 @@ export function FloatingToolbar({
             >✕</button>
           </div>
         ) : (
-          <div className={styles.viewingWrapper}>
+          <div className={styles.viewingWrapper} ref={wrapperRef}>
             <button
               className={styles.viewingBtn}
-              onClick={() => setPickerOpen(p => !p)}
+              onClick={() => { setPickerOpen(p => !p); if (pickerOpen) setSearch('') }}
               aria-expanded={pickerOpen}
             >
               Viewing: All ▾
