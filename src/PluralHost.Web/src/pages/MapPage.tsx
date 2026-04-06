@@ -122,7 +122,7 @@ function MapCanvas() {
         onFilterChange={setViewFilter}
         members={members}
         groups={groups}
-        onAdd={() => setSheetOpen(true)}
+        onAdd={() => { if (connectFrom && connectTo) setSheetOpen(true) }}
         onFitView={() => fitView({ padding: 0.2 })}
       />
 
