@@ -1,10 +1,17 @@
+import React from 'react'
 import { describe, it, expect, vi, beforeAll } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { MemberNodeV2 } from '../components/Map/MemberNodeV2'
 import type { MemberNodeV2Data } from '../hooks/useMapLayout'
 import { GroupNodeV2 } from '../components/Map/GroupNodeV2'
 import type { GroupNodeV2Data } from '../hooks/useMapLayout'
+import { FloatingToolbar } from '../components/Map/FloatingToolbar'
+import type { Member, Group } from '../types'
+
+function wrap(ui: React.ReactElement) {
+  return <MemoryRouter>{ui}</MemoryRouter>
+}
 
 // React Flow requires ResizeObserver
 beforeAll(() => {
@@ -100,5 +107,64 @@ describe('GroupNodeV2', () => {
   it('renders member count badge', () => {
     render(<MemoryRouter><GroupNodeV2 {...makeGroupProps()} /></MemoryRouter>)
     expect(screen.getByText('4')).toBeInTheDocument()
+  })
+})
+
+describe('FloatingToolbar', () => {
+  const members = [{ id: 'm1', name: 'Mira', displayName: 'Mira' } as Member]
+  const groups = [{ id: 'g1', name: 'Protectors' } as Group]
+
+  it('renders mode chips', () => {
+    render(wrap(
+      <FloatingToolbar
+        mode="groups" onModeChange={vi.fn()}
+        viewFilter={{ type: 'all' }} onFilterChange={vi.fn()}
+        members={members} groups={groups}
+        onAdd={vi.fn()} onFitView={vi.fn()}
+      />
+    ))
+    expect(screen.getByText('Groups')).toBeInTheDocument()
+    expect(screen.getByText('Relationships')).toBeInTheDocument()
+    expect(screen.getByText('Both')).toBeInTheDocument()
+  })
+
+  it('calls onModeChange when chip clicked', () => {
+    const onModeChange = vi.fn()
+    render(wrap(
+      <FloatingToolbar
+        mode="groups" onModeChange={onModeChange}
+        viewFilter={{ type: 'all' }} onFilterChange={vi.fn()}
+        members={members} groups={groups}
+        onAdd={vi.fn()} onFitView={vi.fn()}
+      />
+    ))
+    fireEvent.click(screen.getByText('Relationships'))
+    expect(onModeChange).toHaveBeenCalledWith('relationships')
+  })
+
+  it('shows breadcrumb when filter is active', () => {
+    render(wrap(
+      <FloatingToolbar
+        mode="groups" onModeChange={vi.fn()}
+        viewFilter={{ type: 'member', id: 'm1', name: 'Mira' }} onFilterChange={vi.fn()}
+        members={members} groups={groups}
+        onAdd={vi.fn()} onFitView={vi.fn()}
+      />
+    ))
+    expect(screen.getByText(/Mira/)).toBeInTheDocument()
+  })
+
+  it('calls onFilterChange with all when breadcrumb X clicked', () => {
+    const onFilterChange = vi.fn()
+    render(wrap(
+      <FloatingToolbar
+        mode="groups" onModeChange={vi.fn()}
+        viewFilter={{ type: 'member', id: 'm1', name: 'Mira' }} onFilterChange={onFilterChange}
+        members={members} groups={groups}
+        onAdd={vi.fn()} onFitView={vi.fn()}
+      />
+    ))
+    fireEvent.click(screen.getByLabelText('Clear filter'))
+    expect(onFilterChange).toHaveBeenCalledWith({ type: 'all' })
   })
 })
