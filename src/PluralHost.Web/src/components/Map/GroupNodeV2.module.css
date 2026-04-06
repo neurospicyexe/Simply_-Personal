@@ -11,7 +11,7 @@
   min-width: 80px;
 }
 
-.node:hover, .selected {
+.node:hover, .node.selected {
   box-shadow: 0 0 12px color-mix(in srgb, var(--group-color) 40%, transparent);
 }
 
