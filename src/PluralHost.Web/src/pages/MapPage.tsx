@@ -32,6 +32,8 @@ import styles from './MapPage.module.css'
 
 const nodeTypes = { memberV2: MemberNodeV2, groupV2: GroupNodeV2 }
 const edgeTypes = { relationship: RelationshipEdge }
+const EMPTY_MEMBERS: Member[] = []
+const EMPTY: never[] = []
 
 function MapCanvas() {
   const { fitView } = useReactFlow()
@@ -44,11 +46,11 @@ function MapCanvas() {
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
   const [connectTo, setConnectTo] = useState<string | null>(null)
 
-  const { data: members = [] }       = useQuery<Member[]>({ queryKey: ['members'],       queryFn: membersApi.list })
-  const { data: groups = [] }        = useQuery<Group[]>({ queryKey: ['groups'],         queryFn: groupsApi.list })
-  const { data: relationships = [] } = useQuery<MemberRelationship[]>({ queryKey: ['relationships'], queryFn: relationshipsApi.list })
-  const { data: front = [] }         = useQuery<SpEnvelope<FrontContent>[]>({ queryKey: ['front-current'], queryFn: frontApi.getCurrent })
-  const { data: buckets = [] }       = useQuery<PrivacyBucket[]>({ queryKey: ['buckets'], queryFn: bucketsApi.list })
+  const { data: members = EMPTY_MEMBERS } = useQuery<Member[]>({ queryKey: ['members'],       queryFn: membersApi.list })
+  const { data: groups = EMPTY }          = useQuery<Group[]>({ queryKey: ['groups'],         queryFn: groupsApi.list })
+  const { data: relationships = EMPTY }   = useQuery<MemberRelationship[]>({ queryKey: ['relationships'], queryFn: relationshipsApi.list })
+  const { data: front = EMPTY }           = useQuery<SpEnvelope<FrontContent>[]>({ queryKey: ['front-current'], queryFn: frontApi.getCurrent })
+  const { data: buckets = EMPTY }         = useQuery<PrivacyBucket[]>({ queryKey: ['buckets'], queryFn: bucketsApi.list })
 
   const fronterIds = useMemo(
     () => new Set(front.map(f => f.content.member)),
