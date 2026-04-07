@@ -1,7 +1,8 @@
 .canvas {
   position: relative;
   width: 100%;
-  height: calc(100dvh - 64px);
+  height: calc(100vh - 72px);
+  height: calc(100dvh - 72px);
   background: var(--color-bg);
 }
 
