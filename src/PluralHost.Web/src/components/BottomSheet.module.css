@@ -17,6 +17,7 @@
   margin: 0 auto;
   max-height: 90vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-4) var(--space-6) calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;

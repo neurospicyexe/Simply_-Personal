@@ -8,7 +8,10 @@ export const mediaApi = {
       body: form,
       credentials: 'include',
     })
-    if (!res.ok) throw res
+    if (!res.ok) {
+      const body = await res.json().catch(() => null) as { error?: string } | null
+      throw new Error(body?.error ?? `Upload failed (${res.status})`)
+    }
     return res.json()
   },
 }

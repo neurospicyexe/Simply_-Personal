@@ -184,7 +184,7 @@ export default function EssenceTab({ member, groups }: Props) {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp"
               className={styles.avatarInput}
               onChange={handleFileChange}
             />
@@ -223,7 +223,7 @@ export default function EssenceTab({ member, groups }: Props) {
                 <input
                   ref={bgInputRef}
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.gif,.webp"
                   className={styles.avatarInput}
                   onChange={handleBgFileChange}
                 />
