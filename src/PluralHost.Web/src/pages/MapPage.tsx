@@ -13,8 +13,6 @@ import {
   type OnConnect,
   type NodeMouseHandler,
 } from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
-
 import { membersApi } from '../api/members'
 import { groupsApi } from '../api/groups'
 import { relationshipsApi } from '../api/relationships'
