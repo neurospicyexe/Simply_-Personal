@@ -83,22 +83,50 @@ export function buildSubgraph(
   return { memberIds, groupIds, linkPairs }
 }
 
+const GRID_GAP_X = NODE_W + 30
+const GRID_GAP_Y = NODE_H + 30
+
 function runDagre(
   nodeIds: string[],
   linkPairs: Array<[string, string]>,
   rankdir: 'TB' | 'LR'
 ): Map<string, { x: number; y: number }> {
-  const g = new dagre.graphlib.Graph()
-  g.setDefaultEdgeLabel(() => ({}))
-  g.setGraph({ rankdir, ranksep: rankdir === 'LR' ? 100 : 80, nodesep: rankdir === 'LR' ? 50 : 60 })
-  nodeIds.forEach(id => g.setNode(id, { width: NODE_W, height: NODE_H }))
-  const nodeSet = new Set(nodeIds)
-  linkPairs.forEach(([s, t]) => { if (nodeSet.has(s) && nodeSet.has(t)) g.setEdge(s, t) })
-  dagre.layout(g)
-  return new Map(nodeIds.map(id => {
-    const pos = g.node(id)
-    return [id, { x: (pos?.x ?? 0) - NODE_W / 2, y: (pos?.y ?? 0) - NODE_H / 2 }]
-  }))
+  const posMap = new Map<string, { x: number; y: number }>()
+
+  // Only run Dagre on nodes that have at least one edge — isolated nodes fed to
+  // Dagre all land in one horizontal rank, producing the "flat line" layout.
+  const connectedSet = new Set(linkPairs.flatMap(([s, t]) => [s, t]))
+  const connectedIds = nodeIds.filter(id => connectedSet.has(id))
+  const isolatedIds  = nodeIds.filter(id => !connectedSet.has(id))
+
+  if (connectedIds.length > 0) {
+    const g = new dagre.graphlib.Graph()
+    g.setDefaultEdgeLabel(() => ({}))
+    g.setGraph({ rankdir, ranksep: rankdir === 'LR' ? 100 : 80, nodesep: rankdir === 'LR' ? 50 : 60 })
+    connectedIds.forEach(id => g.setNode(id, { width: NODE_W, height: NODE_H }))
+    linkPairs.forEach(([s, t]) => { if (connectedSet.has(s) && connectedSet.has(t)) g.setEdge(s, t) })
+    dagre.layout(g)
+    connectedIds.forEach(id => {
+      const pos = g.node(id)
+      posMap.set(id, { x: (pos?.x ?? 0) - NODE_W / 2, y: (pos?.y ?? 0) - NODE_H / 2 })
+    })
+  }
+
+  // Place isolated nodes in a centered grid below any connected cluster.
+  let maxY = 0
+  posMap.forEach(pos => { maxY = Math.max(maxY, pos.y + NODE_H) })
+  const gridOffsetY = connectedIds.length > 0 ? maxY + 80 : 0
+  const cols = Math.max(1, Math.ceil(Math.sqrt(isolatedIds.length)))
+  const gridStartX = -((cols * GRID_GAP_X) / 2) + NODE_W / 2
+
+  isolatedIds.forEach((id, i) => {
+    posMap.set(id, {
+      x: gridStartX + (i % cols) * GRID_GAP_X,
+      y: gridOffsetY + Math.floor(i / cols) * GRID_GAP_Y,
+    })
+  })
+
+  return posMap
 }
 
 export function useMapLayout(
