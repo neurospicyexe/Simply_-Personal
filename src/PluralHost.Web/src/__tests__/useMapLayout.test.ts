@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSubgraph } from '../hooks/useMapLayout'
+import { buildSubgraph } from '../utils/mapUtils'
 import type { Member, Group, MemberRelationship } from '../types'
 
 const makeMember = (id: string, parentIds: string[] = []): Member => ({
