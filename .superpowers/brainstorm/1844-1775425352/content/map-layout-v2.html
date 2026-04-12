@@ -1,0 +1,120 @@
+<h2>System Map — A+C Hybrid</h2>
+<p class="subtitle">Full canvas with floating controls. Click a node → detail panel slides in from the right without shrinking the canvas.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Default state — no selection</div>
+  <div class="mockup-body" style="background:#0d0d0d;padding:0;border-radius:6px;overflow:hidden;position:relative;height:260px">
+
+    <!-- canvas bg -->
+    <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%, #0f1a0f 0%, #0d0d0d 70%);opacity:0.6"></div>
+
+    <!-- floating top bar -->
+    <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10">
+      <div style="background:#111;border:1px solid #b6ff0044;padding:5px 14px;border-radius:20px;color:#b6ff00;font-size:11px;font-weight:700">Groups</div>
+      <div style="background:#111;border:1px solid #333;padding:5px 14px;border-radius:20px;color:#888;font-size:11px">Relationships</div>
+      <div style="background:#111;border:1px solid #333;padding:5px 14px;border-radius:20px;color:#888;font-size:11px">Both</div>
+    </div>
+
+    <!-- floating top-right actions -->
+    <div style="position:absolute;top:12px;right:12px;display:flex;gap:6px;z-index:10">
+      <div style="background:#111;border:1px solid #333;padding:5px 10px;border-radius:8px;color:#888;font-size:10px">⊕ Add</div>
+      <div style="background:#111;border:1px solid #333;padding:5px 10px;border-radius:8px;color:#888;font-size:10px">⤢ Fit</div>
+    </div>
+
+    <!-- nodes scattered on canvas -->
+    <div style="position:absolute;top:80px;left:80px;text-align:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:#ff4db8;margin:0 auto 4px;border:2px solid #ff4db833"></div>
+      <div style="color:#ccc;font-size:9px">Mira</div>
+    </div>
+    <div style="position:absolute;top:60px;left:200px;text-align:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:#00d4ff;margin:0 auto 4px;border:2px solid transparent"></div>
+      <div style="color:#ccc;font-size:9px">Orin</div>
+    </div>
+    <div style="position:absolute;top:140px;left:150px;text-align:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:#b6ff00;margin:0 auto 4px;border:2px solid transparent;box-shadow:0 0 10px #b6ff0066"></div>
+      <div style="color:#b6ff00;font-size:9px;font-weight:700">Aiden ●</div>
+    </div>
+    <div style="position:absolute;top:110px;left:280px;text-align:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:#b400ff;margin:0 auto 4px"></div>
+      <div style="color:#ccc;font-size:9px">Dusk</div>
+    </div>
+
+    <!-- edge lines -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+      <line x1="98" y1="98" x2="218" y2="78" stroke="#333" stroke-width="1"/>
+      <line x1="168" y1="158" x2="98" y2="98" stroke="#b6ff0044" stroke-width="1.5"/>
+      <line x1="168" y1="158" x2="298" y2="128" stroke="#333" stroke-width="1"/>
+    </svg>
+
+    <!-- floating minimap bottom-left -->
+    <div style="position:absolute;bottom:12px;left:12px;background:#111;border:1px solid #222;border-radius:6px;width:60px;height:40px;display:flex;align-items:center;justify-content:center;color:#333;font-size:9px">minimap</div>
+
+    <!-- floating zoom bottom-right -->
+    <div style="position:absolute;bottom:12px;right:12px;display:flex;gap:4px">
+      <div style="background:#111;border:1px solid #333;width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px">−</div>
+      <div style="background:#111;border:1px solid #333;width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px">+</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:20px">
+  <div class="mockup-header">Node clicked — detail panel slides in over the right edge, canvas stays full size</div>
+  <div class="mockup-body" style="background:#0d0d0d;padding:0;border-radius:6px;overflow:hidden;position:relative;height:260px">
+
+    <!-- canvas (same, full width) -->
+    <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%, #0f1a0f 0%, #0d0d0d 70%);opacity:0.6"></div>
+
+    <!-- floating top bar -->
+    <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10">
+      <div style="background:#111;border:1px solid #b6ff0044;padding:5px 14px;border-radius:20px;color:#b6ff00;font-size:11px;font-weight:700">Groups</div>
+      <div style="background:#111;border:1px solid #333;padding:5px 14px;border-radius:20px;color:#888;font-size:11px">Relationships</div>
+      <div style="background:#111;border:1px solid #333;padding:5px 14px;border-radius:20px;color:#888;font-size:11px">Both</div>
+    </div>
+
+    <!-- nodes same positions, Mira selected -->
+    <div style="position:absolute;top:80px;left:80px;text-align:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:#ff4db8;margin:0 auto 4px;border:2px solid #ff4db8;box-shadow:0 0 14px #ff4db888"></div>
+      <div style="color:#ff4db8;font-size:9px;font-weight:700">Mira</div>
+    </div>
+    <div style="position:absolute;top:60px;left:200px;text-align:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:#00d4ff;margin:0 auto 4px;opacity:0.4"></div>
+      <div style="color:#555;font-size:9px">Orin</div>
+    </div>
+    <div style="position:absolute;top:140px;left:150px;text-align:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:#b6ff00;margin:0 auto 4px;opacity:0.4"></div>
+      <div style="color:#555;font-size:9px">Aiden</div>
+    </div>
+    <div style="position:absolute;top:110px;left:280px;text-align:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:#b400ff;margin:0 auto 4px;opacity:0.4"></div>
+      <div style="color:#555;font-size:9px">Dusk</div>
+    </div>
+
+    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+      <line x1="98" y1="98" x2="218" y2="78" stroke="#222" stroke-width="1"/>
+      <line x1="168" y1="158" x2="98" y2="98" stroke="#333" stroke-width="1.5"/>
+      <line x1="168" y1="158" x2="298" y2="128" stroke="#222" stroke-width="1"/>
+    </svg>
+
+    <!-- detail panel — overlays right side -->
+    <div style="position:absolute;top:0;right:0;bottom:0;width:150px;background:#111;border-left:1px solid #ff4db833;padding:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="color:#888;font-size:9px;text-transform:uppercase">Member</div>
+        <div style="color:#555;font-size:11px;cursor:pointer">✕</div>
+      </div>
+      <div style="width:44px;height:44px;border-radius:50%;background:#ff4db8;margin:0 auto;box-shadow:0 0 16px #ff4db866"></div>
+      <div style="text-align:center">
+        <div style="color:#fff;font-size:12px;font-weight:700">Mira</div>
+        <div style="color:#888;font-size:10px">she/her</div>
+      </div>
+      <div style="background:#ff4db811;border:1px solid #ff4db833;border-radius:4px;padding:4px 6px">
+        <div style="color:#888;font-size:9px">Relationships</div>
+        <div style="color:#ccc;font-size:10px;margin-top:2px">→ Aiden (partners)</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:4px;padding:4px 6px;color:#b6ff00;font-size:10px;text-align:center;margin-top:auto">→ Open Profile</div>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:12px">The canvas never resizes — panel overlays it. Clicking elsewhere or pressing Escape dismisses it. Does this feel right?</p>

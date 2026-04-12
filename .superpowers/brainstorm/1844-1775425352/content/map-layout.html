@@ -1,0 +1,68 @@
+<h2>System Map — Page Layout</h2>
+<p class="subtitle">The map is moving to its own dedicated page. Which layout structure fits how you use it?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d0d;border-radius:6px;padding:12px;font-size:11px;color:#555;font-family:monospace">
+      <div style="background:#111;border-bottom:2px solid #b6ff00;padding:6px 10px;color:#b6ff00;font-weight:700;margin:-12px -12px 10px;border-radius:6px 6px 0 0">◈ System Map</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="background:#1a1a1a;border:1px solid #222;padding:4px 10px;border-radius:20px;color:#aaa">Groups</div>
+        <div style="background:#b6ff00;padding:4px 10px;border-radius:20px;color:#000;font-weight:700">Relationships</div>
+        <div style="background:#1a1a1a;border:1px solid #222;padding:4px 10px;border-radius:20px;color:#aaa">Both</div>
+        <div style="margin-left:auto;background:#1a1a1a;border:1px solid #222;padding:4px 10px;border-radius:20px;color:#aaa">⊕ Add</div>
+      </div>
+      <div style="background:#111;border:1px solid #1e1e1e;border-radius:6px;height:130px;display:flex;align-items:center;justify-content:center;color:#333;font-size:10px">
+        ── full canvas ──
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Full Canvas + Floating Controls</h3>
+      <p>Max canvas real estate. Mode chips + action buttons float over the map. Minimap and zoom controls in corners. Clean, immersive — like Figma or Miro.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d0d;border-radius:6px;padding:12px;font-size:11px;color:#555;font-family:monospace">
+      <div style="background:#111;border-bottom:2px solid #b6ff00;padding:6px 10px;color:#b6ff00;font-weight:700;margin:-12px -12px 10px;border-radius:6px 6px 0 0">◈ System Map</div>
+      <div style="display:flex;height:140px;gap:8px">
+        <div style="background:#111;border:1px solid #1e1e1e;border-radius:6px;width:110px;padding:8px;flex-shrink:0">
+          <div style="color:#888;font-size:9px;text-transform:uppercase;margin-bottom:6px">Members</div>
+          <div style="background:#1a1a1a;border-radius:4px;padding:4px 6px;color:#ccc;margin-bottom:4px">◉ Aiden</div>
+          <div style="background:#b6ff001a;border:1px solid #b6ff0033;border-radius:4px;padding:4px 6px;color:#b6ff00;margin-bottom:4px">◉ Mira</div>
+          <div style="background:#1a1a1a;border-radius:4px;padding:4px 6px;color:#ccc">◉ Orin</div>
+        </div>
+        <div style="background:#111;border:1px solid #1e1e1e;border-radius:6px;flex:1;display:flex;align-items:center;justify-content:center;color:#333;font-size:10px">
+          canvas
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Sidebar + Canvas</h3>
+      <p>Member list on the left, canvas on the right. Click a member to highlight them on the map. Good for systems with many members — easy to locate anyone quickly.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d0d;border-radius:6px;padding:12px;font-size:11px;color:#555;font-family:monospace">
+      <div style="background:#111;border-bottom:2px solid #b6ff00;padding:6px 10px;color:#b6ff00;font-weight:700;margin:-12px -12px 10px;border-radius:6px 6px 0 0">◈ System Map</div>
+      <div style="display:flex;height:140px;gap:8px">
+        <div style="background:#111;border:1px solid #1e1e1e;border-radius:6px;flex:1;display:flex;align-items:center;justify-content:center;color:#333;font-size:10px">
+          canvas
+        </div>
+        <div style="background:#111;border:1px solid #1e1e1e;border-radius:6px;width:100px;padding:8px;flex-shrink:0">
+          <div style="color:#888;font-size:9px;text-transform:uppercase;margin-bottom:6px">Selected</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:#ff4db8;margin:0 auto 6px"></div>
+          <div style="color:#ccc;text-align:center;font-size:10px;margin-bottom:4px">Mira</div>
+          <div style="background:#1a1a1a;border-radius:4px;padding:3px 6px;color:#888;font-size:9px;text-align:center">she/her</div>
+          <div style="margin-top:8px;background:#b6ff0022;border:1px solid #b6ff0044;border-radius:4px;padding:3px 6px;color:#b6ff00;font-size:9px;text-align:center">→ Profile</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Canvas + Detail Panel</h3>
+      <p>Full canvas left, collapsible detail panel right. Click a node to see name, pronouns, color, relationships, and a jump link to their profile. Panel slides in/out.</p>
+    </div>
+  </div>
+
+</div>

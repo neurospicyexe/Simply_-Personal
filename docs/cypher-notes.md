@@ -83,10 +83,15 @@ Key things fixed this session:
 
 Rate limiting: `[EnableRateLimiting("login")]` on `/api/auth/login` (10/min), `[EnableRateLimiting("freeze")]` on `/api/secure/freeze` (5/min) — both active.
 
-## Known Remaining Issues
+## Bug Fixes Applied (2026-04-05)
 
-### Photo upload (avatar / background / extra images)
-Upload code is correct end-to-end. Backend accepts jpg/jpeg/png/gif/webp only — validates magic bytes. To diagnose: open browser Network tab, try an upload, check the `POST /api/media/upload` response body for the exact error. Common cause: HEIC/AVIF/JFIF files are rejected with 400. If the upload returns 200 but image never displays, check that the API is running and `GET /api/media/<uuid>` returns the file.
+- **Service worker stale cache** — PWA with Workbox precache was serving old compiled JS across `git pull` + rebuild cycles. Hard refresh (`Ctrl+Shift+R`) doesn't bypass a registered SW. Fix: added `clientsClaim: true`, `skipWaiting: true` to workbox config in `vite.config.ts` so new SW takes over immediately; added `devOptions: { enabled: false }` to prevent SW from interfering with `npm run dev`. One-time fix: unregister via DevTools → Application → Service Workers → Unregister.
+- **StatusPickerSheet can't scroll** — `.list` had no `min-height: 0` or `overflow-y`. As a flex item, it defaults to `min-height: auto` which prevents the parent from ever clipping it — overflow never fires. Fix: added `min-height: 0; overflow-y: auto` to `.list` in `StatusPickerSheet.module.css`.
+- **BottomSheet scroll bleeds through** — scrolling inside any bottom sheet also scrolled the page behind it. Fix: added `overscroll-behavior: contain` to `.sheet` in `BottomSheet.module.css`.
+- **Image upload errors swallowed** — `mediaApi.upload` threw the raw `Response` object on failure; catch block in EssenceTab couldn't read the error message and always showed "Upload failed. Please try again." Fix: now parses JSON body and throws `new Error(body?.error ?? \`Upload failed (${status})\`)` — actual server message (e.g. "Extension '.heic' is not allowed") now surfaces in the UI.
+- **Upload file picker too permissive** — `accept="image/*"` offered HEIC/AVIF/BMP/TIFF etc. which the backend rejects with 400. Fix: both avatar and background inputs now use `accept=".jpg,.jpeg,.png,.gif,.webp"` to match backend allowlist.
+
+## Known Remaining Issues
 
 ### Pending / Watch List
 

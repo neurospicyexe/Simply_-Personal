@@ -1,0 +1,76 @@
+<h2>Node Visual Design</h2>
+<p class="subtitle">How rich should member nodes look on the map?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d0d;border-radius:6px;padding:20px;display:flex;gap:24px;align-items:flex-end;justify-content:center">
+      <!-- plain dot - no avatar -->
+      <div style="text-align:center">
+        <div style="width:44px;height:44px;border-radius:50%;background:#ff4db8;margin:0 auto 6px;border:2px solid #ff4db844"></div>
+        <div style="color:#ccc;font-size:10px">Mira</div>
+      </div>
+      <!-- fronting - glowing -->
+      <div style="text-align:center">
+        <div style="width:44px;height:44px;border-radius:50%;background:#b6ff00;margin:0 auto 6px;border:2px solid #b6ff00;box-shadow:0 0 16px #b6ff0066"></div>
+        <div style="color:#b6ff00;font-size:10px;font-weight:700">Aiden ●</div>
+      </div>
+      <!-- isolated/dimmed -->
+      <div style="text-align:center;opacity:0.35">
+        <div style="width:44px;height:44px;border-radius:50%;background:#b400ff;margin:0 auto 6px"></div>
+        <div style="color:#888;font-size:10px">Dusk</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Current (refined)</h3>
+      <p>Keep the colored dot approach but bigger, with improved glow for fronting members and better label typography. Clean, fast-rendering, works great at any zoom.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d0d;border-radius:6px;padding:20px;display:flex;gap:24px;align-items:flex-end;justify-content:center">
+      <!-- with avatar ring -->
+      <div style="text-align:center">
+        <div style="width:48px;height:48px;border-radius:50%;background:#ff4db8;margin:0 auto 6px;border:2px solid #ff4db844;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:700">M</div>
+        <div style="color:#ccc;font-size:10px">Mira</div>
+      </div>
+      <!-- fronting with avatar + ring -->
+      <div style="text-align:center">
+        <div style="width:48px;height:48px;border-radius:50%;background:#b6ff00;margin:0 auto 6px;border:3px solid #b6ff00;box-shadow:0 0 20px #b6ff0088;display:flex;align-items:center;justify-content:center;font-size:16px;color:#000;font-weight:700">A</div>
+        <div style="color:#b6ff00;font-size:10px;font-weight:700">Aiden ●</div>
+      </div>
+      <!-- with pronouns below -->
+      <div style="text-align:center">
+        <div style="width:48px;height:48px;border-radius:50%;background:#00d4ff;margin:0 auto 4px;border:2px solid #00d4ff22;display:flex;align-items:center;justify-content:center;font-size:16px;color:#000;font-weight:700">O</div>
+        <div style="color:#ccc;font-size:10px">Orin</div>
+        <div style="color:#555;font-size:9px">they/them</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Avatar circle + pronouns</h3>
+      <p>Nodes show the member's avatar image (or initial if none). Pronouns shown under the name at normal zoom. Fronting gets a bright ring + glow. More identity at a glance.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d0d0d;border-radius:6px;padding:20px;display:flex;gap:16px;align-items:flex-start;justify-content:center">
+      <!-- glassmorphic card node -->
+      <div style="background:rgba(255,77,184,0.08);border:1px solid rgba(255,77,184,0.25);border-radius:10px;padding:8px 12px;width:80px;backdrop-filter:blur(8px)">
+        <div style="width:28px;height:28px;border-radius:50%;background:#ff4db8;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700">M</div>
+        <div style="color:#fff;font-size:10px;font-weight:600;text-align:center">Mira</div>
+        <div style="color:#ff4db8;font-size:8px;text-align:center">she/her</div>
+      </div>
+      <!-- fronting glassmorphic -->
+      <div style="background:rgba(182,255,0,0.1);border:1.5px solid rgba(182,255,0,0.5);border-radius:10px;padding:8px 12px;width:80px;box-shadow:0 0 16px rgba(182,255,0,0.2)">
+        <div style="width:28px;height:28px;border-radius:50%;background:#b6ff00;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#000;font-weight:700">A</div>
+        <div style="color:#b6ff00;font-size:10px;font-weight:700;text-align:center">Aiden</div>
+        <div style="color:#b6ff00;font-size:8px;text-align:center">● fronting</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Glassmorphic cards</h3>
+      <p>Each node is a mini glass card: avatar, name, pronouns, fronting status. Takes more canvas space but each person feels like a card you can grab. Like the reference app.</p>
+    </div>
+  </div>
+
+</div>
