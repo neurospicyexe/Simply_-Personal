@@ -1,4 +1,5 @@
-import { useMemo, useCallback, useState, useEffect } from 'react'
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ReactFlow,
@@ -35,10 +36,6 @@ type MapMode = 'groups' | 'relationships' | 'both'
 const nodeTypes = { member: MemberNode, group: GroupNode }
 const edgeTypes = { relationship: RelationshipEdge }
 
-// Stable reference prevents useMemo deps changing while queries are pending
-// (= [] in destructuring creates a new array each render when data is undefined)
-const EMPTY: never[] = []
-
 interface D3Node { id: string; x?: number; y?: number }
 interface D3Link { source: string; target: string }
 
@@ -59,27 +56,46 @@ interface Props {
 }
 
 export function SystemMap({ initialMode = 'groups' }: Props) {
+  const navigate = useNavigate()
   const [mode, setMode] = useState<MapMode>(initialMode)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [connectFrom, setConnectFrom] = useState<string | null>(null)
   const [connectTo, setConnectTo] = useState<string | null>(null)
 
-  const { data: members = EMPTY } = useQuery({ queryKey: ['members'], queryFn: membersApi.list })
-  const { data: groups = EMPTY } = useQuery({ queryKey: ['groups'], queryFn: groupsApi.list })
-  const { data: relationships = EMPTY } = useQuery({ queryKey: ['relationships'], queryFn: relationshipsApi.list })
-  const { data: front = EMPTY } = useQuery({ queryKey: ['front-current'], queryFn: frontApi.getCurrent })
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const [canvasDims, setCanvasDims] = useState({ width: 800, height: 600 })
+
+  useEffect(() => {
+    const el = canvasRef.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect
+      if (width > 0 && height > 0) setCanvasDims({ width, height })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const { data: members = [], isLoading: membersLoading } = useQuery({ queryKey: ['members'], queryFn: membersApi.list })
+  const { data: groups = [], isLoading: groupsLoading } = useQuery({ queryKey: ['groups'], queryFn: groupsApi.list })
+  const { data: relationships = [], isLoading: relsLoading } = useQuery({ queryKey: ['relationships'], queryFn: relationshipsApi.list })
+  const { data: front = [], isLoading: frontLoading } = useQuery({ queryKey: ['front-current'], queryFn: frontApi.getCurrent })
+
+  const isLoading = membersLoading || groupsLoading || relsLoading || frontLoading
 
   const frontingIds = useMemo(
-    () => new Set(front.map(f => f.content.member)),
+    () => new Set((front as { content: { member: string } }[]).map(f => f.content.member)),
     [front]
   )
 
   const { rfNodes, rfEdges } = useMemo(() => {
-    const WIDTH = 800
-    const HEIGHT = 600
+    const WIDTH = canvasDims.width
+    const HEIGHT = canvasDims.height
 
     const showGroups = mode === 'groups' || mode === 'both'
     const showRelationships = mode === 'relationships' || mode === 'both'
+
+    const groupById = new Map((groups as Group[]).map(g => [g.id, g]))
 
     const d3Nodes: D3Node[] = (members as Member[]).map(m => ({ id: `member-${m.id}` }))
     if (showGroups) {
@@ -90,7 +106,7 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
     if (showGroups) {
       (members as Member[]).forEach(m =>
         m.parentIds.forEach(gid => {
-          if ((groups as Group[]).find(g => g.id === gid)) {
+          if (groupById.has(gid)) {
             d3Links.push({ source: `member-${m.id}`, target: `group-${gid}` })
           }
         })
@@ -121,11 +137,7 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
     if (showGroups) {
       (groups as Group[]).forEach(g => {
         const pos = posMap.get(`group-${g.id}`) ?? { x: 0, y: 0 }
-        const data: GroupNodeData = {
-          name: g.name,
-          color: g.color,
-          memberNodeIds: (members as Member[]).filter(m => m.parentIds.includes(g.id)).map(m => `member-${m.id}`),
-        }
+        const data: GroupNodeData = { name: g.name, color: g.color }
         rfNodes.push({ id: `group-${g.id}`, type: 'group', position: pos, data })
       })
     }
@@ -134,7 +146,7 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
     if (showGroups) {
       (members as Member[]).forEach(m =>
         m.parentIds.forEach(gid => {
-          const grp = (groups as Group[]).find(g => g.id === gid)
+          const grp = groupById.get(gid)
           if (!grp) return
           rfEdges.push({
             id: `membership-${m.id}-${gid}`,
@@ -159,7 +171,7 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
     }
 
     return { rfNodes, rfEdges }
-  }, [members, groups, relationships, frontingIds, mode])
+  }, [members, groups, relationships, frontingIds, mode, canvasDims])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges)
@@ -169,8 +181,8 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
 
   const onConnect: OnConnect = useCallback((connection) => {
     if (connection.source && connection.target) {
-      const fromId = connection.source.replace('member-', '')
-      const toId = connection.target.replace('member-', '')
+      const fromId = connection.source.slice('member-'.length)
+      const toId = connection.target.slice('member-'.length)
       if (fromId !== toId && connection.source.startsWith('member-') && connection.target.startsWith('member-')) {
         setConnectFrom(fromId)
         setConnectTo(toId)
@@ -178,6 +190,12 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
       }
     }
   }, [])
+
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    if (node.type === 'member') {
+      navigate(`/members/${(node.data as MemberNodeData).id}`)
+    }
+  }, [navigate])
 
   const fromMember = useMemo(
     () => (members as Member[]).find(m => m.id === connectFrom),
@@ -189,7 +207,7 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
   )
 
   return (
-    <div className={styles.canvas}>
+    <div className={styles.canvas} ref={canvasRef}>
       <div className={styles.modeChips}>
         {(['groups', 'relationships', 'both'] as MapMode[]).map(m => (
           <button
@@ -202,26 +220,36 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
         ))}
       </div>
       <div style={{ height: 'calc(100% - 36px)' }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background color="#1a1a1a" variant={BackgroundVariant.Dots} gap={20} size={1} />
-        </ReactFlow>
+        {isLoading
+          ? <div className={styles.loadingOverlay}>Loading map…</div>
+          : (
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              fitView
+              proOptions={{ hideAttribution: true }}
+            >
+              <Background color="#1a1a1a" variant={BackgroundVariant.Dots} gap={20} size={1} />
+            </ReactFlow>
+          )
+        }
       </div>
       {sheetOpen && fromMember && toMember && (
         <NewRelationshipSheet
           isOpen={sheetOpen}
           fromMember={{ id: fromMember.id, name: fromMember.displayName || fromMember.name }}
           toMember={{ id: toMember.id, name: toMember.displayName || toMember.name }}
-          onClose={() => setSheetOpen(false)}
+          onClose={() => {
+            setSheetOpen(false)
+            setConnectFrom(null)
+            setConnectTo(null)
+          }}
         />
       )}
     </div>

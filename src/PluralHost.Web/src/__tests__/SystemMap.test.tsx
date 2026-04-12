@@ -44,7 +44,7 @@ vi.mock('../api/front', () => ({
 }))
 
 const memberData = { id: 'mem-1', name: 'Jude', color: '#b6ff00', isFronting: false, isIsolated: false }
-const groupData = { name: 'Inner Circle', color: '#b6ff00', memberNodeIds: ['mem-1'] }
+const groupData = { name: 'Inner Circle', color: '#b6ff00' }
 
 function NodeWrapper({ children }: { children: React.ReactNode }) {
   return <MemoryRouter><ReactFlowProvider>{children}</ReactFlowProvider></MemoryRouter>
@@ -73,7 +73,7 @@ describe('MemberNode', () => {
     expect(screen.getByText('Jude')).toBeInTheDocument()
   })
 
-  it('navigates to member detail on click', () => {
+  it('does not navigate on direct click (navigation handled by onNodeClick at flow level)', () => {
     render(
       <NodeWrapper>
         <MemberNode
@@ -93,7 +93,7 @@ describe('MemberNode', () => {
       </NodeWrapper>
     )
     fireEvent.click(screen.getByText('Jude').closest('div')!)
-    expect(mockNavigate).toHaveBeenCalledWith('/members/mem-1')
+    expect(mockNavigate).not.toHaveBeenCalled()
   })
 })
 
@@ -185,5 +185,11 @@ describe('SystemMap', () => {
   it('Relationships mode does not show group node', () => {
     render(<MapWrapper><SystemMap initialMode="relationships" /></MapWrapper>)
     expect(screen.queryByText('Inner Circle')).not.toBeInTheDocument()
+  })
+
+  it('shows loading state while queries are pending', () => {
+    vi.mocked(useQuery).mockImplementation(() => ({ data: undefined, isLoading: true } as any))
+    render(<MapWrapper><SystemMap /></MapWrapper>)
+    expect(screen.getByText(/loading map/i)).toBeInTheDocument()
   })
 })

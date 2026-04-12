@@ -101,3 +101,13 @@
   color: #000;
   border-color: var(--color-primary);
 }
+
+.loadingOverlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #555;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}

@@ -15,7 +15,7 @@ export function NewRelationshipSheet({ isOpen, fromMember, toMember, onClose }: 
   const [isDirected, setIsDirected] = useState(false)
   const qc = useQueryClient()
 
-  const { mutate, isPending, isError, reset } = useMutation({
+  const { mutate, isPending, error, reset } = useMutation({
     mutationFn: () =>
       relationshipsApi.create({
         fromMemberId: fromMember.id,
@@ -62,9 +62,11 @@ export function NewRelationshipSheet({ isOpen, fromMember, toMember, onClose }: 
           value={label}
           onChange={e => setLabel(e.target.value)}
         />
-        {isError && (
+        {error && (
           <p style={{ color: 'var(--color-danger)', fontSize: 11, margin: '0' }}>
-            A &quot;{label.trim()}&quot; connection already exists between these alters.
+            {(error as Error).message?.includes('already exists')
+              ? `A "${label.trim()}" connection already exists between these alters.`
+              : 'Something went wrong. Please try again.'}
           </p>
         )}
         <div style={{ display: 'flex', gap: 6 }}>
