@@ -16,7 +16,12 @@ vi.mock('@react-sigma/core', () => ({
   ),
   useLoadGraph: () => vi.fn(),
   useRegisterEvents: () => vi.fn(),
-  useSigma: () => ({ setSetting: vi.fn(), refresh: vi.fn(), getGraph: () => new MultiGraph() }),
+  useSigma: () => ({
+    setSetting: vi.fn(),
+    refresh: vi.fn(),
+    getGraph: () => new MultiGraph(),
+    viewportToGraph: vi.fn(() => ({ x: 0, y: 0 })),
+  }),
 }))
 
 vi.mock('graphology-layout-forceatlas2/worker', () => ({
