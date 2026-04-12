@@ -92,26 +92,32 @@ function EventController({
   onConnect: (from: string, to: string) => void
   onPendingFromChange: (id: string | null) => void
 }) {
-  useRegisterEvents({
-    clickNode: ({ node }) => {
-      if (connectMode) {
-        if (!pendingFrom) {
-          onPendingFromChange(node.startsWith('member-') ? node : null)
-        } else if (node !== pendingFrom && node.startsWith('member-')) {
-          onConnect(pendingFrom, node)
-          onPendingFromChange(null)
+  const registerEvents = useRegisterEvents()
+
+  useEffect(() => {
+    registerEvents({
+      clickNode: (event) => {
+        const node = event.node
+        if (connectMode) {
+          if (!pendingFrom) {
+            onPendingFromChange(node.startsWith('member-') ? node : null)
+          } else if (node !== pendingFrom && node.startsWith('member-')) {
+            onConnect(pendingFrom, node)
+            onPendingFromChange(null)
+          }
+        } else {
+          onNodeClick(node)
         }
-      } else {
-        onNodeClick(node)
-      }
-    },
-    doubleClickNode: ({ node }) => {
-      if (!connectMode) onNodeDoubleClick?.(node)
-    },
-    clickStage: () => {
-      if (connectMode) onPendingFromChange(null)
-    },
-  })
+      },
+      doubleClickNode: (event) => {
+        if (!connectMode) onNodeDoubleClick?.(event.node)
+      },
+      clickStage: () => {
+        if (connectMode) onPendingFromChange(null)
+      },
+    })
+  }, [registerEvents, connectMode, pendingFrom, onNodeClick, onNodeDoubleClick, onConnect, onPendingFromChange])
+
   return null
 }
 

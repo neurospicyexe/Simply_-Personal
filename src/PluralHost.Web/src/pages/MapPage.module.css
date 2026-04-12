@@ -1,19 +1,14 @@
-.canvas {
+.page {
   position: relative;
   width: 100%;
-  height: calc(100vh - 72px);
-  height: calc(100dvh - 72px);
-  background: var(--color-bg);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.minimap {
-  bottom: 12px !important;
-  left: 12px !important;
-}
-
-.controls {
-  bottom: 12px !important;
-  right: 12px !important;
+.canvas {
+  flex: 1;
+  min-height: 0;
 }
 
 .emptyState {

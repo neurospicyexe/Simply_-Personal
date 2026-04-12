@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import type { Node, Edge } from '@xyflow/react'
 import type { Member, Group, MemberRelationship } from '../types'
 export type { MapMode, ViewFilter } from '../utils/mapUtils'
-import { buildSubgraph } from '../utils/mapUtils'
+import { buildSubgraph, type MapMode, type ViewFilter } from '../utils/mapUtils'
 
 export type MemberNodeV2Data = {
   id: string

@@ -55,7 +55,7 @@ export function useSigmaGraph(
           label: g.name,
           nodeType: 'group',
           groupId: id,
-          memberCount: members.filter(mem => mem.parentIds.includes(id)).length,
+          memberCount: g.memberCount,
         })
       }
     })

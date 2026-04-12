@@ -1,5 +1,5 @@
 import React from 'react'
-import { describe, it, expect, vi, beforeAll } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { MemberNodeV2 } from '../components/Map/MemberNodeV2'
@@ -8,6 +8,22 @@ import { GroupNodeV2 } from '../components/Map/GroupNodeV2'
 import type { GroupNodeV2Data } from '../hooks/useMapLayout'
 import { FloatingToolbar } from '../components/Map/FloatingToolbar'
 import type { Member, Group } from '../types'
+import { useQuery } from '@tanstack/react-query'
+
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual('@tanstack/react-query')
+  return { ...actual, useQuery: vi.fn(), useMutation: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }) }
+})
+
+vi.mock('../components/Map/SigmaMapCanvas', () => ({
+  SigmaMapCanvas: ({ connectMode }: { connectMode: boolean }) => (
+    <div data-testid="sigma-canvas">{connectMode ? 'connect-mode' : 'view-mode'}</div>
+  ),
+}))
+
+vi.mock('../hooks/useSigmaGraph', () => ({
+  useSigmaGraph: () => ({ hasNode: () => false }),
+}))
 
 function wrap(ui: React.ReactElement) {
   return <MemoryRouter>{ui}</MemoryRouter>
@@ -192,5 +208,27 @@ describe('FloatingToolbar', () => {
       />
     ))
     expect(screen.getByText('Connecting…')).toBeInTheDocument()
+  })
+})
+
+import MapPage from '../pages/MapPage'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+function AppWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </QueryClientProvider>
+  )
+}
+
+describe('MapPage', () => {
+  beforeEach(() => {
+    vi.mocked(useQuery).mockReturnValue({ data: [], isLoading: false } as any)
+  })
+
+  it('renders sigma canvas', () => {
+    render(<AppWrapper><MapPage /></AppWrapper>)
+    expect(screen.getByTestId('sigma-canvas')).toBeInTheDocument()
   })
 })

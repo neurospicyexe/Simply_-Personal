@@ -15,7 +15,7 @@ vi.mock('@react-sigma/core', () => ({
     <div data-testid="sigma-container" style={style} className={className}>{children}</div>
   ),
   useLoadGraph: () => vi.fn(),
-  useRegisterEvents: vi.fn(),
+  useRegisterEvents: () => vi.fn(),
   useSigma: () => ({ setSetting: vi.fn(), refresh: vi.fn(), getGraph: () => new MultiGraph() }),
 }))
 
