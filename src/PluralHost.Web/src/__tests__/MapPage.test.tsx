@@ -120,7 +120,7 @@ describe('FloatingToolbar', () => {
         mode="groups" onModeChange={vi.fn()}
         viewFilter={{ type: 'all' }} onFilterChange={vi.fn()}
         members={members} groups={groups}
-        onAdd={vi.fn()} onFitView={vi.fn()}
+        connectMode={false} onConnectModeChange={vi.fn()}
       />
     ))
     expect(screen.getByText('Groups')).toBeInTheDocument()
@@ -135,7 +135,7 @@ describe('FloatingToolbar', () => {
         mode="groups" onModeChange={onModeChange}
         viewFilter={{ type: 'all' }} onFilterChange={vi.fn()}
         members={members} groups={groups}
-        onAdd={vi.fn()} onFitView={vi.fn()}
+        connectMode={false} onConnectModeChange={vi.fn()}
       />
     ))
     fireEvent.click(screen.getByText('Relationships'))
@@ -148,7 +148,7 @@ describe('FloatingToolbar', () => {
         mode="groups" onModeChange={vi.fn()}
         viewFilter={{ type: 'member', id: 'm1', name: 'Mira' }} onFilterChange={vi.fn()}
         members={members} groups={groups}
-        onAdd={vi.fn()} onFitView={vi.fn()}
+        connectMode={false} onConnectModeChange={vi.fn()}
       />
     ))
     expect(screen.getByText(/Mira/)).toBeInTheDocument()
@@ -161,10 +161,36 @@ describe('FloatingToolbar', () => {
         mode="groups" onModeChange={vi.fn()}
         viewFilter={{ type: 'member', id: 'm1', name: 'Mira' }} onFilterChange={onFilterChange}
         members={members} groups={groups}
-        onAdd={vi.fn()} onFitView={vi.fn()}
+        connectMode={false} onConnectModeChange={vi.fn()}
       />
     ))
     fireEvent.click(screen.getByLabelText('Clear filter'))
     expect(onFilterChange).toHaveBeenCalledWith({ type: 'all' })
+  })
+
+  it('calls onConnectModeChange when Connect button clicked', () => {
+    const onConnectModeChange = vi.fn()
+    render(wrap(
+      <FloatingToolbar
+        mode="groups" onModeChange={vi.fn()}
+        viewFilter={{ type: 'all' }} onFilterChange={vi.fn()}
+        members={members} groups={groups}
+        connectMode={false} onConnectModeChange={onConnectModeChange}
+      />
+    ))
+    fireEvent.click(screen.getByText('Connect'))
+    expect(onConnectModeChange).toHaveBeenCalledWith(true)
+  })
+
+  it('shows active state when connectMode is true', () => {
+    render(wrap(
+      <FloatingToolbar
+        mode="groups" onModeChange={vi.fn()}
+        viewFilter={{ type: 'all' }} onFilterChange={vi.fn()}
+        members={members} groups={groups}
+        connectMode={true} onConnectModeChange={vi.fn()}
+      />
+    ))
+    expect(screen.getByText('Connecting…')).toBeInTheDocument()
   })
 })

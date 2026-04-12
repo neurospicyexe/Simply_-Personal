@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import type { Member, Group } from '../../types'
-import type { MapMode, ViewFilter } from '../../hooks/useMapLayout'
+import type { MapMode, ViewFilter } from '../../utils/mapUtils'
 import styles from './FloatingToolbar.module.css'
 
 interface Props {
@@ -10,8 +10,8 @@ interface Props {
   onFilterChange: (f: ViewFilter) => void
   members: Member[]
   groups: Group[]
-  onAdd: () => void
-  onFitView: () => void
+  connectMode: boolean
+  onConnectModeChange: (v: boolean) => void
 }
 
 const MODES: { id: MapMode; label: string }[] = [
@@ -21,7 +21,7 @@ const MODES: { id: MapMode; label: string }[] = [
 ]
 
 export function FloatingToolbar({
-  mode, onModeChange, viewFilter, onFilterChange, members, groups, onAdd, onFitView,
+  mode, onModeChange, viewFilter, onFilterChange, members, groups, connectMode, onConnectModeChange,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -145,8 +145,14 @@ export function FloatingToolbar({
 
       {/* Actions */}
       <div className={styles.actions}>
-        <button className={styles.actionBtn} onClick={onAdd} aria-label="Add relationship">⊕</button>
-        <button className={styles.actionBtn} onClick={onFitView} aria-label="Fit view">⤢</button>
+        <button
+          className={[styles.actionBtn, connectMode && styles.connectActive].filter(Boolean).join(' ')}
+          onClick={() => onConnectModeChange(!connectMode)}
+          aria-label={connectMode ? 'Cancel connect' : 'Connect two members'}
+          aria-pressed={connectMode}
+        >
+          {connectMode ? 'Connecting…' : 'Connect'}
+        </button>
       </div>
     </div>
   )
