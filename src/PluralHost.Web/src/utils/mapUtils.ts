@@ -49,6 +49,13 @@ export function buildSubgraph(
         if (groupIdSet.has(gid)) linkPairs.push([`member-${m.id}`, `group-${gid}`])
       })
     })
+    // Nested group edges: child → parent group
+    groups.forEach(g => {
+      if (!groupIdSet.has(g.id)) return
+      if (g.parentGroupId && groupIdSet.has(g.parentGroupId)) {
+        linkPairs.push([`group-${g.id}`, `group-${g.parentGroupId}`])
+      }
+    })
   }
   if (showRels) {
     relationships.forEach(r => {

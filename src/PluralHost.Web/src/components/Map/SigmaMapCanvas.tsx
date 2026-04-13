@@ -44,17 +44,17 @@ function GraphLoader({ graph }: { graph: MultiGraph }) {
     const layout = new FA2Layout(graph, {
       settings: {
         gravity: 1,
-        scalingRatio: 10,
+        scalingRatio: 3,
         strongGravityMode: false,
-        barnesHutOptimize: true,   // essential for 500+ nodes
+        barnesHutOptimize: true,
         barnesHutTheta: 0.5,
-        slowDown: 10,
+        slowDown: 3,
         linLogMode: false,
         outboundAttractionDistribution: false,
       },
     })
     layout.start()
-    const timer = setTimeout(() => layout.stop(), 8000)
+    const timer = setTimeout(() => layout.stop(), 5000)
     return () => { clearTimeout(timer); layout.stop() }
   }, [graph, loadGraph])
 
