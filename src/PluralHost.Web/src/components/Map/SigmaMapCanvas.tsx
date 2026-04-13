@@ -64,13 +64,15 @@ function DragController({ connectMode }: { connectMode: boolean }) {
         drag.current = { active: true, nodeId: event.node }
         sigma.getGraph().setNodeAttribute(event.node, 'fixed', true)
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mousemove: (event: any) => {
+      mousemove: (event) => {
         if (!drag.current.active || !drag.current.nodeId) return
-        const pos = sigma.viewportToGraph({ x: event.x, y: event.y })
+        const { x, y, preventSigmaDefault } = event as unknown as {
+          x: number; y: number; preventSigmaDefault: () => void
+        }
+        const pos = sigma.viewportToGraph({ x, y })
         sigma.getGraph().setNodeAttribute(drag.current.nodeId, 'x', pos.x)
         sigma.getGraph().setNodeAttribute(drag.current.nodeId, 'y', pos.y)
-        event.preventSigmaDefault()  // blocks camera pan while dragging a node
+        preventSigmaDefault()  // blocks camera pan while dragging a node
       },
     })
 
@@ -123,10 +125,9 @@ function HighlightController({
   // The reducer closures read hoveredNode/neighborSet refs at call-time,
   // so hover changes (above) always see current state without re-running this effect.
   useEffect(() => {
-    const graph = sigma.getGraph()
-
     sigma.setSetting('nodeReducer', (node: string, data: Record<string, unknown>) => {
-      const hovered = hoveredNode.current
+      const graph     = sigma.getGraph()  // always the live graph after any loadGraph()
+      const hovered   = hoveredNode.current
       const isHovered  = node === hovered
       const isSelected = node === selectedNodeId
       const isPending  = node === pendingFrom
@@ -166,6 +167,7 @@ function HighlightController({
     })
 
     sigma.setSetting('edgeReducer', (edge: string, data: Record<string, unknown>) => {
+      const graph        = sigma.getGraph()  // always the live graph
       const hovered      = hoveredNode.current
       const isMembership = (data.edgeType as string) === 'membership'
       const baseColor    = data.color as string
@@ -181,11 +183,11 @@ function HighlightController({
         }
       }
 
-      // Default: near-invisible. Appending '20' gives ~12% opacity in hex.
+      // Default: fixed dark color — avoids fragile hex-alpha appending on user-supplied colors.
       return {
         ...data,
         size:  isMembership ? 0.3 : 0.7,
-        color: isMembership ? `${baseColor}20` : '#55555520',
+        color: '#333333',
       }
     })
 
