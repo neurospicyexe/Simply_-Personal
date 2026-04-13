@@ -15,6 +15,23 @@ interface Props {
   className?: string
 }
 
+// Module-level constant — avoids recreating the object on every SigmaMapCanvas render,
+// which would cause SigmaContainer to see a new settings reference each time.
+const SIGMA_SETTINGS = {
+  renderEdgeLabels:           false,
+  labelColor:                 { color: '#cccccc' },
+  labelSize:                  11,
+  labelWeight:                '500',
+  // Labels only appear once a node reaches 8 CSS px on screen.
+  // Hover forces labels on hovered node + neighbors via forceLabel in the nodeReducer.
+  labelRenderedSizeThreshold: 8,
+  defaultEdgeType:            'line',
+  minCameraRatio:             0.02,
+  maxCameraRatio:             10,
+  zIndex:                     true,
+  enableEdgeEvents:           false,
+}
+
 // ── GraphLoader ───────────────────────────────────────────────────────────────
 // Loads the graph into Sigma and runs FA2 for 8s with Barnes-Hut optimization.
 // Nodes marked fixed:true (dragged by user) are left in place by FA2.
@@ -27,7 +44,7 @@ function GraphLoader({ graph }: { graph: MultiGraph }) {
     const layout = new FA2Layout(graph, {
       settings: {
         gravity: 1,
-        scalingRatio: 10,          // was 3 — higher spreads nodes further apart
+        scalingRatio: 10,
         strongGravityMode: false,
         barnesHutOptimize: true,   // essential for 500+ nodes
         barnesHutTheta: 0.5,
@@ -126,7 +143,9 @@ function HighlightController({
   // so hover changes (above) always see current state without re-running this effect.
   useEffect(() => {
     sigma.setSetting('nodeReducer', (node: string, data: Record<string, unknown>) => {
-      const graph     = sigma.getGraph()  // always the live graph after any loadGraph()
+      // sigma.getGraph() is called inside the reducer (not captured at effect time)
+      // so it always reflects the live graph after any loadGraph() call.
+      const graph     = sigma.getGraph()
       const hovered   = hoveredNode.current
       const isHovered  = node === hovered
       const isSelected = node === selectedNodeId
@@ -134,7 +153,6 @@ function HighlightController({
       const isFronting = Boolean(data.isFronting)
       const isMember   = (data.nodeType as string) === 'member'
 
-      // Degree-based size: isolated nodes stay small, hubs grow.
       const degree = graph.degree(node)
       let size = isMember
         ? Math.max(6,  Math.min(20, 6  + degree * 1.2))
@@ -148,15 +166,12 @@ function HighlightController({
       let zIndex     = 0
 
       if (connectMode && isMember) {
-        // Connect mode: pending node is lime, others greyed.
         color = isPending ? '#b6ff00' : '#2a2a2a'
       } else if (hovered && !isHovered) {
         if (neighborSet.current.has(node)) {
-          // Direct neighbor: keep full color, reveal label.
           forceLabel = true
           zIndex     = 5
         } else {
-          // Non-neighbor: dim to near-background.
           color  = '#1c1c1c'
           zIndex = -1
         }
@@ -167,7 +182,7 @@ function HighlightController({
     })
 
     sigma.setSetting('edgeReducer', (edge: string, data: Record<string, unknown>) => {
-      const graph        = sigma.getGraph()  // always the live graph
+      const graph        = sigma.getGraph()
       const hovered      = hoveredNode.current
       const isMembership = (data.edgeType as string) === 'membership'
       const baseColor    = data.color as string
@@ -262,26 +277,11 @@ export function SigmaMapCanvas({
     if (!connectMode) setPendingFrom(null)
   }, [connectMode])
 
-  const settings = {
-    renderEdgeLabels:          false,
-    labelColor:                { color: '#cccccc' },
-    labelSize:                 11,
-    labelWeight:               '500',
-    // Labels only appear once a node reaches 8 CSS px on screen.
-    // Hover forces labels on hovered node + neighbors via forceLabel in reducer.
-    labelRenderedSizeThreshold: 8,
-    defaultEdgeType:           'line',
-    minCameraRatio:            0.02,
-    maxCameraRatio:            10,
-    zIndex:                    true,  // enables per-node z ordering
-    enableEdgeEvents:          false,
-  }
-
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <SigmaContainer
         graph={MultiGraph}
-        settings={settings}
+        settings={SIGMA_SETTINGS}
         style={{ width: '100%', height: '100%', background: '#0d0d0d', ...style }}
         className={className}
       >
