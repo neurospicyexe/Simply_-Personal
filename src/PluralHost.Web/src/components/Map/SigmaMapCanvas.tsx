@@ -61,7 +61,7 @@ function GraphLoader({ graph }: { graph: MultiGraph }) {
 
 function LayoutWorker() {
   const sigma = useSigma()
-  const [settings, setSettings] = useState(FA2_EXPAND)
+  const [settings, setSettings] = useState<typeof FA2_EXPAND | typeof FA2_SETTLE>(FA2_EXPAND)
   const { start, stop, kill } = useWorkerLayoutForceAtlas2({ settings })
 
   const ctrl = useRef({ start, stop, kill })
