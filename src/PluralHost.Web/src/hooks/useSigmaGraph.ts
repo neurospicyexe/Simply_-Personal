@@ -62,23 +62,27 @@ function computeGroupPositions(
 // scalingRatio 2500 overpowers gravity so nodes drift outward into a neuron-map layout.
 // Equilibrium radius ≈ sqrt(scalingRatio / gravity) ≈ sqrt(25000 / 0.005) ≈ 2236 units.
 // Seed positions are pre-placed near that radius so FA2 relaxes rather than travels.
+// Membership edges get weight 0.02 — visible but structurally inert in FA2.
+// Relationship edges get weight 1.0. edgeWeightInfluence: 1 activates this split.
+// Group nodes are pinned (fixed: true) as spatial anchors; members orbit them.
 export const FA2_EXPAND = {
   gravity: 0.005,
   scalingRatio: 25000,
-  slowDown: 5,
+  slowDown: 8,
   barnesHutTheta: 0.5,
   outboundAttractionDistribution: true,
   strongGravityMode: false,
+  edgeWeightInfluence: 1,
 } as const
 
-// Settle phase: same equilibrium, 5× heavier damping kills oscillations.
 export const FA2_SETTLE = {
   gravity: 0.005,
   scalingRatio: 25000,
-  slowDown: 25,
+  slowDown: 40,
   barnesHutTheta: 0.5,
   outboundAttractionDistribution: true,
   strongGravityMode: false,
+  edgeWeightInfluence: 1,
 } as const
 
 /** @deprecated use FA2_EXPAND */
@@ -195,6 +199,7 @@ export function useSigmaGraph(
         nodeType: 'group',
         groupId: id,
         memberCount: g.memberCount,
+        fixed: true,   // groups are spatial anchors; FA2 leaves them in place
       })
     })
 
@@ -205,13 +210,17 @@ export function useSigmaGraph(
     linkPairs.forEach(([source, target]) => {
       if (!graph.hasNode(source) || !graph.hasNode(target)) return
       if (source.startsWith('group-') && target.startsWith('group-')) {
-        graph.addEdge(source, target, { edgeType: 'groupNesting', color: '#555555', size: 0.8, label: '' })
+        // Low weight: group nesting is structural metadata, not a force line
+        graph.addEdge(source, target, { edgeType: 'groupNesting', color: '#555555', size: 0.8, label: '', weight: 0.05 })
       } else if (target.startsWith('group-')) {
         const gid = target.slice('group-'.length)
         const g   = groupMap.get(gid)
-        graph.addEdge(source, target, { edgeType: 'membership', color: g?.color ?? '#444444', size: 0.5, label: '' })
+        // Near-zero weight: membership edges are visual tethers only.
+        // Without this, 500 membership pulls collapse every alter into the group cluster.
+        graph.addEdge(source, target, { edgeType: 'membership', color: g?.color ?? '#444444', size: 0.5, label: '', weight: 0.02 })
       } else {
         const rel = relMap.get(`${source}>>${target}`)
+        // Full weight: alter-to-alter relationships drive the neuron-arm structure
         graph.addEdge(source, target, {
           edgeType: 'relationship',
           label: rel?.label ?? '',
@@ -219,6 +228,7 @@ export function useSigmaGraph(
           color: '#555555',
           size: 1.5,
           type: rel?.isDirected ? 'arrow' : 'line',
+          weight: 1,
         })
       }
     })
