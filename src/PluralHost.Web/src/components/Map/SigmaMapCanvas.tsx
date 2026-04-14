@@ -33,6 +33,7 @@ const SIGMA_SETTINGS = {
   maxCameraRatio:             10,
   zIndex:                     true,
   enableEdgeEvents:           false,
+  antialias:                  true,
 }
 
 // ── GraphLoader ───────────────────────────────────────────────────────────────
@@ -45,6 +46,55 @@ function GraphLoader({ graph }: { graph: MultiGraph }) {
   useEffect(() => {
     loadGraph(graph)
   }, [graph, loadGraph])
+
+  return null
+}
+
+// ── LayoutController ──────────────────────────────────────────────────────────
+// Handles the "Expansion" and "Cooling" phases upon loading.
+// Runs high-intensity FA2 for 3s to achieve the neuron-style spread,
+// then stabilizes by reducing slowDown.
+
+function LayoutController() {
+  const sigma = useSigma()
+  const [phase, setPhase] = useState<'high' | 'cool' | 'off'>('high')
+
+  useEffect(() => {
+    const graph = sigma.getGraph()
+    if (graph.order === 0) return
+
+    let timeoutId: ReturnType<typeof setTimeout>
+    let animationId: number
+
+    const runLayout = () => {
+      // High phase runs more iterations per frame for "intensity"
+      forceAtlas2.assign(graph, {
+        iterations: phase === 'high' ? 5 : 1,
+        settings: {
+          ...FA2_SETTINGS,
+          // stabilize by reducing slowDown as requested
+          slowDown: phase === 'high' ? 1 : 0.1,
+        },
+      })
+      sigma.refresh()
+      animationId = requestAnimationFrame(runLayout)
+    }
+
+    if (phase !== 'off') {
+      animationId = requestAnimationFrame(runLayout)
+    }
+
+    if (phase === 'high') {
+      timeoutId = setTimeout(() => setPhase('cool'), 3000)
+    } else if (phase === 'cool') {
+      timeoutId = setTimeout(() => setPhase('off'), 2000)
+    }
+
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [sigma, phase])
 
   return null
 }
@@ -64,13 +114,12 @@ function DragController({ connectMode }: { connectMode: boolean }) {
       if (drag.current.active) {
         // Brief sync settle: neighbors adjust around the newly placed node.
         // The dragged node stays fixed: true so FA2 leaves it where the user put it.
-        const graph = sigma.getGraph()
-        if (graph.order > 0) {
-          forceAtlas2.assign(graph, {
+        if (sigma.getGraph().order > 0) {
+          forceAtlas2.assign(sigma.getGraph(), {
             iterations: 60,
             settings: {
               ...FA2_SETTINGS,
-              barnesHutOptimize: graph.order > 50,
+              barnesHutOptimize: sigma.getGraph().order > 50,
             },
           })
           sigma.refresh()
@@ -145,7 +194,6 @@ function HighlightController({
   // so hover changes (above) always see current state without re-running this effect.
   useEffect(() => {
     sigma.setSetting('nodeReducer', (node: string, data: Record<string, unknown>) => {
-      const graph     = sigma.getGraph()
       const hovered   = hoveredNode.current
       const isHovered  = node === hovered
       const isSelected = node === selectedNodeId
@@ -153,17 +201,17 @@ function HighlightController({
       const isFronting = Boolean(data.isFronting)
       const isMember   = (data.nodeType as string) === 'member'
 
-      const degree = graph.degree(node)
-      let size = isMember
-        ? Math.max(6,  Math.min(20, 6  + degree * 1.2))
-        : Math.max(14, Math.min(26, 14 + degree * 0.6))
+      // Use pre-calculated centrality-based size as the base
+      let size = (data.size as number) || (isMember ? 8 : 16)
+
       if (isFronting)              size = Math.max(size, 14)
       if (isHovered || isSelected) size *= 1.35
       if (isPending)               size *= 1.5
 
       let color      = data.color as string
       let forceLabel = isHovered || isSelected
-      let zIndex     = 0
+      // Use pre-calculated negative zIndex (larger = deeper)
+      let zIndex     = (data.zIndex as number) || 0
 
       if (connectMode && isMember) {
         color = isPending ? '#b6ff00' : '#2a2a2a'
@@ -173,10 +221,10 @@ function HighlightController({
           zIndex     = 5
         } else {
           color  = '#1c1c1c'
-          zIndex = -1
+          zIndex = -100
         }
       }
-      if (isHovered) zIndex = 10
+      if (isHovered) zIndex = 100
 
       return { ...data, size, color, forceLabel, zIndex, highlighted: isSelected || isHovered }
     })
@@ -285,6 +333,7 @@ export function SigmaMapCanvas({
         className={className}
       >
         <GraphLoader graph={graph} />
+        <LayoutController />
         <HighlightController
           selectedNodeId={selectedNodeId}
           connectMode={connectMode}

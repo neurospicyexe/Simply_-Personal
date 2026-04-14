@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { MultiGraph } from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import noverlap from 'graphology-layout-noverlap'
+import betweennessCentrality from 'graphology-metrics/centrality/betweenness'
 import type { Member, Group, MemberRelationship } from '../types'
 import { buildSubgraph, type MapMode, type ViewFilter } from '../utils/mapUtils'
 
@@ -66,11 +67,14 @@ function computeGroupPositions(
 
 // Shared FA2 settings used by both the pre-pass (sync) and drag settle (in SigmaMapCanvas).
 // Higher scalingRatio = stronger repulsion; lower gravity = less centripetal collapse.
+// Inverting the ratio of repulsion to gravity to achieve a "neuron-like" expansion.
 export const FA2_SETTINGS = {
-  gravity: 0.5,
-  scalingRatio: 5,
-  slowDown: 3,
+  gravity: 0.05,
+  scalingRatio: 2000,
+  slowDown: 1,
   barnesHutTheta: 0.5,
+  outboundAttractionDistribution: true,
+  strongGravityMode: false,
 } as const
 
 export function useSigmaGraph(
@@ -193,6 +197,20 @@ export function useSigmaGraph(
     })
 
     if (graph.order > 0) {
+      // Calculate betweenness centrality to scale node sizes and rendering depth
+      const centrality = betweennessCentrality(graph)
+      graph.forEachNode((node, attr) => {
+        const c = centrality[node] ?? 0
+        const isMember = attr.nodeType === 'member'
+        const baseSize = isMember ? 8 : 16
+        const extra    = c * 50
+        const finalSize = Math.max(baseSize, Math.min(32, baseSize + extra))
+        
+        graph.setNodeAttribute(node, 'size', finalSize)
+        // Z-Index: Larger nodes render BEHIND smaller ones to prevent blobbing
+        graph.setNodeAttribute(node, 'zIndex', -Math.round(finalSize))
+      })
+
       // FA2 pre-pass: strong repulsion + weak gravity pushes clusters apart before first paint
       forceAtlas2.assign(graph, {
         iterations: 300,
@@ -203,13 +221,15 @@ export function useSigmaGraph(
       })
 
       // Noverlap post-pass: resolve any remaining circle-on-circle overlaps.
-      // Margin is scaled to the graph's coordinate extent after FA2, so it maps
-      // to roughly 10px of screen clearance at the default camera zoom.
-      const xs = graph.nodes().map(n => graph.getNodeAttribute(n, 'x') as number)
-      const extent = Math.max(...xs) - Math.min(...xs) || 1000
+      // High gridSize and expansionRatio ensure a mandatory buffer zone around every node.
       noverlap.assign(graph, {
         maxIterations: 100,
-        settings: { margin: Math.max(5, extent / 80), speed: 3, ratio: 1.0, gridSize: 20 },
+        settings: {
+          margin: 15,
+          speed: 3,
+          ratio: 1.5,
+          gridSize: 40,
+        },
       })
     }
 

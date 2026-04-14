@@ -10,7 +10,8 @@
       "Bash(find:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet test:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
