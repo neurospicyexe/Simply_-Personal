@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { SigmaContainer, useLoadGraph, useRegisterEvents, useSigma } from '@react-sigma/core'
+import { useLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import '@react-sigma/core/lib/style.css'
 import { MultiGraph } from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
@@ -50,51 +51,46 @@ function GraphLoader({ graph }: { graph: MultiGraph }) {
   return null
 }
 
-// ── LayoutController ──────────────────────────────────────────────────────────
-// Handles the "Expansion" and "Cooling" phases upon loading.
-// Runs high-intensity FA2 for 3s to achieve the neuron-style spread,
-// then stabilizes by reducing slowDown.
+// ── LayoutWorker ──────────────────────────────────────────────────────────────
+// Uses @react-sigma's worker-based FA2 for smooth, non-blocking expansion.
+// Runs at high intensity for 3s, then reduces slowdown for stability.
 
-function LayoutController() {
+function LayoutWorker() {
   const sigma = useSigma()
-  const [phase, setPhase] = useState<'high' | 'cool' | 'off'>('high')
+  const { start, stop, kill, isLayoutRunning } = useLayoutForceAtlas2({
+    settings: FA2_SETTINGS,
+  })
 
   useEffect(() => {
     const graph = sigma.getGraph()
     if (graph.order === 0) return
 
-    let timeoutId: ReturnType<typeof setTimeout>
-    let animationId: number
+    // Start high-intensity expansion
+    start()
 
-    const runLayout = () => {
-      // High phase runs more iterations per frame for "intensity"
-      forceAtlas2.assign(graph, {
-        iterations: phase === 'high' ? 5 : 1,
-        settings: {
-          ...FA2_SETTINGS,
-          // stabilize by reducing slowDown as requested
-          slowDown: phase === 'high' ? 1 : 0.1,
-        },
-      })
-      sigma.refresh()
-      animationId = requestAnimationFrame(runLayout)
-    }
+    const coolingId = setTimeout(() => {
+      // Transition to stable "cool" phase
+      if (isLayoutRunning) {
+        stop()
+        start({
+          settings: {
+            ...FA2_SETTINGS,
+            slowDown: 10, // Significantly slower for stability
+          }
+        })
+      }
+    }, 3000)
 
-    if (phase !== 'off') {
-      animationId = requestAnimationFrame(runLayout)
-    }
-
-    if (phase === 'high') {
-      timeoutId = setTimeout(() => setPhase('cool'), 3000)
-    } else if (phase === 'cool') {
-      timeoutId = setTimeout(() => setPhase('off'), 2000)
-    }
+    const stopId = setTimeout(() => {
+      stop()
+    }, 6000)
 
     return () => {
-      if (animationId) cancelAnimationFrame(animationId)
-      if (timeoutId) clearTimeout(timeoutId)
+      clearTimeout(coolingId)
+      clearTimeout(stopId)
+      kill()
     }
-  }, [sigma, phase])
+  }, [sigma, start, stop, kill])
 
   return null
 }
@@ -333,7 +329,7 @@ export function SigmaMapCanvas({
         className={className}
       >
         <GraphLoader graph={graph} />
-        <LayoutController />
+        <LayoutWorker />
         <HighlightController
           selectedNodeId={selectedNodeId}
           connectMode={connectMode}
