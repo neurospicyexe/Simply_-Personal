@@ -27,7 +27,7 @@ function computeGroupPositions(
   })
   const nested = groupIds.filter(id => !topLevel.includes(id))
 
-  const r = Math.max(1200, Math.sqrt(topLevel.length) * 600)
+  const r = Math.max(2000, Math.sqrt(topLevel.length) * 800)
   topLevel.forEach((id, i) => {
     const angle = (2 * Math.PI * i) / Math.max(1, topLevel.length)
     pos.set(id, { x: Math.cos(angle) * r, y: Math.sin(angle) * r })
@@ -65,24 +65,28 @@ function computeGroupPositions(
 // Membership edges get weight 0.02 — visible but structurally inert in FA2.
 // Relationship edges get weight 1.0. edgeWeightInfluence: 1 activates this split.
 // Group nodes are pinned (fixed: true) as spatial anchors; members orbit them.
+// linLogMode uses log(1+dist) attraction instead of dist — weakens dramatically at range,
+// so nodes that are far apart stay far apart. This is what creates the "floating arm" look.
 export const FA2_EXPAND = {
   gravity: 0.005,
   scalingRatio: 25000,
-  slowDown: 8,
+  slowDown: 5,
   barnesHutTheta: 0.5,
   outboundAttractionDistribution: true,
   strongGravityMode: false,
   edgeWeightInfluence: 1,
+  linLogMode: true,
 } as const
 
 export const FA2_SETTLE = {
   gravity: 0.005,
   scalingRatio: 25000,
-  slowDown: 40,
+  slowDown: 30,
   barnesHutTheta: 0.5,
   outboundAttractionDistribution: true,
   strongGravityMode: false,
   edgeWeightInfluence: 1,
+  linLogMode: true,
 } as const
 
 /** @deprecated use FA2_EXPAND */
@@ -111,13 +115,42 @@ export function useSigmaGraph(
 
     const { pos: groupPos, clusterRadius } = computeGroupPositions(groupIds, groupMap)
 
-    const ungroupedR = Math.max(clusterRadius + 1200, 2500)
+    const ungroupedR = Math.max(clusterRadius + 1800, 4000)
+
     const grouped: string[]   = []
     const ungrouped: string[] = []
     memberIds.forEach(id => {
       const m = memberMap.get(id)
       if (m?.parentIds.some(gid => groupPos.has(gid))) grouped.push(id)
       else ungrouped.push(id)
+    })
+
+    // Golden angle (137.5°) spiral — same packing pattern as sunflower seeds / biological neurons.
+    // Distributes N nodes around a hub with no rows, no clusters, maximum visual separation.
+    const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
+
+    // Build group → members list so each group's members are placed as one spiral
+    const groupToMembers = new Map<string, string[]>()
+    groupPos.forEach((_, gid) => groupToMembers.set(gid, []))
+    grouped.forEach(id => {
+      const m = memberMap.get(id)
+      const primaryGid = m?.parentIds.find(gid => groupPos.has(gid))
+      if (primaryGid) groupToMembers.get(primaryGid)?.push(id)
+    })
+
+    // Precompute spiral seed positions (only used when node has no prevGraph position)
+    const spiralSeed = new Map<string, { x: number; y: number }>()
+    groupToMembers.forEach((mems, gid) => {
+      const center = groupPos.get(gid)!
+      const scale = Math.max(300, Math.sqrt(mems.length) * 60)
+      mems.forEach((id, i) => {
+        const radius = scale * Math.sqrt(i + 1)
+        const theta  = GOLDEN_ANGLE * i
+        spiralSeed.set(id, {
+          x: center.x + radius * Math.cos(theta),
+          y: center.y + radius * Math.sin(theta),
+        })
+      })
     })
 
     ungrouped.forEach((id, i) => {
@@ -156,10 +189,9 @@ export function useSigmaGraph(
         x = prevGraph.getNodeAttribute(nodeId, 'x')
         y = prevGraph.getNodeAttribute(nodeId, 'y')
       } else {
-        const firstGroupId = m.parentIds.find(gid => groupPos.has(gid))!
-        const center = groupPos.get(firstGroupId)!
-        x = center.x + (stableRand(id + 'x') - 0.5) * 350
-        y = center.y + (stableRand(id + 'y') - 0.5) * 350
+        const seed = spiralSeed.get(id)
+        x = seed?.x ?? (stableRand(id + 'x') - 0.5) * 1500
+        y = seed?.y ?? (stableRand(id + 'y') - 0.5) * 1500
       }
 
       graph.addNode(nodeId, {
@@ -250,8 +282,10 @@ export function useSigmaGraph(
       const isNewGraph = !prevGraph || Math.abs(graph.order - prevGraph.order) > (prevGraph.order * 0.2)
       
       if (isNewGraph) {
-        forceAtlas2.assign(graph, {
-          iterations: 150,
+        // Geometric spiral seed already places nodes near their final positions.
+      // FA2 here only smooths overlaps — not the primary layout driver.
+      forceAtlas2.assign(graph, {
+          iterations: 80,
           settings: {
             ...FA2_EXPAND,
             barnesHutOptimize: graph.order > 30,
