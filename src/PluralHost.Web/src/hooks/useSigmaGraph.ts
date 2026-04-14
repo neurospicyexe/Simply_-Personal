@@ -27,7 +27,7 @@ function computeGroupPositions(
   })
   const nested = groupIds.filter(id => !topLevel.includes(id))
 
-  const r = Math.max(400, Math.sqrt(topLevel.length) * 250)
+  const r = Math.max(1200, Math.sqrt(topLevel.length) * 600)
   topLevel.forEach((id, i) => {
     const angle = (2 * Math.PI * i) / Math.max(1, topLevel.length)
     pos.set(id, { x: Math.cos(angle) * r, y: Math.sin(angle) * r })
@@ -40,8 +40,8 @@ function computeGroupPositions(
       const parentPos = g?.parentGroupId ? pos.get(g.parentGroupId) : undefined
       if (parentPos) {
         pos.set(id, {
-          x: parentPos.x + (stableRand(id + 'nx') - 0.5) * 220,
-          y: parentPos.y + (stableRand(id + 'ny') - 0.5) * 220,
+          x: parentPos.x + (stableRand(id + 'nx') - 0.5) * 500,
+          y: parentPos.y + (stableRand(id + 'ny') - 0.5) * 500,
         })
       }
     })
@@ -49,8 +49,8 @@ function computeGroupPositions(
   nested.forEach(id => {
     if (!pos.has(id)) {
       pos.set(id, {
-        x: (stableRand(id + 'fx') - 0.5) * 600,
-        y: (stableRand(id + 'fy') - 0.5) * 600,
+        x: (stableRand(id + 'fx') - 0.5) * 1500,
+        y: (stableRand(id + 'fy') - 0.5) * 1500,
       })
     }
   })
@@ -60,20 +60,22 @@ function computeGroupPositions(
 
 // High-intensity expansion phase: strong repulsion, low gravity, moderate damping.
 // scalingRatio 2500 overpowers gravity so nodes drift outward into a neuron-map layout.
+// Equilibrium radius ≈ sqrt(scalingRatio / gravity) ≈ sqrt(25000 / 0.005) ≈ 2236 units.
+// Seed positions are pre-placed near that radius so FA2 relaxes rather than travels.
 export const FA2_EXPAND = {
-  gravity: 0.05,
-  scalingRatio: 2500,
-  slowDown: 3,
+  gravity: 0.005,
+  scalingRatio: 25000,
+  slowDown: 5,
   barnesHutTheta: 0.5,
   outboundAttractionDistribution: true,
   strongGravityMode: false,
 } as const
 
-// Settle phase: same repulsion, heavier damping to kill oscillations after expansion.
+// Settle phase: same equilibrium, 5× heavier damping kills oscillations.
 export const FA2_SETTLE = {
-  gravity: 0.05,
-  scalingRatio: 2500,
-  slowDown: 15,
+  gravity: 0.005,
+  scalingRatio: 25000,
+  slowDown: 25,
   barnesHutTheta: 0.5,
   outboundAttractionDistribution: true,
   strongGravityMode: false,
@@ -105,7 +107,7 @@ export function useSigmaGraph(
 
     const { pos: groupPos, clusterRadius } = computeGroupPositions(groupIds, groupMap)
 
-    const ungroupedR = Math.max(clusterRadius + 400, 900)
+    const ungroupedR = Math.max(clusterRadius + 1200, 2500)
     const grouped: string[]   = []
     const ungrouped: string[] = []
     memberIds.forEach(id => {
@@ -125,8 +127,8 @@ export function useSigmaGraph(
         y = prevGraph.getNodeAttribute(nodeId, 'y')
       } else {
         const angle = (2 * Math.PI * i) / Math.max(1, ungrouped.length)
-        x = Math.cos(angle) * ungroupedR + (stableRand(id + 'x') - 0.5) * 150
-        y = Math.sin(angle) * ungroupedR + (stableRand(id + 'y') - 0.5) * 150
+        x = Math.cos(angle) * ungroupedR + (stableRand(id + 'x') - 0.5) * 300
+        y = Math.sin(angle) * ungroupedR + (stableRand(id + 'y') - 0.5) * 300
       }
 
       graph.addNode(nodeId, {
@@ -152,8 +154,8 @@ export function useSigmaGraph(
       } else {
         const firstGroupId = m.parentIds.find(gid => groupPos.has(gid))!
         const center = groupPos.get(firstGroupId)!
-        x = center.x + (stableRand(id + 'x') - 0.5) * 160
-        y = center.y + (stableRand(id + 'y') - 0.5) * 160
+        x = center.x + (stableRand(id + 'x') - 0.5) * 350
+        y = center.y + (stableRand(id + 'y') - 0.5) * 350
       }
 
       graph.addNode(nodeId, {

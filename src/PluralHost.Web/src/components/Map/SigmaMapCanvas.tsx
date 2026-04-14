@@ -119,8 +119,8 @@ function DragController({ connectMode }: { connectMode: boolean }) {
           forceAtlas2.assign(sigma.getGraph(), {
             iterations: 60,
             settings: {
-              ...FA2_EXPAND,
-              barnesHutOptimize: sigma.getGraph().order > 50,
+              ...FA2_SETTLE,
+              barnesHutOptimize: sigma.getGraph().order > 30,
             },
           })
           sigma.refresh()
