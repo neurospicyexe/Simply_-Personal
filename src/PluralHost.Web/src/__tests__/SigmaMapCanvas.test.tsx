@@ -24,12 +24,6 @@ vi.mock('@react-sigma/core', () => ({
   }),
 }))
 
-vi.mock('graphology-layout-forceatlas2/worker', () => ({
-  default: class {
-    start() {} stop() {}
-  },
-}))
-
 import { SigmaMapCanvas } from '../components/Map/SigmaMapCanvas'
 
 function makeGraph() {

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { MultiGraph } from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
+import noverlap from 'graphology-layout-noverlap'
 import type { Member, Group, MemberRelationship } from '../types'
 import { buildSubgraph, type MapMode, type ViewFilter } from '../utils/mapUtils'
 
@@ -14,11 +15,12 @@ function stableRand(seed: string): number {
 }
 
 // Place groups in a circle (top-level) or near their parent (nested).
-// Returns a position map used to seed member nodes into the right clusters.
+// Returns positions AND the cluster radius so callers can place ungrouped
+// members in a ring outside all group clusters.
 function computeGroupPositions(
   groupIds: string[],
   groupMap: Map<string, Group>
-): Map<string, { x: number; y: number }> {
+): { pos: Map<string, { x: number; y: number }>; clusterRadius: number } {
   const pos = new Map<string, { x: number; y: number }>()
   const groupIdSet = new Set(groupIds)
 
@@ -49,7 +51,7 @@ function computeGroupPositions(
       }
     })
   }
-  // Any remaining nested groups (parent not resolved) get a random fallback
+  // Any remaining nested groups (parent not resolved) get a stable fallback
   nested.forEach(id => {
     if (!pos.has(id)) {
       pos.set(id, {
@@ -59,8 +61,17 @@ function computeGroupPositions(
     }
   })
 
-  return pos
+  return { pos, clusterRadius: r }
 }
+
+// Shared FA2 settings used by both the pre-pass (sync) and drag settle (in SigmaMapCanvas).
+// Higher scalingRatio = stronger repulsion; lower gravity = less centripetal collapse.
+export const FA2_SETTINGS = {
+  gravity: 0.5,
+  scalingRatio: 8,
+  slowDown: 3,
+  barnesHutTheta: 0.5,
+} as const
 
 export function useSigmaGraph(
   members: Member[],
@@ -79,19 +90,44 @@ export function useSigmaGraph(
     const memberMap = new Map(members.map(m => [m.id, m]))
     const groupMap  = new Map(groups.map(g => [g.id, g]))
 
-    // Cluster centers for member seeding — groups spread before members placed
-    const groupPos = computeGroupPositions(groupIds, groupMap)
+    const { pos: groupPos, clusterRadius } = computeGroupPositions(groupIds, groupMap)
 
-    // Member nodes: seed near their first group's cluster center
+    // Ungrouped members start on a ring outside all group clusters — never at origin.
+    // This eliminates the central "singularity" blob on first render.
+    const ungroupedR = Math.max(clusterRadius + 400, 900)
+    const grouped: string[]   = []
+    const ungrouped: string[] = []
     memberIds.forEach(id => {
       const m = memberMap.get(id)
+      if (m?.parentIds.some(gid => groupPos.has(gid))) grouped.push(id)
+      else ungrouped.push(id)
+    })
+
+    ungrouped.forEach((id, i) => {
+      const m = memberMap.get(id)
       if (!m) return
-      const firstGroupId = m.parentIds.find(gid => groupPos.has(gid))
-      const center = firstGroupId ? groupPos.get(firstGroupId)! : { x: 0, y: 0 }
-      const spread = firstGroupId ? 120 : 300
+      const angle = (2 * Math.PI * i) / Math.max(1, ungrouped.length)
       graph.addNode(`member-${id}`, {
-        x: center.x + (stableRand(id + 'x') - 0.5) * spread,
-        y: center.y + (stableRand(id + 'y') - 0.5) * spread,
+        x: Math.cos(angle) * ungroupedR + (stableRand(id + 'x') - 0.5) * 150,
+        y: Math.sin(angle) * ungroupedR + (stableRand(id + 'y') - 0.5) * 150,
+        size: fronterIds.has(id) ? 14 : 10,
+        color: m.color ?? '#b6ff00',
+        label: m.displayName || m.name,
+        nodeType: 'member',
+        memberId: id,
+        isFronting: fronterIds.has(id),
+      })
+    })
+
+    // Grouped members: seed near their cluster center with a wider spread than before
+    grouped.forEach(id => {
+      const m = memberMap.get(id)
+      if (!m) return
+      const firstGroupId = m.parentIds.find(gid => groupPos.has(gid))!
+      const center = groupPos.get(firstGroupId)!
+      graph.addNode(`member-${id}`, {
+        x: center.x + (stableRand(id + 'x') - 0.5) * 160,
+        y: center.y + (stableRand(id + 'y') - 0.5) * 160,
         size: fronterIds.has(id) ? 14 : 10,
         color: m.color ?? '#b6ff00',
         label: m.displayName || m.name,
@@ -128,7 +164,6 @@ export function useSigmaGraph(
       if (!graph.hasNode(source) || !graph.hasNode(target)) return
 
       if (source.startsWith('group-') && target.startsWith('group-')) {
-        // Nested group containment edge
         graph.addEdge(source, target, {
           edgeType: 'groupNesting',
           color: '#555555',
@@ -157,18 +192,24 @@ export function useSigmaGraph(
       }
     })
 
-    // Synchronous FA2 pre-pass: runs before the async worker picks it up.
-    // The first rendered frame is already force-directed — no spaghetti on load.
     if (graph.order > 0) {
+      // FA2 pre-pass: strong repulsion + weak gravity pushes clusters apart before first paint
       forceAtlas2.assign(graph, {
-        iterations: 150,
+        iterations: 300,
         settings: {
-          gravity: 1,
-          scalingRatio: 3,
-          slowDown: 3,
-          barnesHutOptimize: graph.order > 80,
-          barnesHutTheta: 0.5,
+          ...FA2_SETTINGS,
+          barnesHutOptimize: graph.order > 50,
         },
+      })
+
+      // Noverlap post-pass: resolve any remaining circle-on-circle overlaps.
+      // Margin is scaled to the graph's coordinate extent after FA2, so it maps
+      // to roughly 10px of screen clearance at the default camera zoom.
+      const xs = graph.nodes().map(n => graph.getNodeAttribute(n, 'x') as number)
+      const extent = Math.max(...xs) - Math.min(...xs) || 1000
+      noverlap.assign(graph, {
+        maxIterations: 100,
+        settings: { margin: Math.max(5, extent / 80), speed: 3, ratio: 1.0, gridSize: 20 },
       })
     }
 

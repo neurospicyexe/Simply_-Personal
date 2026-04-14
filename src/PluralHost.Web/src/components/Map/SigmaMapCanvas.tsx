@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { SigmaContainer, useLoadGraph, useRegisterEvents, useSigma } from '@react-sigma/core'
 import '@react-sigma/core/lib/style.css'
 import { MultiGraph } from 'graphology'
-import FA2Layout from 'graphology-layout-forceatlas2/worker'
+import forceAtlas2 from 'graphology-layout-forceatlas2'
+import { FA2_SETTINGS } from '../../hooks/useSigmaGraph'
 
 interface Props {
   graph: MultiGraph
@@ -25,6 +26,8 @@ const SIGMA_SETTINGS = {
   // Labels only appear once a node reaches 8 CSS px on screen.
   // Hover forces labels on hovered node + neighbors via forceLabel in the nodeReducer.
   labelRenderedSizeThreshold: 8,
+  // Prevent label crowding: only one label renders per 150px grid cell.
+  labelGridCellSize:          150,
   defaultEdgeType:            'line',
   minCameraRatio:             0.02,
   maxCameraRatio:             10,
@@ -33,38 +36,23 @@ const SIGMA_SETTINGS = {
 }
 
 // ── GraphLoader ───────────────────────────────────────────────────────────────
-// Loads the graph into Sigma and runs FA2 for 8s with Barnes-Hut optimization.
-// Nodes marked fixed:true (dragged by user) are left in place by FA2.
+// Loads the pre-laid-out graph into Sigma. The layout (FA2 + noverlap) already
+// ran synchronously in useSigmaGraph — no async worker needed here.
 
 function GraphLoader({ graph }: { graph: MultiGraph }) {
   const loadGraph = useLoadGraph()
 
   useEffect(() => {
     loadGraph(graph)
-    const layout = new FA2Layout(graph, {
-      settings: {
-        gravity: 1,
-        scalingRatio: 3,
-        strongGravityMode: false,
-        barnesHutOptimize: true,
-        barnesHutTheta: 0.5,
-        slowDown: 3,
-        linLogMode: false,
-        outboundAttractionDistribution: false,
-      },
-    })
-    layout.start()
-    const timer = setTimeout(() => layout.stop(), 5000)
-    return () => { clearTimeout(timer); layout.stop() }
   }, [graph, loadGraph])
 
   return null
 }
 
 // ── DragController ────────────────────────────────────────────────────────────
-// Enables node dragging. Marks dragged nodes fixed so FA2 ignores them
-// after the user positions them. Uses a document-level mouseup listener so
-// drag always ends even when the mouse leaves the canvas.
+// Enables node dragging. Marks dragged nodes fixed so future settle passes
+// leave them in place. On mouseup, runs a short sync FA2 settle so neighbors
+// reflow around the repositioned node — no async worker fighting the mouse.
 
 function DragController({ connectMode }: { connectMode: boolean }) {
   const sigma = useSigma()
@@ -72,7 +60,24 @@ function DragController({ connectMode }: { connectMode: boolean }) {
   const drag = useRef<{ active: boolean; nodeId: string | null }>({ active: false, nodeId: null })
 
   useEffect(() => {
-    const endDrag = () => { drag.current = { active: false, nodeId: null } }
+    const endDrag = () => {
+      if (drag.current.active) {
+        // Brief sync settle: neighbors adjust around the newly placed node.
+        // The dragged node stays fixed: true so FA2 leaves it where the user put it.
+        const graph = sigma.getGraph()
+        if (graph.order > 0) {
+          forceAtlas2.assign(graph, {
+            iterations: 60,
+            settings: {
+              ...FA2_SETTINGS,
+              barnesHutOptimize: graph.order > 50,
+            },
+          })
+          sigma.refresh()
+        }
+      }
+      drag.current = { active: false, nodeId: null }
+    }
     document.addEventListener('mouseup', endDrag)
 
     registerEvents({
@@ -101,12 +106,9 @@ function DragController({ connectMode }: { connectMode: boolean }) {
 
 // ── HighlightController ───────────────────────────────────────────────────────
 // Three responsibilities:
-//   1. Degree-based node sizing (hub nodes larger than isolated ones)
+//   1. Degree-based node sizing with camera-adaptive scale (zoom out → smaller nodes)
 //   2. Hover: dim non-neighbors, reveal neighbor labels, highlight edges
 //   3. Edge dimming: near-invisible by default, full opacity on hover
-//
-// Uses refs for hover state so event handlers don't need re-registration;
-// calls sigma.refresh() manually after mutating the refs.
 
 function HighlightController({
   selectedNodeId,
@@ -143,8 +145,6 @@ function HighlightController({
   // so hover changes (above) always see current state without re-running this effect.
   useEffect(() => {
     sigma.setSetting('nodeReducer', (node: string, data: Record<string, unknown>) => {
-      // sigma.getGraph() is called inside the reducer (not captured at effect time)
-      // so it always reflects the live graph after any loadGraph() call.
       const graph     = sigma.getGraph()
       const hovered   = hoveredNode.current
       const isHovered  = node === hovered
@@ -157,9 +157,16 @@ function HighlightController({
       let size = isMember
         ? Math.max(6,  Math.min(20, 6  + degree * 1.2))
         : Math.max(14, Math.min(26, 14 + degree * 0.6))
-      if (isFronting)            size = Math.max(size, 14)
+      if (isFronting)              size = Math.max(size, 14)
       if (isHovered || isSelected) size *= 1.35
-      if (isPending)             size *= 1.5
+      if (isPending)               size *= 1.5
+
+      // Adaptive scaling: shrink nodes as the user zooms out so dense areas
+      // stay visually distinct. Uses square-root curve for gentle falloff —
+      // 4x zoom-out halves size rather than quartering it.
+      const cameraRatio = sigma.getCamera().ratio
+      const zoomFactor  = 1 / Math.sqrt(Math.max(1, cameraRatio))
+      size = Math.max(3, size * zoomFactor)
 
       let color      = data.color as string
       let forceLabel = isHovered || isSelected
@@ -198,7 +205,6 @@ function HighlightController({
         }
       }
 
-      // Default: fixed dark color — avoids fragile hex-alpha appending on user-supplied colors.
       return {
         ...data,
         size:  isMembership ? 0.3 : 0.7,
