@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { SigmaContainer, useLoadGraph, useRegisterEvents, useSigma } from '@react-sigma/core'
-import { useLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
+import { useWorkerLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import '@react-sigma/core/lib/style.css'
 import { MultiGraph } from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
@@ -57,7 +57,7 @@ function GraphLoader({ graph }: { graph: MultiGraph }) {
 
 function LayoutWorker() {
   const sigma = useSigma()
-  const { start, stop, kill, isLayoutRunning } = useLayoutForceAtlas2({
+  const { start, stop, kill, isRunning } = useWorkerLayoutForceAtlas2({
     settings: FA2_SETTINGS,
   })
 
@@ -70,14 +70,9 @@ function LayoutWorker() {
 
     const coolingId = setTimeout(() => {
       // Transition to stable "cool" phase
-      if (isLayoutRunning) {
+      if (isRunning) {
         stop()
-        start({
-          settings: {
-            ...FA2_SETTINGS,
-            slowDown: 10, // Significantly slower for stability
-          }
-        })
+        start() 
       }
     }, 3000)
 
@@ -90,7 +85,7 @@ function LayoutWorker() {
       clearTimeout(stopId)
       kill()
     }
-  }, [sigma, start, stop, kill])
+  }, [sigma, start, stop, kill, isRunning])
 
   return null
 }
