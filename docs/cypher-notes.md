@@ -91,6 +91,44 @@ Rate limiting: `[EnableRateLimiting("login")]` on `/api/auth/login` (10/min), `[
 - **Image upload errors swallowed** — `mediaApi.upload` threw the raw `Response` object on failure; catch block in EssenceTab couldn't read the error message and always showed "Upload failed. Please try again." Fix: now parses JSON body and throws `new Error(body?.error ?? \`Upload failed (${status})\`)` — actual server message (e.g. "Extension '.heic' is not allowed") now surfaces in the UI.
 - **Upload file picker too permissive** — `accept="image/*"` offered HEIC/AVIF/BMP/TIFF etc. which the backend rejects with 400. Fix: both avatar and background inputs now use `accept=".jpg,.jpeg,.png,.gif,.webp"` to match backend allowlist.
 
+## Session 2026-04-14 — 3D Force Graph / Neuron Map Layout
+
+### Goal
+Transform the system map from a dense ball into an expansive neuron-style mind map matching the spatial feel of vasturiano/3d-force-graph.
+
+### What we tried (in order)
+
+**Round 1 — FA2 tuning:** `scalingRatio` 100→2500→25000, gravity 0.1→0.005, `outboundAttractionDistribution: true`. Still a ball.
+
+**Round 2 — Equilibrium radius math:** FA2 converges to `sqrt(scalingRatio/gravity)`. At 100/0.05 → ~224 units (a ball). At 25000/0.005 → ~2236 units. Scaled seed positions to match. Better, still clumping.
+
+**Round 3 — Edge weight split:** 500+ membership edges all pulling toward a handful of group nodes overwhelm any repulsion. Fixed: membership edges `weight: 0.02`, relationship edges `weight: 1.0`, `edgeWeightInfluence: 1`, group nodes `fixed: true` as anchors.
+
+**Round 4 — Golden angle spiral + linLogMode:** Replaced random scatter with phyllotaxis spiral (`r = scale*sqrt(i)`, `theta = 137.5°*i`). Added `linLogMode: true` (log attraction — distant nodes stay distant). User said "way better!! but middle still tight."
+
+**Round 5 — 3D migration (current state):** Replaced Sigma.js with `react-force-graph-3d` (vasturiano Three.js stack). Z-axis breaks the center-cancellation problem. Added `UnrealBloomPass` for glow. Pushed as commit `3b65986`. Needs `npm install --legacy-peer-deps` on server.
+
+### The real lesson — why FA2 always failed
+
+1. **FA2 has no link distance.** d3-force has `forceLink().distance(300)` — a minimum cable length. FA2 only has attraction; nodes collapse until they touch. Every tuning pass failed because the tool was wrong for the job.
+
+2. **2D center cancellation.** With 500 nodes around a center, repulsion vectors cancel. The Z axis breaks this — nodes have a new dimension to escape into.
+
+### Inspiration repos (for next session)
+- `vasturiano/3d-force-graph` — Three.js + d3-force-3d; `dagMode: 'radialout'` for radial hierarchy
+- `mindorb/mindorb` — Three.js WebGL shader approach to mind map nodes
+- `opentecture/mindmapping` — CSS2D + Three.js, multiple layout modes
+- `entin-hun/3D-MIND` — vasturiano fork focused on mind map UX patterns
+
+### Resume checklist
+1. Server: `git pull && cd src/PluralHost.Web && npm install --legacy-peer-deps && npm run build`
+2. Verify 3D renders; confirm bloom works
+3. Tune d3-force charge/link distance for 500-node system
+4. Explore `dagMode: 'radialout'` if hierarchy is still unclear
+5. `SigmaMapCanvas` + `useSigmaGraph` intentionally kept — SystemMap component still uses them
+
+---
+
 ## Known Remaining Issues
 
 ### Pending / Watch List
