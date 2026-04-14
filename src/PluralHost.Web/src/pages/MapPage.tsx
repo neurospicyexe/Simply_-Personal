@@ -5,9 +5,8 @@ import { groupsApi } from '../api/groups'
 import { relationshipsApi } from '../api/relationships'
 import { frontApi } from '../api/front'
 import { bucketsApi } from '../api/buckets'
-import { useSigmaGraph } from '../hooks/useSigmaGraph'
 import { type MapMode, type ViewFilter } from '../utils/mapUtils'
-import { SigmaMapCanvas } from '../components/Map/SigmaMapCanvas'
+import { ForceGraph3DCanvas } from '../components/Map/ForceGraph3DCanvas'
 import { DetailPanel, type SelectedNode } from '../components/Map/DetailPanel'
 import { FloatingToolbar } from '../components/Map/FloatingToolbar'
 import { NewRelationshipSheet } from '../components/SystemMap/NewRelationshipSheet'
@@ -34,8 +33,6 @@ export default function MapPage() {
     () => new Set((front as SpEnvelope<FrontContent>[]).map(f => f.content.member)),
     [front]
   )
-
-  const graph = useSigmaGraph(members, groups, relationships, fronterIds, viewFilter, mode)
 
   const handleNodeClick = useCallback((nodeId: string) => {
     if (nodeId.startsWith('member-')) {
@@ -87,8 +84,13 @@ export default function MapPage() {
         onConnectModeChange={setConnectMode}
       />
       <div className={styles.canvas}>
-        <SigmaMapCanvas
-          graph={graph}
+        <ForceGraph3DCanvas
+          members={members}
+          groups={groups}
+          relationships={relationships}
+          fronterIds={fronterIds}
+          viewFilter={viewFilter}
+          mode={mode}
           selectedNodeId={selectedNodeId}
           connectMode={connectMode}
           onNodeClick={handleNodeClick}
