@@ -4,7 +4,7 @@ import { useWorkerLayoutForceAtlas2 } from '@react-sigma/layout-forceatlas2'
 import '@react-sigma/core/lib/style.css'
 import { MultiGraph } from 'graphology'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
-import { FA2_SETTINGS } from '../../hooks/useSigmaGraph'
+import { FA2_EXPAND, FA2_SETTLE } from '../../hooks/useSigmaGraph'
 
 interface Props {
   graph: MultiGraph
@@ -52,40 +52,50 @@ function GraphLoader({ graph }: { graph: MultiGraph }) {
 }
 
 // ── LayoutWorker ──────────────────────────────────────────────────────────────
-// Uses @react-sigma's worker-based FA2 for smooth, non-blocking expansion.
-// Runs at high intensity for 3s, then reduces slowdown for stability.
+// Two-phase layout:
+//   Phase 1 (0–3 s)  — FA2_EXPAND: high scalingRatio, low gravity → nodes blast outward.
+//   Phase 2 (3–8 s)  — FA2_SETTLE: same repulsion, 5× higher slowDown → damps oscillations.
+//
+// A stable ref holds the latest start/stop/kill so setTimeout callbacks never
+// capture stale closures.
 
 function LayoutWorker() {
   const sigma = useSigma()
-  const { start, stop, kill, isRunning } = useWorkerLayoutForceAtlas2({
-    settings: FA2_SETTINGS,
-  })
+  const [settings, setSettings] = useState(FA2_EXPAND)
+  const { start, stop, kill } = useWorkerLayoutForceAtlas2({ settings })
 
+  const ctrl = useRef({ start, stop, kill })
+  useEffect(() => { ctrl.current = { start, stop, kill } }, [start, stop, kill])
+
+  // Expansion phase — fires once per sigma instance (i.e. on graph load).
   useEffect(() => {
-    const graph = sigma.getGraph()
-    if (graph.order === 0) return
+    if (sigma.getGraph().order === 0) return
 
-    // Start high-intensity expansion
-    start()
+    ctrl.current.start()
 
-    const coolingId = setTimeout(() => {
-      // Transition to stable "cool" phase
-      if (isRunning) {
-        stop()
-        start() 
-      }
+    const coolingTimer = setTimeout(() => {
+      ctrl.current.stop()
+      ctrl.current.kill()
+      setSettings(FA2_SETTLE)
     }, 3000)
 
-    const stopId = setTimeout(() => {
-      stop()
-    }, 6000)
-
     return () => {
-      clearTimeout(coolingId)
-      clearTimeout(stopId)
-      kill()
+      clearTimeout(coolingTimer)
+      ctrl.current.kill()
     }
-  }, [sigma, start, stop, kill, isRunning])
+  }, [sigma]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Settle phase — starts once settings flip to FA2_SETTLE, auto-stops after 5 s.
+  useEffect(() => {
+    if (settings === FA2_EXPAND) return
+    if (sigma.getGraph().order === 0) return
+    ctrl.current.start()
+    const doneTimer = setTimeout(() => ctrl.current.stop(), 5000)
+    return () => {
+      clearTimeout(doneTimer)
+      ctrl.current.stop()
+    }
+  }, [settings]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return null
 }
@@ -109,7 +119,7 @@ function DragController({ connectMode }: { connectMode: boolean }) {
           forceAtlas2.assign(sigma.getGraph(), {
             iterations: 60,
             settings: {
-              ...FA2_SETTINGS,
+              ...FA2_EXPAND,
               barnesHutOptimize: sigma.getGraph().order > 50,
             },
           })

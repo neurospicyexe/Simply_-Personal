@@ -58,14 +58,29 @@ function computeGroupPositions(
   return { pos, clusterRadius: r }
 }
 
-export const FA2_SETTINGS = {
-  gravity: 0.1,
-  scalingRatio: 100,
-  slowDown: 1,
+// High-intensity expansion phase: strong repulsion, low gravity, moderate damping.
+// scalingRatio 2500 overpowers gravity so nodes drift outward into a neuron-map layout.
+export const FA2_EXPAND = {
+  gravity: 0.05,
+  scalingRatio: 2500,
+  slowDown: 3,
   barnesHutTheta: 0.5,
   outboundAttractionDistribution: true,
   strongGravityMode: false,
 } as const
+
+// Settle phase: same repulsion, heavier damping to kill oscillations after expansion.
+export const FA2_SETTLE = {
+  gravity: 0.05,
+  scalingRatio: 2500,
+  slowDown: 15,
+  barnesHutTheta: 0.5,
+  outboundAttractionDistribution: true,
+  strongGravityMode: false,
+} as const
+
+/** @deprecated use FA2_EXPAND */
+export const FA2_SETTINGS = FA2_EXPAND
 
 export function useSigmaGraph(
   members: Member[],
@@ -224,16 +239,16 @@ export function useSigmaGraph(
       
       if (isNewGraph) {
         forceAtlas2.assign(graph, {
-          iterations: 300,
+          iterations: 150,
           settings: {
-            ...FA2_SETTINGS,
-            barnesHutOptimize: graph.order > 50,
+            ...FA2_EXPAND,
+            barnesHutOptimize: graph.order > 30,
           },
         })
 
         noverlap.assign(graph, {
           maxIterations: 100,
-          settings: { margin: 15, speed: 3, ratio: 1.5, gridSize: 40 },
+          settings: { margin: 20, speed: 3, ratio: 1.5, gridSize: 80 },
         })
       }
     }
