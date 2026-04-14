@@ -11,6 +11,11 @@ import { SigmaMapCanvas } from '../Map/SigmaMapCanvas'
 import { NewRelationshipSheet } from './NewRelationshipSheet'
 import styles from './SystemMap.module.css'
 import type { Member, Group, MemberRelationship, SpEnvelope, FrontContent } from '../../types'
+import type { ViewFilter } from '../../utils/mapUtils'
+
+// Stable reference — inline `{ type: 'all' }` creates a new object every render,
+// which would defeat useSigmaGraph's useMemo and rebuild the graph on every re-render.
+const VIEW_ALL: ViewFilter = { type: 'all' }
 
 interface Props {
   initialMode?: MapMode
@@ -36,7 +41,7 @@ export function SystemMap({ initialMode = 'groups' }: Props) {
     [front]
   )
 
-  const graph = useSigmaGraph(members, groups, relationships, fronterIds, { type: 'all' }, mode)
+  const graph = useSigmaGraph(members, groups, relationships, fronterIds, VIEW_ALL, mode)
 
   const handleNodeClick = useCallback((nodeId: string) => {
     if (nodeId.startsWith('member-')) {

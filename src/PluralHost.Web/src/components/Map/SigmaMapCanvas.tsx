@@ -161,13 +161,6 @@ function HighlightController({
       if (isHovered || isSelected) size *= 1.35
       if (isPending)               size *= 1.5
 
-      // Adaptive scaling: shrink nodes as the user zooms out so dense areas
-      // stay visually distinct. Uses square-root curve for gentle falloff —
-      // 4x zoom-out halves size rather than quartering it.
-      const cameraRatio = sigma.getCamera().ratio
-      const zoomFactor  = 1 / Math.sqrt(Math.max(1, cameraRatio))
-      size = Math.max(3, size * zoomFactor)
-
       let color      = data.color as string
       let forceLabel = isHovered || isSelected
       let zIndex     = 0

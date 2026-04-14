@@ -68,7 +68,7 @@ function computeGroupPositions(
 // Higher scalingRatio = stronger repulsion; lower gravity = less centripetal collapse.
 export const FA2_SETTINGS = {
   gravity: 0.5,
-  scalingRatio: 8,
+  scalingRatio: 5,
   slowDown: 3,
   barnesHutTheta: 0.5,
 } as const
